@@ -2,6 +2,7 @@ module Syn = Lambdasyn
 open SpecLang 
 
 exception NoMappingForVar of string
+exception IllegalConstructorType of string    
 (*A var to refinement type mapping typing environment*)
 module TypingEnv = struct
 
@@ -70,6 +71,18 @@ let find t tyd =
 let add = fun t -> fun tyd sort -> ConsMap.add t tyd sort 
 let remove = ConsMap.remove
 
+let rec findCons4RetT t retT acc : ((Var.t*RefinementType.t)list ) = 
+        match t with 
+        | [] -> acc
+        | (vi, rti):: xs -> 
+                match rti with 
+                 | RefinementType.Arrow ((v,t1), t2) -> 
+                        if (RefinementType.compare_types t2 retT) then 
+                          let acc = (vi, rti) :: acc in 
+                          findCons4RetT xs retT acc 
+                        else
+                          findCons4RetT xs retT acc
+                 | _ -> raise (IllegalConstructorType "findCons4RetT")   
 end 
 
 
@@ -81,3 +94,32 @@ module RelationalEnv = struct
 
 
 end
+
+module ExploredTerms = struct 
+  type t = Var.t list
+  let empty = []  
+  let find t (e:Var.t) = List.find (fun e' -> (Var.equal e e')) t 
+  let add t e = e::t
+  let remove t e  =
+        List.filter (fun e' -> not (Var.equal e e')) t 
+
+  let mem t e = List.exists e t 
+
+end
+
+
+module ExploredPaths = struct 
+  type t = Var.t list
+  let empty = []  
+  let find t (e:Var.t) = List.find (fun e' -> (Var.equal e e')) t 
+  let add t e = e::t
+  let remove t e  =
+        List.filter (fun e' -> not (Var.equal e e')) t 
+
+  let mem t e = List.exists e t 
+  let fromList ls = ls
+end
+
+
+
+

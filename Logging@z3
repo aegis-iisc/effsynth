@@ -1,0 +1,2571 @@
+V "4.7.1.0 May  7 2021"
+R
+C 3
+= 0xa6f6a8
+R
+P 0xa6f6a8
+S "model"
+S "true"
+C 5
+R
+P 0xa6f6a8
+S "proof"
+S "true"
+C 5
+R
+P 0xa6f6a8
+S "timeout"
+S "200000"
+C 5
+R
+P 0xa6f6a8
+C 7
+= 0xa6f718
+R
+P 0xa6f6a8
+C 4
+R
+P 0xa6f718
+U 2
+C 328
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+C 408
+= 0xaae718
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xaae718
+C 416
+R
+P 0xa6f718
+C 54
+= 0xa79f48
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79f48
+C 9
+R
+P 0xa6f718
+C 55
+= 0xa79f68
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79f68
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+C 3
+= 0xaae768
+R
+P 0xaae768
+S "model"
+S "true"
+C 5
+R
+P 0xaae768
+S "proof"
+S "true"
+C 5
+R
+P 0xaae768
+S "timeout"
+S "200000"
+C 5
+R
+P 0xaae768
+C 7
+= 0xac1c28
+R
+P 0xaae768
+C 4
+R
+P 0xac1c28
+U 2
+C 328
+R
+P 0xac1c28
+C 339
+R
+P 0xac1c28
+C 408
+= 0xaeca38
+R
+P 0xac1c28
+C 339
+R
+P 0xac1c28
+P 0xaeca38
+C 416
+R
+P 0xac1c28
+P 0xaeca38
+C 420
+R
+P 0xac1c28
+C 339
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+C 159
+= 0xa7a808
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a808
+C 9
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+S "y1"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |y1|
+P 0xa79fa8
+C 51
+= 0xa7a8c8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a8c8
+C 9
+R
+P 0xa6f718
+P 0xa79fa8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a8c8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+S "x1"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |x1|
+P 0xa79fa8
+C 51
+= 0xa7a8e8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a8e8
+C 9
+R
+P 0xa6f718
+P 0xa79fa8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a8e8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+S "v"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |v|
+P 0xa79fa8
+C 51
+= 0xa7a908
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a908
+C 9
+R
+P 0xa6f718
+P 0xa79fa8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a908
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+S "T0"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T0|
+C 31
+= 0xa7a928
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a928
+C 9
+R
+P 0xa6f718
+S "T1"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T1|
+C 31
+= 0xa7a948
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a948
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "node"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |node|
+U 2
+P 0xa7a928
+P 0xa7a948
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e5f8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e5f8
+C 9
+R
+P 0xa6f718
+P 0xa7e5f8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun node \040T0 T1\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "indent"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |indent|
+U 2
+P 0xa7a928
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e638
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e638
+C 9
+R
+P 0xa6f718
+P 0xa7e638
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun indent \040T0 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T2"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T2|
+C 31
+= 0xa7a968
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a968
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "indent"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |indent|
+U 2
+P 0xa7a928
+P 0xa7a968
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e678
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e678
+C 9
+R
+P 0xa6f718
+P 0xa7e678
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun indent \040T0 T2\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "indent"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |indent|
+U 3
+P 0xa79fa8
+P 0xa7a968
+P 0xa79ee8
+p 3
+P 0xa79ee8
+C 49
+= 0xa88208
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88208
+C 9
+R
+P 0xa6f718
+P 0xa88208
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun indent \040Int T2 Bool\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "indent"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |indent|
+U 3
+P 0xa79fa8
+P 0xa7a928
+P 0xa79ee8
+p 3
+P 0xa79ee8
+C 49
+= 0xa88250
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88250
+C 9
+R
+P 0xa6f718
+P 0xa88250
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun indent \040Int T0 Bool\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T3"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T3|
+C 31
+= 0xa7a988
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a988
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "elems"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |elems|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e6b8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e6b8
+C 9
+R
+P 0xa6f718
+P 0xa7e6b8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun elems \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "len"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |len|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e6f8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e6f8
+C 9
+R
+P 0xa6f718
+P 0xa7e6f8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun len \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T4"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T4|
+C 31
+= 0xa7a9a8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a9a8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "fst"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |fst|
+U 2
+P 0xa7a9a8
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e738
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e738
+C 9
+R
+P 0xa6f718
+P 0xa7e738
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun fst \040T4 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "snd"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |snd|
+U 2
+P 0xa7a9a8
+P 0xa7a988
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e778
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e778
+C 9
+R
+P 0xa6f718
+P 0xa7e778
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun snd \040T4 T3\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T5"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T5|
+C 31
+= 0xa7a9c8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a9c8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "revfst"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |revfst|
+U 2
+P 0xa7a9c8
+P 0xa7a988
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e7b8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e7b8
+C 9
+R
+P 0xa6f718
+P 0xa7e7b8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun revfst \040T5 T3\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "revsnd"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |revsnd|
+U 2
+P 0xa7a9c8
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e7f8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e7f8
+C 9
+R
+P 0xa6f718
+P 0xa7e7f8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun revsnd \040T5 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T6"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T6|
+C 31
+= 0xa7a9e8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a9e8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "fstint"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |fstint|
+U 2
+P 0xa7a9e8
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e838
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e838
+C 9
+R
+P 0xa6f718
+P 0xa7e838
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun fstint \040T6 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "sndint"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |sndint|
+U 2
+P 0xa7a9e8
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e878
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e878
+C 9
+R
+P 0xa6f718
+P 0xa7e878
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun sndint \040T6 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T7"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T7|
+C 31
+= 0xa7aa08
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aa08
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "pr1"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |pr1|
+U 2
+P 0xa7aa08
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e8b8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e8b8
+C 9
+R
+P 0xa6f718
+P 0xa7e8b8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun pr1 \040T7 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "pr2"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |pr2|
+U 2
+P 0xa7aa08
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e8f8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e8f8
+C 9
+R
+P 0xa6f718
+P 0xa7e8f8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun pr2 \040T7 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "pr3"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |pr3|
+U 2
+P 0xa7aa08
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e938
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e938
+C 9
+R
+P 0xa6f718
+P 0xa7e938
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun pr3 \040T7 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T8"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T8|
+C 31
+= 0xa7aa28
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aa28
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "wellformed"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |wellformed|
+U 2
+P 0xa7aa28
+P 0xa79ee8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e978
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e978
+C 9
+R
+P 0xa6f718
+P 0xa7e978
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun wellformed \040T8 Bool\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T9"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T9|
+C 31
+= 0xa7aa48
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aa48
+C 9
+R
+P 0xa6f718
+P 0xa7aa48
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+S "T10"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T10|
+C 31
+= 0xa7aa68
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aa68
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "sel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |sel|
+U 3
+P 0xa7aa48
+P 0xa7aa68
+P 0xa79fa8
+p 3
+P 0xa79ee8
+C 49
+= 0xa88298
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88298
+C 9
+R
+P 0xa6f718
+P 0xa88298
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun sel \040T9 T10 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T11"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T11|
+C 31
+= 0xa7aa88
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aa88
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "sel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |sel|
+U 3
+P 0xa7aa48
+P 0xa7aa88
+P 0xa79fa8
+p 3
+P 0xa79ee8
+C 49
+= 0xa882e0
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa882e0
+C 9
+R
+P 0xa6f718
+P 0xa882e0
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun sel \040T9 T11 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T12"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T12|
+C 31
+= 0xa7aaa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aaa8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "mem_sel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |mem_sel|
+U 3
+P 0xa7aa48
+P 0xa7aaa8
+P 0xa7a988
+p 3
+P 0xa79ee8
+C 49
+= 0xa88328
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88328
+C 9
+R
+P 0xa6f718
+P 0xa88328
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun mem_sel \040T9 T12 T3\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T13"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T13|
+C 31
+= 0xa7aac8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aac8
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "bsel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |bsel|
+U 3
+P 0xa7aa48
+P 0xa7aac8
+P 0xa79ee8
+p 3
+P 0xa79ee8
+C 49
+= 0xa88370
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88370
+C 9
+R
+P 0xa6f718
+P 0xa88370
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun bsel \040T9 T13 Bool\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "ilssel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |ilssel|
+U 3
+P 0xa7aa48
+P 0xa7aaa8
+P 0xa7a988
+p 3
+P 0xa79ee8
+C 49
+= 0xa883b8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa883b8
+C 9
+R
+P 0xa6f718
+P 0xa883b8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun ilssel \040T9 T12 T3\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "T14"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T14|
+C 31
+= 0xa7aae8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7aae8
+C 9
+R
+P 0xa6f718
+S "T15"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |T15|
+C 31
+= 0xa7ab08
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab08
+C 9
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "plssel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |plssel|
+U 3
+P 0xa7aa48
+P 0xa7aae8
+P 0xa7ab08
+p 3
+P 0xa79ee8
+C 49
+= 0xa88400
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88400
+C 9
+R
+P 0xa6f718
+P 0xa88400
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun plssel \040T9 T14 T15\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "phd"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |phd|
+U 2
+P 0xa7ab08
+P 0xa7a9e8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e9b8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e9b8
+C 9
+R
+P 0xa6f718
+P 0xa7e9b8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun phd \040T15 T6\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "phd"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |phd|
+U 2
+P 0xa7ab08
+P 0xa7a9e8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e9b8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e9b8
+C 9
+R
+P 0xa6f718
+P 0xa7e9b8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun phd \040T15 T6\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "plen"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |plen|
+U 2
+P 0xa7ab08
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7e9f8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7e9f8
+C 9
+R
+P 0xa6f718
+P 0xa7e9f8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun plen \040T15 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "num_prefix_2"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |num_prefix_2|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7ea38
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ea38
+C 9
+R
+P 0xa6f718
+P 0xa7ea38
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun num_prefix_2 \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "num_prefix_3"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |num_prefix_3|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7ea78
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ea78
+C 9
+R
+P 0xa6f718
+P 0xa7ea78
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun num_prefix_3 \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "num_hd"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |num_hd|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7eab8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7eab8
+C 9
+R
+P 0xa6f718
+P 0xa7eab8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun num_hd \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "tail_sel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |tail_sel|
+U 3
+P 0xa7aa48
+P 0xa7aaa8
+P 0xa7a988
+p 3
+P 0xa79ee8
+C 49
+= 0xa88448
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88448
+C 9
+R
+P 0xa6f718
+P 0xa88448
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun tail_sel \040T9 T12 T3\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "hd"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |hd|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7eaf8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7eaf8
+C 9
+R
+P 0xa6f718
+P 0xa7eaf8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun hd \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "tail"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |tail|
+U 2
+P 0xa7a988
+P 0xa7a988
+p 2
+P 0xa79ee8
+C 49
+= 0xa7eb38
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7eb38
+C 9
+R
+P 0xa6f718
+P 0xa7eb38
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun tail \040T3 T3\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+S "err"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |err|
+P 0xa7aac8
+C 51
+= 0xa7ab28
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab28
+C 9
+R
+P 0xa6f718
+P 0xa7aac8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab28
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "bool_sel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |bool_sel|
+U 3
+P 0xa7aa48
+P 0xa7aac8
+P 0xa79ee8
+p 3
+P 0xa79ee8
+C 49
+= 0xa88490
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa88490
+C 9
+R
+P 0xa6f718
+P 0xa88490
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun bool_sel \040T9 T13 Bool\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "leni"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |leni|
+U 2
+P 0xa7a988
+P 0xa79fa8
+p 2
+P 0xa79ee8
+C 49
+= 0xa7eb78
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7eb78
+C 9
+R
+P 0xa6f718
+P 0xa7eb78
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun leni \040T3 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+P 0xa7aa48
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+C 32
+= 0xa79ee8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79ee8
+C 9
+R
+P 0xa6f718
+S "hd_sel"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |hd_sel|
+U 3
+P 0xa7aa48
+P 0xa7aaa8
+P 0xa79fa8
+p 3
+P 0xa79ee8
+C 49
+= 0xa884d8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa884d8
+C 9
+R
+P 0xa6f718
+P 0xa884d8
+C 329
+R
+P 0xa6f718
+C 339
+M "\040declare-fun hd_sel \040T9 T12 Int\041 Bool\041"
+M "\010"
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+S "2"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |2|
+P 0xa79fa8
+C 51
+= 0xa7ab48
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab48
+C 9
+R
+P 0xa6f718
+P 0xa79fa8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab48
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+I 2
+P 0xa79fa8
+C 150
+= 0xa7ab68
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab68
+C 9
+R
+P 0xa6f718
+P 0xa7ab48
+P 0xa7ab68
+C 56
+= 0xa80670
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80670
+C 9
+R
+P 0xa6f718
+P 0xa80670
+C 329
+R
+P 0xa6f718
+C 339
+M "\040assert \040\061 \1242\124 2\041\041"
+M "\010"
+R
+P 0xa6f718
+P 0xaae718
+P 0xa80670
+C 422
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a908
+P 0xa7ab48
+C 56
+= 0xa80718
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80718
+C 9
+R
+P 0xa6f718
+P 0xa80718
+C 329
+R
+P 0xa6f718
+C 339
+M "\040assert \040\061 v \1242\124\041\041"
+M "\010"
+R
+P 0xa6f718
+P 0xaae718
+P 0xa80718
+C 422
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+S "2"
+C 30
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+$ |2|
+P 0xa79fa8
+C 51
+= 0xa7ab48
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab48
+C 9
+R
+P 0xa6f718
+P 0xa79fa8
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab48
+C 329
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+C 33
+= 0xa79fa8
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa79fa8
+C 9
+R
+P 0xa6f718
+I 2
+P 0xa79fa8
+C 150
+= 0xa7ab68
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7ab68
+C 9
+R
+P 0xa6f718
+P 0xa7ab48
+P 0xa7ab68
+C 56
+= 0xa80670
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80670
+C 9
+R
+P 0xa6f718
+P 0xa80670
+C 329
+R
+P 0xa6f718
+C 339
+M "\040assert \040\061 \1242\124 2\041\041"
+M "\010"
+R
+P 0xa6f718
+P 0xaae718
+P 0xa80670
+C 422
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7a908
+P 0xa7ab48
+C 56
+= 0xa80718
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80718
+C 9
+R
+P 0xa6f718
+P 0xa80718
+C 58
+= 0xa7c238
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7c238
+C 9
+R
+P 0xa6f718
+P 0xa7c238
+C 329
+R
+P 0xa6f718
+C 339
+M "\040assert \040not \040\061 v \1242\124\041\041\041"
+M "\010"
+R
+P 0xa6f718
+P 0xaae718
+P 0xa7c238
+C 422
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xaae718
+C 424
+= 0xda1558
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xda1558
+C 448
+R
+P 0xa6f718
+P 0xda1558
+C 450
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xda1558
+U 0
+C 451
+= 0xa80670
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80670
+C 9
+R
+P 0xa6f718
+P 0xda1558
+U 1
+C 451
+= 0xa80718
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80718
+C 9
+R
+P 0xa6f718
+P 0xda1558
+U 2
+C 451
+= 0xa80670
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa80670
+C 9
+R
+P 0xa6f718
+P 0xda1558
+U 3
+C 451
+= 0xa7c238
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xa7c238
+C 9
+R
+P 0xa6f718
+P 0xaae718
+C 436
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xaae718
+C 427
+R
+P 0xa6f718
+C 339
+R
+P 0xa6f718
+P 0xaae718
+C 420
+R
+P 0xa6f718
+C 339

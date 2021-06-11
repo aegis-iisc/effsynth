@@ -1380,8 +1380,10 @@ module Effect = struct
                 | (Nondet, ExNondet) -> ExNondet
                 | (_, _) -> ALL 
 
-
- 
+           
+      let isSubEffect t1 t2 = 
+           let join = lub t1 t2 in
+           if (equall join t2) then true else false
 
 
        end 
@@ -1401,6 +1403,12 @@ struct
     (*get the effect from the Monadic types*)    
     
 
+
+   let getReturnConstraints t = 
+        match t with 
+        | MArrow (eff, pre, t, post) -> 
+        | Base (v, t, pred) -> pred
+        | _ -> raise (Error "Non Base or Computation Type")
 
    let rec get_effect t : Effect.t = 
         match t with 
@@ -1715,17 +1723,20 @@ struct
    
    let rec toTyD t = match t with
         Base (v,tdes,p) -> tdes
-      (*| Tuple tv -> TyD.makeTtuple (List.map (fun (v,t) ->  
+      | Tuple tv -> TyD.makeTtuple (List.map (fun (v,t) ->  
               let ty_desc_for_t = toTyD t in 
-              ty_desc_for_t)  tv)*)
+              ty_desc_for_t)  tv)
       | Arrow ((v1,t1),t2) -> TyD.Ty_arrow ((toTyD t1), (toTyD t2))
-      | MArrow (eff, p1 , tb, p2) -> TyD.Ty_arrow (Ty_unit, tb)  
+      | MArrow (eff, p1 , tb, p2) -> tb   
      
  
   let compare_types (t1:t)  (t2 :t) : bool = 
-        TyD.sametype (toTyD t1) (toTyD t2) 
-    
- 
+        match (t1, t2) with 
+        | (Base (_,_,_), Base (_,_,_)) ->   TyD.sametype (toTyD t1) (toTyD t2) 
+        | (Arrow ((_,_),_), Arrow ((_,_),_)) -> TyD.sametype (toTyD t1) (toTyD t2)
+        | (MArrow (eff, p1 , tb, p2), MArrow (eff2, p12 , tb2, p22))  -> TyD.sametype (toTyD t1) (toTyD t2)   
+        | (_, _) -> false
+
   let  rec mapBaseTy t f = match t with
       Base (v,t,p) -> 
         (* let () = Printf.printf "%s" "\nBase substs" in 

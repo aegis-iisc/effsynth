@@ -22,9 +22,9 @@ and  monExp =
         | Elloc of typedMonExp           
         | Eget of typedMonExp 
         | Eset of typedMonExp * typedMonExp
-        | Ecapp of var * ( typedMonExp list ) 
-
-
+        | Ecapp of var * ( monExp list ) 
+        | Ehole (*a hole in place of an expression*)
+        | Edo of monExp * monExp (*do E; retrun K*)
 
 and typedMonExp = {expMon:monExp; ofType:RefTy.t }
 
