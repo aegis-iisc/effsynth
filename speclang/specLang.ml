@@ -106,10 +106,21 @@ end
 
 module RelId =
 struct 
-  type t = Ident.t
-  let equal (t1,t2) = Ident.equal t1 t2
-  let toString = Ident.name
+  type t =  Ident.t
+  let equal (t1,t2) = (Ident.equal t1 t2) 
+  let toString t = (Ident.name t)
   let fromString s = Ident.create s
+  
+  let explode s =
+    let rec exp i l =
+      if i < 0 then l else exp (i - 1) (s.[i] :: l) in
+      exp (String.length s - 1) []
+ 
+
+  let getIdNumber rid = 
+    let relCharList = explode rid in 
+    2 
+        
 end
 
 
@@ -162,7 +173,7 @@ type t =
         | Ty_char         
         | Ty_heap
         | Ty_arrow of t * t
-
+        | Ty_tuple of (t list) 
 
 (*check if two types are same*)
   let rec sametype t1 t2 = 
@@ -180,7 +191,11 @@ type t =
 
         | ((Ty_arrow  (t11 , t12) ), 
                 Ty_arrow (t21, t22)) -> (sametype t11 t21) && (sametype t12 t22)
+        | ( Ty_tuple (tl1), Ty_tuple (tl2) ) -> List.fold_left2 (fun acc t1i t2i -> acc && (sametype t1i t2i)) true tl1 tl2    
+        | (Ty_unknown, _) -> true
+        | (_, Ty_unknown) -> true 
         | (_, _) -> false  
+
    
 (*base types from string*)    
  let fromString s = 
@@ -251,11 +266,16 @@ module Con = struct
         | "cons" -> Cons
         | _ -> NamedCons (Ident.create s)
 
-  let toString t = match t with 
+  let toString t = 
+      match t with 
          ILit i -> ("ILit "^(string_of_int i)) 
-        |BLit b -> match b with 
+        |BLit b -> (match b with 
                    true -> "BLit true"
                    | false -> "BLit false"
+                 )
+        | Cons -> "cons(x,xs)"
+        | Nil -> "nil"
+        | NamedCons id -> ("relation "^(Ident.name id))
         | _ -> raise (Unimplemented "to string Con")
 (*
         |CLit of char 
@@ -612,8 +632,13 @@ struct
   type term = Expr of expr
             |Star of instexpr
 
-
- 
+ (*getRelId : expr -> RelId.t list*)
+ let rec getRelId e   = 
+        match e with 
+         | R (ie, id) -> let RInst {rel;_} = ie in [rel]
+         | MultiR (ie, ls_id) -> let RInst {rel;_} = ie in [rel]  
+         | _ -> []
+        
 
   let relexpr_for_var (v : Var.t) =
         V(Var (Var.toString v)) 
@@ -767,13 +792,17 @@ struct
 end       
 (*The Con.t must be replaced with the exact constructor*)
 module StructuralRelation = struct (*<R, Tr m Const x , y -> r | Nil -> r ->*)
-  type t = T of {id:RelId.t ; params : RelId.t list; mapp: ( Con.t * Ident.t list option * RelLang.term) list}
+  type t = T of {id:RelId.t ; 
+                  params : RelId.t list; mapp: 
+                  (Con.t * Ident.t list option * RelLang.term) list}
   (* Not allowed in Ocaml, this can always be replaces by application of T*)
   (*let newSR data = T data*)
 
   let conMapToString mapp =
     let conmap = "{" ^ (Vector.toString (fun (c,vlo,trm) ->
+        
         let cstr = Con.toString c in 
+    
         let vseq = match vlo with 
             None -> ""
           | Some vl -> Vector.toString Ident.name vl in 
@@ -790,9 +819,8 @@ module StructuralRelation = struct (*<R, Tr m Const x , y -> r | Nil -> r ->*)
         0 -> relid
       | _ -> relid ^ (List.fold_right (fun rid acc -> acc ^ " " ^ (RelId.toString rid)) params "" ) 
     in 
-
     let conmap = conMapToString mapp in 
-
+    
     "relation (" ^ relstr ^ ") = " ^ conmap
 end
 
@@ -889,7 +917,7 @@ struct
            | Eq of expr * expr
            | Gt of expr * expr
 
-    let exprToString e = 
+   let exprToString e = 
         match e with 
         Int i -> (string_of_int i)
         | Bool b -> (string_of_bool b)
@@ -953,6 +981,16 @@ struct
            | Grt of expr * expr
            | Q of expr              
     let rec footprint (rp : t) = []
+
+    (*getRelation : RelPredicate.t -> RelId.t list*)
+    let getRelation t = 
+        match t with 
+         | NEq (re1, re2)          
+         | Eq( re1, re2)  
+         | Sub (re1, re2) 
+         | SubEq (re1, re2) 
+         | Grt (re1, re2) ->  (RelLang.getRelId re1) @ (RelLang.getRelId re2)
+         | Q re -> RelLang.getRelId re 
 
     let toString rp = match rp with
 
@@ -1072,27 +1110,6 @@ let heap_splits_predicate (heapfull : Var.t) (heapfrag1 : Var.t) (heapfrag2 : Va
 
 let heap_preserve frame pre post = 
         True
-(*let heap_frame_h (h_frame : Var.t) (h_initial : Var.t) (h_final : Var.t) : t 
-        (*\forall x in dom (h_frame) sel h_final x  = sel h_initial x*
-         * 
-        (*frame h2 h h_int
-         *x in dom h  ~  (dom h - {(x)}) C dom h *)
-
-         *)
-         let _dom_frame =  MultiR ( (RelLang.instOfRel (RelId.fromString "dom")), [(h_frame)]) in 
-        
-        (*{(x)}*)
-         let _bound_x = Var.get_fresh_var "x" in 
-         let x_tuple = RelLang.T [(_bound_x)] in 
-         let _x_in_dom_h_frame  = 
-           RelPredicate.Subset((RelLang.D (_dom_frame, x_tuple)), _dom_frame)  in 
-        
-         let sel_eq_init_finlal =  (RP.Eq ( MultiR ( (RelLang.instOfRel (RelId.fromString "sel")), [(_h_initial); (_bound_x)]),
-                 MultiR ( (RelLang.instOfRel (RelId.fromString "sel")), [(_h_final); (_bound_x)])) in 
-         (**)
-        let frame_pred = P.Forall  
-*)        
-
 let rec footprint (phi: t) : (Var.t list) = 
      match phi  with 
         True -> [] 
@@ -1297,20 +1314,51 @@ let rec toString t = match t with
         let (result_var, result_ty) = result in 
         let _x_ident = Var.get_fresh_var "x" in 
         (*get an expression Inl x*)        
-        let _Inl_x_expr = RelLang.relationInstantiationExp "Inl" "x" in 
+        let _Inl_x_expr = RelLang.relationInstantiationExp (RelId.fromString ("Inl")) "x" in 
         let _v_eq_inl_x = Rel (RelPredicate.Eq (RelLang.V (RelLang.Var(Ident.create (Var.toString result_var)))
                                                 , _Inl_x_expr)) in  
         let pred_of_x = applySubst (_x_ident, result_var) pred in 
         let exc_predicate = Conj(_v_eq_inl_x, pred_of_x) in 
         exc_predicate
 
- (*TODO Later 
-* let nondet_predicate (result : (Var.t * TyD.t) (pred:Predicate.t) : t = 
-*)
-        
+  (*getRelation : t : Predicate.t -> (RelId.t list)*)
+  let rec  getRelation t  = 
+        match t with 
+          True  -> []
+         |  False -> []
+         |  Base (basepred) -> []  
+         |  Rel (relpred) -> RelPredicate.getRelation relpred 
+         |  Exists (binds, pred) -> getRelation pred 
+         |  Not (t1) -> getRelation t1
+         |  Conj (t1, t2) -> (getRelation t1) @ (getRelation t2) 
+         |  If (t1, t2) -> (getRelation t1) @ (getRelation t2) 
+         |  Iff (t1, t2) -> (getRelation t1) @ (getRelation t2) 
+         |  Disj (t1, t2) -> (getRelation t1) @ (getRelation t2) 
+         |  Dot (t1, t2) -> (getRelation t1) @ (getRelation t2) 
+         | Forall(binds, pred) -> getRelation pred 
+ 
+(*conjunctify  :  P.t   -> P.t list*)
+  let rec conjunctify t = 
+        match t with 
+         |  True  |  False   |  Base _ |  Rel _ -> [t]
+         |  Exists (binds, pred) -> conjunctify pred 
+         |  Not (t1) -> conjunctify t1
+         |  Conj (t1, t2)  |  If (t1, t2) |  Iff (t1, t2) |  Disj (t1, t2)  
+         |  Dot (t1, t2) ->  (conjunctify t1) @ (conjunctify t2) 
+         |  Forall(binds, pred) -> conjunctify pred
+
+  (*maxProjRel : RelId.t list -> int*)
+  let maxProjRel lsRelId = 
+        List.fold_left (fun max relid_i -> 
+                        let relIdNumber = RelId.getIdNumber relid_i in 
+                        if (relIdNumber > max) then relIdNumber else max) 0 lsRelId 
+
+  open RelId
+  let lowerRelIdToVar t ( (ol, nw) : (RelId.t * RelId.t)) = 
+        applySubsts [(nw, ol)] t 
 
 
-
+ 
 end
 
 module P = Predicate
@@ -1388,27 +1436,76 @@ module Effect = struct
 
        end 
 
+module EffectSet = struct
+  type t =  | Empty 
+            | I of Var.t 
+            | R of Var.t 
+            | W of Var.t 
+            | J of t * t 
 
+
+  let rec equal t1 t2 =
+    match (t1, t2) with 
+      | (Empty, Empty) -> true 
+      | (I v1, I v2) ->  Var.equal v1 v2 
+      | (R v1, R v2) ->  Var.equal v1 v2
+      | (W v1, W v2) ->  Var.equal v1 v2
+      | (J (t1, t2), J (t1', t2'))  -> (equal t1 t1' && equal t2 t2') || 
+                                      (equal t1 t2' && equal t2 t1') 
+      | (_, _) -> false
+
+  let refl t1 t2 = equal t1 t2 
+               
+  let rec toString t = 
+    match t with 
+      | Empty -> "Empty Set"
+      | I v ->  "Init ("^(Var.toString v)^")"          
+      | R v ->  "Read ("^(Var.toString v)^")" 
+      | W v ->  "Write ("^(Var.toString v)^")"         
+      | J (t1, t2) -> (toString t1)^" U "^(toString t2)
+
+
+  
+   let rec lessThanOrder t1 t2 = 
+       match (t1, t2) with 
+       | (Empty, _) -> true 
+       | (_, Empty) -> false
+       | (t1, t2) -> 
+            if (refl t1 t2) then true 
+                else 
+                  match (t1, t2) with
+                    | (J (t11, t12), J (t21, t22)) -> 
+                          (lessThanOrder t11 t21 
+                              || lessThanOrder t11 t22) 
+                          && 
+                          (lessThanOrder t12 t21 
+                              || lessThanOrder t12 t22) 
+                    | (t1, J (t11, t12)) ->  
+                          (lessThanOrder t1 t11 || lessThanOrder t1 t12)                          
+
+                    | (J (t11, t12), t2) -> (lessThanOrder t11 t2) 
+                                            && (lessThanOrder t12 t2) 
+
+end 
 
 (*A module defining the refinement types *)
 module RefinementType = 
 struct 
   exception RefTyEx of string 
+  (*How  will we defined*)
   type t = 
       Base of Var.t * TyD.t * Predicate.t 
-    | Tuple of (Var.t * t) list
+    | Tuple of (t list) 
     | Arrow of (Var.t * t) * t
-    (*Additional Computation type, the return type is TyD.t rather that RefTy.t as any constraint on the return value is defined in the post predicate*)    
-    | MArrow of Effect.t * (Predicate.t)  * TyD.t * (Predicate.t) (*pre x:\tau post*)           
+    | MArrow of Effect.t * (Predicate.t)  * (Var.t * t)  * (Predicate.t) (*pre x:\tau post*)           
+    | Sigma of (Var.t * t) list  
     (*get the effect from the Monadic types*)    
     
-
-
-   let getReturnConstraints t = 
-        match t with 
-        | MArrow (eff, pre, t, post) -> 
-        | Base (v, t, pred) -> pred
-        | _ -> raise (Error "Non Base or Computation Type")
+   let rec isEffectful t = 
+      match t with 
+        | MArrow (_,_,(_,_),_)-> true 
+        | Arrow ((_,_), t2) -> isEffectful t2
+        | _ -> false
 
    let rec get_effect t : Effect.t = 
         match t with 
@@ -1418,274 +1515,29 @@ struct
 
    let rec toString rty = match rty with 
         Base(var,td,pred) -> ("Base {" ^ (Var.toString var)^ ":" ^ (TyD.toString td) ^(" | ")^(Predicate.toString pred))^"}" 
-        (*| Tuple tv -> L.vector (List.rev (List.map (fun (v,t) ->  L.seq [L.str (Var.toString v); L.str ":"; layout t]) tv))*)
+        | Tuple tupleList -> (List.fold_left (fun acc rti -> acc^", "^(toString rti)) "Tuple [" tupleList)^" ]" 
         | Arrow ((v1,t1),t2) ->  (" Arrow ( ( "^(Var.toString v1)^" , "^(toString t1)^" ),"^(toString t2)) 
-| MArrow (eff, p1,t1,p2) -> ("MArrrow ( "^(Effect.toString eff)^" \n PRE { \n "^(Predicate.toString p1)^(" \n } \n RET :  ")^(TyD.toString t1)^" \n { POST "^(Predicate.toString p2)^" \n } \n )")
-
-   let rec getBodyType t = 
-        match t with 
-           | MArrow (_,_,_,_) -> t 
-           | Arrow ((v,ta),tb) -> getBodyType tb 
-           | _ -> t
-
+        | MArrow (eff, p1,(v, t), p2) -> ("MArrrow ( "^(Effect.toString eff)^" \n 
+                                                PRE { \n "^(Predicate.toString p1)^(" \n } \n 
+                                                RET :  ")^(toString t)^" \n { 
+                                                POST "^(Predicate.toString p2)^" \n } \n )")
+        | Sigma (vi_ti_list) -> "Sigma "
    (*least effect of types*)
    let lub_effects (ty1:t) (ty2:t) : Effect.t = 
         Effect.lub (get_effect ty1) (get_effect ty2)
 
-   (*define lifting function from each lower type to upper types*)
-
-  (*define lifting from pure --> state *)      
-   let rec liftState (lower : t) : ( t ) = 
-        match lower with
-         (*This case will never be encountered
-          * If the lower is a normalized Pure of the form Pure {True} t {}*)
-         MArrow (e, pre, result_ty, post ) ->
-                (**)
-                let result_var = (Var.get_fresh_var "v") in 
-
-                (match e with
-                  | Effect.Pure -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post = Predicate.heap_inv_predicate (result_var, result_ty) in 
-                                MArrow (Effect.State, _default_pre, result_ty, _default_post)
-                  | _ -> (*Just resturn the same type*)lower      
-                ) 
-
-
-                                
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftState resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post_0 = Predicate.heap_inv_predicate (v, basety) in 
-                                let  _default_post = Predicate.Conj (_default_post_0, pred) in 
-                                MArrow (Effect.State, _default_pre, basety, _default_post) 
-
-        | _ -> raise (Error "Unhandled Lifting") 
-
-   (*define lifting from pure --> Exc *)      
-    let rec liftExc (lower : t) : ( t ) = 
-        match lower with
-         (*If the lower is a normalized Pure of the form Pure {True} t {}*)
-                                        
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftExc resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post = Predicate.exc_success_predicate (v, basety) pred in 
-                                MArrow (Effect.Exc, _default_pre, basety, _default_post) 
-
-        | _ -> raise (Error "Unhandled Lifting from ") 
-
-
-
-    (*define lifting from pure --> Nondet *) 
-
-   (*TODO Expand later*)     
-    let liftNondet (lower : t) : ( t ) =  lower
-      (*  match lower with
-                                        
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftNondet resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post_0 = Predicate.nondet (v, basety) in 
-                                let  _default_post = Predicate.Conj (_default_post_0, pred) in 
-                                MArrow (Effect.Nondet, _default_pre, basety, _default_post) 
-
-        | _ raise (Error "Unhandled Lifting from ") 
-       *)
-  (*define lifting from ST --> StExc and Exc --> STExc and Pure --> STExcp *)      
-    let rec liftStExc (lower : t) : ( t ) = 
-        match lower with
-         (*If the lower is a normalized Pure of the form Pure {True} t {}*)
-         MArrow (e, pre, result_ty, post ) ->
-                (**)
-                let result_var = (Var.get_fresh_var "v") in 
-
-                (match e with
-                  | Effect.State -> (*let lower = State {pre} t  {\h v h'. \post} lift to StExc {pre} t {\h v h'. v = Inl x /\ post x*)
-                                let _lifted_post = Predicate.exc_success_predicate (result_var, result_ty) post in 
-                                MArrow (Effect.StExc, pre, result_ty, _lifted_post) 
-
-
-                  | Effect.Exc -> (*let lower =  Exc {pre} t  {\post} lift to StExc {pre} t {\h v h'.  post v /\ Inv h h'*)
-                                let bound_vars_post = Predicate.getBVs post in 
-                                 (match bound_vars_post with 
-                                  | [(v,vty)] ->   let _default_state_inv_pred = Predicate.heap_inv_predicate (v, vty) in 
-                                                   let _lifted_post = Predicate.Conj(post, _default_state_inv_pred) in 
-                                                   MArrow (Effect.StExc, pre, result_ty, _lifted_post)
-                                  | [] -> 
-                                        let fresh_result_var = Var.get_fresh_var "v" in 
-                                        let _default_state_inv_pred = Predicate.heap_inv_predicate (fresh_result_var, result_ty) in 
-                                        let _lifted_post = Predicate.Conj(post, _default_state_inv_pred) in 
-                                        MArrow (Effect.StExc, pre, result_ty, _lifted_post)
-
-                                  | _ -> raise (Error ("Lifting for a Exc to STExc with mutiple bounded vars not implemented"))
-                                 )
-        
-                 | _ -> (*Just resturn the same type*)lower      
-                ) 
-
-
-        (*Pure to StExc lifting*)                        
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftStExc resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                (*pick from pure to ST and then from at to STExc*)
-                                let lifted_in_st = liftState lower in
-                                liftStExc lifted_in_st
-
-
-        | _ -> raise (Error "Unhandled Lifting from ") 
-
- 
-
-  (*define lifting from pure --> Nondet *)      
-    let liftExNondet (lower : t) : ( t ) =  lower
-   (*     match lower with
-         (*If the lower is a normalized Pure of the form Pure {True} t {}*)
-         MArrow (e, pre, result_ty, post ) ->
-                (**)
-                let result_var = (Var.get_fresh_var "v") in 
-
-                (match e with
-                  | Effect.Nondet -> (*TODO*)
-                                let _default_pre = Predicate.True in 
-                                let _default_post = Predicate.nondet (result_var, result_ty) in 
-                                MArrow (Effect.Nondet, _default_pre, result_ty, _default_post)
-                  | Effect.Exc -> 
-
 
         
-                 | _ -> (*Just resturn the same type*)lower      
-                ) 
-
-
-                                
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftNondet resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post_0 = Predicate.nondet (v, basety) in 
-                                let  _default_post = Predicate.Conj (_default_post_0, pred) in 
-                                MArrow (Effect.Nondet, _default_pre, basety, _default_post) 
-
-        | _ raise (Error "Unhandled Lifting from ") 
-
- *)
-
-  (*define lifting from pure --> Nondet *)      
-    let liftStNondet (lower : t) : ( t ) = lower 
-       (* match lower with
-         (*If the lower is a normalized Pure of the form Pure {True} t {}*)
-         MArrow (e, pre, result_ty, post ) ->
-                (**)
-                let result_var = (Var.get_fresh_var "v") in 
-
-                (match e with
-                  | Effect.St -> (*TODO*)
-                                let _default_pre = Predicate.True in 
-                                let _default_post = Predicate.nondet (result_var, result_ty) in 
-                                MArrow (Effect.Nondet, _default_pre, result_ty, _default_post)
-                  | Effect.Nondet -> 
-
-
-        
-                 | _ -> (*Just resturn the same type*)lower      
-                ) 
-
-
-                                
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftNondet resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post_0 = Predicate.nondet (v, basety) in 
-                                let  _default_post = Predicate.Conj (_default_post_0, pred) in 
-                                MArrow (Effect.Nondet, _default_pre, basety, _default_post) 
-
-        | _ raise (Error "Unhandled Lifting from ") 
-
-        *)
-
-
-  (*define lifting from pure --> Nondet *)      
-    let liftAll (lower : t) : ( t ) =  lower 
-       (* match lower with
-         (*If the lower is a normalized Pure of the form Pure {True} t {}*)
-         MArrow (e, pre, result_ty, post ) ->
-                (**)
-                let result_var = (Var.get_fresh_var "v") in 
-
-                (match e with
-                  | Effect.St -> (*TODO*)
-                                let _default_pre = Predicate.True in 
-                                let _default_post = Predicate.nondet (result_var, result_ty) in 
-                                MArrow (Effect.Nondet, _default_pre, result_ty, _default_post)
-                  | Effect.Exc -> 
-
-                  | Effect.Nondet ->
-                  | Effect.StExc ->
-
-                  | Effect.StNondet -> 
-                  | Effect.ExcNondet -> 
-                  
-
-        
-                 | _ -> (*Just resturn the same type*)lower      
-                ) 
-
-
-                                
-        |  Arrow ((v, argty), resty) -> (*(x:t) -> {v : ty | pred}*)
-                                let _lifted_resty = liftNondet resty in 
-                                Arrow ((v, argty), _lifted_resty)
-        | Base (v, basety, pred) -> 
-                                let _default_pre = Predicate.True in 
-                                let _default_post_0 = Predicate.nondet (v, basety) in 
-                                let  _default_post = Predicate.Conj (_default_post_0, pred) in 
-                                MArrow (Effect.Nondet, _default_pre, basety, _default_post) 
-
-        | _ raise (Error "Unhandled Lifting from ") 
-*)
- 
-        (*polymorphic lifting of type*)
-    let liftM (lower : t) (target: Effect.t ) : t = 
-        let m1 = get_effect lower in 
-        if (Effect.equall m1 target) then 
-                let () = Printf.printf "%s" ("\n Equall effects no lifting needed "^(Effect.toString m1)^" == "^(Effect.toString target)) in 
-                lower 
-        else 
-                ( match (m1, target) with 
-                  | (Effect.Pure, Effect.State) -> liftState lower
-                  | (Effect.Pure, Effect.Exc) -> liftExc lower
-                  | (_, Effect.StExc) -> liftStExc lower 
-                  | (_, _) -> raise (Error ("Unhandled lifting for "^(toString lower)))
-                )
-                
-                  
-
-
-
-
-     
   (*Additional functions for MArrow *)
   let precondition (_mArrow  : t)  =
      match _mArrow with 
-       | MArrow (eff, pre, b, post) -> pre 
+       | MArrow (eff, pre, (v, rt), post) -> pre 
        | _ -> raise (Error "precondition defined for a MArrow type only")
 
                       
   let postcondition (_mArrow  : t)  =
      match _mArrow with 
-       | MArrow (eff, pre, b, post) -> post 
+       | MArrow (eff, pre, (v, rt), post) -> post 
        | _ -> raise (Error "postcondition defined for a MArrow type only")
 
  (* lift_base : basety -> ty*)
@@ -1713,44 +1565,38 @@ struct
   let rec fromTyD tyD = 
     let open TyD in 
     match tyD with 
-      Ty_arrow (td1,td2) ->
-        (*TODO do we need empty var here
-*        the type is (x:\tau) -> tau*)
-        Arrow ( (emptyVar (), fromTyD td1),
-               fromTyD td2)
-  
+    | Ty_arrow (td1,td2) -> Arrow ( (emptyVar (), fromTyD td1),fromTyD td2)
+    | Ty_tuple tl -> Tuple (List.map (fun tyd_i -> fromTyD tyd_i) tl)
     |  tyD -> Base (genVar(), tyD, Predicate.truee())
-   
+         
    let rec toTyD t = match t with
         Base (v,tdes,p) -> tdes
-      | Tuple tv -> TyD.makeTtuple (List.map (fun (v,t) ->  
-              let ty_desc_for_t = toTyD t in 
-              ty_desc_for_t)  tv)
+      | Tuple tl -> Ty_tuple (List.map (fun t ->  toTyD t) tl)   
       | Arrow ((v1,t1),t2) -> TyD.Ty_arrow ((toTyD t1), (toTyD t2))
-      | MArrow (eff, p1 , tb, p2) -> tb   
-     
- 
+      | MArrow (eff, p1 ,(vtb, tb), p2) -> toTyD tb   
+      | Sigma (vi_ti_list) -> Ty_tuple (List.map (fun (v, t) ->  toTyD t) vi_ti_list)   
+  (*compares Base types*)
   let compare_types (t1:t)  (t2 :t) : bool = 
         match (t1, t2) with 
         | (Base (_,_,_), Base (_,_,_)) ->   TyD.sametype (toTyD t1) (toTyD t2) 
         | (Arrow ((_,_),_), Arrow ((_,_),_)) -> TyD.sametype (toTyD t1) (toTyD t2)
-        | (MArrow (eff, p1 , tb, p2), MArrow (eff2, p12 , tb2, p22))  -> TyD.sametype (toTyD t1) (toTyD t2)   
+        | (MArrow (_,_,_,_), MArrow (_,_,_,_))  -> TyD.sametype (toTyD t1) (toTyD t2) 
+        | (Tuple _ , Tuple _) -> TyD.sametype (toTyD t1) (toTyD t2) 
+        | (Sigma (ls1), Sigma (ls2)) ->  TyD.sametype (toTyD t1) (toTyD t2)
         | (_, _) -> false
 
   let  rec mapBaseTy t f = match t with
       Base (v,t,p) -> 
-        (* let () = Printf.printf "%s" "\nBase substs" in 
-         *)let (x,y,z) = f (v,t,p) in 
+        let (x,y,z) = f (v,t,p) in 
         Base (x,y,z)
-    | Tuple tv -> 
-     (*  let () = Printf.printf "%s" "\nTuple substs" in 
-      *)   Tuple (List.map (fun (v,t) -> 
-        (v,mapBaseTy t f)) tv)
+    | Tuple tv -> Tuple (List.map (fun t -> mapBaseTy t f) tv)
     | Arrow ((v1,t1),t2) ->
-     (*      let () = Printf.printf "%s" "\nArrow substs" in 
-      *)      Arrow ((v1,mapBaseTy t1 f), 
+        Arrow ((v1,mapBaseTy t1 f), 
                                    mapBaseTy t2 f)
-
+    |  MArrow (eff, pre, (v, t), post) -> 
+        MArrow (eff, pre, (v, mapBaseTy t f), post)
+    | Sigma ls ->  Sigma (List.map (fun (v, t) -> (v, (mapBaseTy t f))) ls)
+  
   let mapTyD t f = mapBaseTy t (fun (v,t,p) -> 
       (v,f t, P.mapTyD p f)) 
 
@@ -1786,7 +1632,7 @@ struct
 				     * multiple binds : [v.x0 ↦ T0, v.x1 ↦ T1]
 				     *)
   
-  let rec decomposeTupleBind (tvar , (Tuple refTyBinds) as tty) =
+  (*let rec decomposeTupleBind (tvar , (Tuple refTyBinds) as tty) =
      					
               let  bindss = List.map (fun ((_,refTy) as refTyBind) -> 
       										match refTy with 
@@ -1795,7 +1641,7 @@ struct
      												refTyBinds in 
      				let binds = List.map (fun (v,ty) -> (newLongVar (tvar,v), ty)) (List.concat bindss) in 
      		     			binds
-  
+  *)
 
   let uncurry_Arrow (arrowty) =
     let Arrow ((_, frstargTy), res) = arrowty in  
@@ -1860,9 +1706,15 @@ module RelSpec = struct
    let toString t = 
         let T {reldecs;primdecs;typespecs;preds} = t in 
         let ps =  List.fold_left (fun psacc p -> (psacc^" \n "^(Formula.toString p))) " Formulas " preds in 
+        let () = Printf.printf "%s" "HERE>>>" in 
         let srs = List.fold_left (fun srsacc sr -> (srsacc^" \n "^(StructuralRelation.toString sr))) " SRs " reldecs in 
+        let () = Printf.printf "%s" "HERE 2>>>" in 
+        
         let prs = List.fold_left (fun prsacc pr -> (prsacc^" \n "^(PrimitiveRelation.toString pr))) " PRs " primdecs in 
+        let () = Printf.printf "%s" "HERE 3 >>>" in 
+        
         let tss = List.fold_left (fun tsacc ts -> (tsacc^" \n "^(TypeSpec.toString ts))) " TSs " typespecs in 
+        let () = Printf.printf "%s" "HERE 4>>>" in 
         
        ("RelSpec { "^srs^"; "^prs^"; "^tss^"; "^ps^" }")
         

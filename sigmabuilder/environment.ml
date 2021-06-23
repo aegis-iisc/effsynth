@@ -35,8 +35,10 @@ let remove = TyMap.remove
 (*enumerate variables and find macthing types*)
 let enumerateAndFind t (rt:TypingEnvValue.t) : ((TypingEnvKey.t*TypingEnvValue.t) list)   = 
         TyMap.enumerate t rt 
-          
-           
+
+(*TODO :: Currently the filter directly returns the same gamma, needs updation later*)          
+let filterOnEffectSet t eff = 
+      t            
 
 end 
 
@@ -66,27 +68,63 @@ let mem = ConsMap.mem
 let find t tyd = 
     try (ConsMap.find t tyd) 
   with 
-  | (ConsMap.KeyNotFound k) -> raise (NoMappingForVar k)
+   (ConsMap.KeyNotFound k) -> raise (NoMappingForVar k)
 
 let add = fun t -> fun tyd sort -> ConsMap.add t tyd sort 
 let remove = ConsMap.remove
 
-let rec findCons4RetT t retT acc : ((Var.t*RefinementType.t)list ) = 
-        match t with 
+let findCons4retT t retT : ((Var.t*RefinementType.t)list ) = 
+  let rec traversal gamma acc  =      
+    (match gamma with 
         | [] -> acc
         | (vi, rti):: xs -> 
                 match rti with 
                  | RefinementType.Arrow ((v,t1), t2) -> 
                         if (RefinementType.compare_types t2 retT) then 
                           let acc = (vi, rti) :: acc in 
-                          findCons4RetT xs retT acc 
+                          traversal xs acc 
                         else
-                          findCons4RetT xs retT acc
-                 | _ -> raise (IllegalConstructorType "findCons4RetT")   
+                          traversal xs acc
+                 | _ -> raise (IllegalConstructorType "findCons4RetT")  
+    )
+  in 
+ traversal t empty
+
 end 
 
 
+(*A map from component name a monExp*)
+module Components = struct
 
+
+module ComponentEnvKey =
+       struct
+         type t = Var.t
+         let equal(t1,t2)  =  Var.equal t1 t2
+       end
+
+module ComponentEnvValue =
+       struct
+         (*Need to change later to scehema*)
+         type t = RefinementType.t
+         let equal (t1,t2) = true           
+
+end
+
+module CompMap   = Applicativemap.ApplicativeMap (ComponentEnvKey) (ComponentEnvValue) 
+
+type t = CompMap.t
+let empty = CompMap.empty
+let mem = CompMap.mem
+let find t name = 
+    try (CompMap.find t name) 
+  with 
+  | (CompMap.KeyNotFound k) -> raise (NoMappingForVar k)
+
+let add = fun t -> fun name comp -> CompMap.add t name comp 
+let remove = CompMap.remove
+
+end
 
 (*To be populated later*)
 module RelationalEnv = struct
@@ -97,13 +135,14 @@ end
 
 module ExploredTerms = struct 
   type t = Var.t list
+  let equal t1 t2 = Var.equal t1 t2    
   let empty = []  
   let find t (e:Var.t) = List.find (fun e' -> (Var.equal e e')) t 
   let add t e = e::t
   let remove t e  =
         List.filter (fun e' -> not (Var.equal e e')) t 
 
-  let mem t e = List.exists e t 
+  let mem t e = List.exists (fun e' -> equal e e') t 
 
 end
 

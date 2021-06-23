@@ -13,7 +13,7 @@ module TyD = TyD
   module PR = PrimitiveRelation
 
  (*We are moving back to normal VCs*)
-  module VC = TransTypeChecker.VerificationC
+  module VC = VerificationC
     
   type result = Success | Undef | Failure
  

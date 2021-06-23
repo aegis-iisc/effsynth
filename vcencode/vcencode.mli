@@ -1,4 +1,4 @@
-module VC = TransTypeChecker.VerificationC
+module VC = VerificationC
 
 val z3_log : string -> unit
 

@@ -83,12 +83,27 @@ spec:
                   d}
 
 decsandtys: 
+   | td = typedef SEMICOLON d= decsandtys
+                  {
+                    match d with 
+                              RelSpec.T {
+                              typedefs = td :: typedefs;
+                              preds = preds;
+                              reldecs = r ::reldecs; 
+                              primdecs = primdecs;
+                              typespecs = typespecs}
+                          }
+
+
+
+                  }
+
    | r=reldec SEMICOLON d=decsandtys 
                   {
                     match d with 
                     RelSpec.T ({preds;reldecs; primdecs; typespecs}) -> 
                     RelSpec.T {preds = preds;
-		    		reldecs = r ::reldecs; 
+		    		                  reldecs = r ::reldecs; 
                               primdecs = primdecs;
                             typespecs = typespecs}
                           }
@@ -241,42 +256,29 @@ typespec : ASSUME i=ID COLON rt=refty {
                                 refty = rt}};
 
 refty : rta=reftyatom { rta}
-      | vrta=vartyatom ARROW rt=refty {  
-                                          RefTy.Arrow (((fst (vrta)) , (snd vrta)), rt)}
+      | vrta=vartyatom ARROW rt=refty { RefTy.Arrow (((fst (vrta)) , (snd vrta)), rt)}
       | mtype=mty {mtype};
 
 reftyatom : bt=basety { bt}
-          | LPAREN vas=vartyseq RPAREN  {
-                         
-                          match vas with
-                                 
-                          [(v, (RefTy.Base (_, _, _) as refty))] -> 
-                              RefTy.alphaRenameToVar (refty) v
-                        | [(v,refty)] -> refty
-                        | _ -> RefTy.Tuple (Vector.fromList vas)};
+          | LPAREN vas=vartyseq RPAREN  {RefTy.Sigma vas};
 
-vartyatom : bt=basety {
-                      match bt with 
-                       RefTy.Base (v,_,_) -> (v,bt)
-                       | _ -> raise (Failure "Impossible case of basety")}
+vartyatom : LPAREN i=ID COLON bt=basety RPAREN 
+		{
+                  match bt with 
+                     RefTy.Base (v,_,_) -> ((Var.fromString i),bt)
+                       | _ -> raise (Failure "Impossible case of basety")
+		};
 	   | LPAREN vas=vartyseq RPAREN  {
-                      
-                      match vas with
-                          [x] -> x 
-                        | _ -> (genVar (), RefTy.Tuple 
-                            (Vector.fromList vas))
+                match vas with
+                        [x] -> x 
+                        | _ -> (genVar (), RefTy.Sigma vas)
                   };
 
 vartyseq : vt=varty {[vt]}
          | vt=varty COMMA vts=vartyseq {vt :: vts};
 
-varty : rt=refty {let open RefTy in 
-                        match rt with
-                          Base (v,_,_) -> (v,alphaRename rt)
-                        | Tuple _ -> (genVar (),rt)
-                        | Arrow _ -> (genVar (),rt)
-			| MArrow _ -> (genVar (), rt) 
-              };
+varty : i = ID COLON rt=refty 
+		{((Var.fromString i), rt)};
 tyd : 	t=ID {TyD.fromString t}
 	| LBRACE t=ID RBRACE {TyD.makeTList (TyD.fromString t)}	
 	| REF t=tyd {TyD.makeTRef t };
@@ -292,7 +294,7 @@ basety : ty=tyd {RefinementType.Base ((Var.get_fresh_var "v"),
        | LCURLY v =ID COLON ty=tyd PIPE pr=pred RCURLY {RefinementType.Base ((Var.fromString v), 
                 ty, pr)};
 /* added type for effectful*/
-mty : ef=ID LCURLY pre=pred RCURLY resty=tyd LCURLY post=pred RCURLY  {RefTy.MArrow (Effect.fromString ef, pre, resty, post)};
+mty : ef=ID LCURLY pre=pred RCURLY resvar= ID COLON resty=refty LCURLY post=pred RCURLY  {RefTy.MArrow (Effect.fromString ef, pre, (resvar, resty), post)};
 
 /*this will do for now*/
 /*effect : STATE 
