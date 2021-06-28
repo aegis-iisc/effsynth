@@ -4,6 +4,7 @@
 type token = 
   | UNION
   | UINST
+  | TYPE
   | TRUE
   | SUBSETEQ
   | SUBSET
@@ -21,6 +22,7 @@ type token =
   | PRIMITIVE
   | PLUS
   | PIPE
+  | OF
   | NUMEQ
   | NOT
   | MINUS

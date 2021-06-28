@@ -74,6 +74,11 @@ let rec monExp_toString (m:monExp) =
         | Ebind (mne, tmne1, tmne2) -> ("Ebind "^(monExp_toString mne)^" <- "^
                                             (typedMonExp_toString tmne1)^" in "^
                                             (typedMonExp_toString tmne2 ))  
+        | Ecapp (cname, argls) -> "Ecapp "^(cname)^" ( "^(
+                                List.fold_left (fun accstr ai -> 
+                                                accstr^", "^(monExp_toString ai)) "" argls
+
+                                                )^" )" 
         | _ -> "Other expression"  
 
 

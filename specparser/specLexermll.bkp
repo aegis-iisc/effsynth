@@ -42,6 +42,8 @@ let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 rule token = parse
 | eol {line := (!line)+1; token lexbuf}
 |(ws)+  {debug "whitespace "; token lexbuf}
+|("type")  {debug "type" ; Tokens.TYPE}
+|("of")  {debug "of" ; Tokens.OF}
 |("state")  {debug "state" ; Tokens.STATE}
 |("exc")  {debug "exc" ; Tokens.EXC}
 |("stexc")  {debug "stexc" ; Tokens.STEXC}

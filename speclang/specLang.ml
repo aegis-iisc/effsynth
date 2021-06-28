@@ -151,19 +151,63 @@ struct
   let equals(t1,t2) = (Ident.name t1 = Ident.name t2  )
   
   let fromString s = Ident.create s 
+  let default = "Cons"
 end
 
 
 
-(*This will be replaced with our base types and functions over it*)     
-module TyD = 
-  struct 
-type loc = string 
 
+(*User defined Constructors and types*)
+module rec Algebraic : sig
+    
+    type constructor = Const of {name : Tycon.t;
+                                args : TyD.t list}
+    type t = TD of {
+                    typename : Var.t;   
+                    constructors : constructor list   
+                }
+
+    val  constructor_equal : constructor -> constructor -> bool  
+    val sametype : t -> t -> bool
+    val toString : t -> string 
+                 
+
+  end = struct
+     type constructor = Const of {name : Tycon.t;
+                                args : TyD.t list}
+     type t = TD of {
+                    typename : Var.t;   
+                    constructors : constructor list   
+                }
+
+     let constructor_equal c1 c2 =
+        let Const {name=name1;args=args1} = c1 in 
+        let Const {name=name2;args=args2} = c2 in 
+        if (Tycon.equals(name1, name2)) then 
+            List.for_all2 (fun argi1 argi2 -> (TyD.sametype argi1 argi2)) args1 args2
+        else 
+            false                 
+      
+      let sametype (TD {typename=name1;constructors=constlist1} as t1) 
+            (TD {typename=name2;constructors=constlist2} as t2) 
+        =
+           (Var.equal name1 name2)  &&  
+            (List.for_all2 (fun c1 c2 -> constructor_equal c1 c2) constlist1 constlist2)  
+
+
+     let toString at = "AT"                
+
+                  
+  end
+
+(*Base Types*)     
+and TyD : sig 
+
+
+type loc = string 
 
 type t = 
         | Ty_unknown
-        | Ty_alpha of Tyvar.t
         | Ty_unit 
         | Ty_ref of t 
         | Ty_list of t (*only list and no other user define algebraic data types*)
@@ -174,12 +218,47 @@ type t =
         | Ty_heap
         | Ty_arrow of t * t
         | Ty_tuple of (t list) 
+        | Ty_alpha of Tyvar.t (*alpha is any named type*)
+        | Ty_alg of Algebraic.t 
+
+ val sametype : t -> t -> bool 
+ val fromString : string -> t 
+ val toString : t -> string 
+ val makeTunknown : unit -> t  
+ val makeTList : t -> t  
+ val makeTRef : t ->  t
+ 
+ val instantiateTyvars : (t * Tyvar.t)list -> t ->  t 
+ val unifiable : t * t -> bool  
+ val unify : t -> t ->  t
+     
+
+ 
+
+
+end = struct 
+
+type loc = string 
+
+type t = 
+        | Ty_unknown
+        | Ty_unit 
+        | Ty_ref of t 
+        | Ty_list of t (*only list and no other user define algebraic data types*)
+        | Ty_int 
+        | Ty_bool
+        | Ty_string
+        | Ty_char         
+        | Ty_heap
+        | Ty_arrow of t * t
+        | Ty_tuple of (t list) 
+        | Ty_alpha of Tyvar.t
+        | Ty_alg of Algebraic.t 
 
 (*check if two types are same*)
   let rec sametype t1 t2 = 
         match (t1, t2) with
         | ((Ty_alpha tvar1), (Ty_alpha tvar2)) -> (Tyvar.equal(tvar1, tvar2)) 
-                
         | (Ty_unit, Ty_unit) -> true
         | ((Ty_ref  ta1),( Ty_ref ta2))  -> sametype ta1 ta2 
         | ((Ty_list  ta1), (Ty_list ta2)) -> sametype ta1 ta2
@@ -194,6 +273,7 @@ type t =
         | ( Ty_tuple (tl1), Ty_tuple (tl2) ) -> List.fold_left2 (fun acc t1i t2i -> acc && (sametype t1i t2i)) true tl1 tl2    
         | (Ty_unknown, _) -> true
         | (_, Ty_unknown) -> true 
+        | (Ty_alg at1, Ty_alg at2) -> Algebraic.sametype at1 at2
         | (_, _) -> false  
 
    
@@ -221,6 +301,7 @@ type t =
         | Ty_heap  -> "Ty_heap"
         | Ty_string -> "Ty_string"
         | Ty_arrow  (_ , _)-> "Function type"
+        | Ty_alg at -> Algebraic.toString at
 
  let makeTunknown () = Ty_unknown           
  let makeTList t = Ty_list t 
@@ -243,8 +324,13 @@ type t =
         if sametype t1 t2 then 
                 t1 
         else raise (SpecLangEx ("Non Unifiable types"))
-  end
 
+
+end 
+
+
+
+(*Literals*)
 module Con = struct
       
   type t =
@@ -254,40 +340,40 @@ module Con = struct
         |Llit of t list           
         |SLit of string 
         |ULit 
-        |Cons
+    
+    (*     |Cons
         | Nil     
         | NamedCons of Ident.t
-
-  let default = Cons
+ *)
+(*   let default = Cons
 
   let fromString s = 
         match s with 
         | "nil" -> Nil
         | "cons" -> Cons
         | _ -> NamedCons (Ident.create s)
-
-  let toString t = 
+ *)
+  
+  let rec toString t = 
       match t with 
          ILit i -> ("ILit "^(string_of_int i)) 
         |BLit b -> (match b with 
                    true -> "BLit true"
                    | false -> "BLit false"
                  )
-        | Cons -> "cons(x,xs)"
+        | CLit c -> Char.escaped c
+        | Llit ls -> List.fold_left (fun str li -> (str^"::"^(toString li))) "List " ls
+        | SLit s -> s
+        | ULit -> "()" 
+            
+       (*  | Cons -> "cons(x,xs)"
         | Nil -> "nil"
-        | NamedCons id -> ("relation "^(Ident.name id))
-        | _ -> raise (Unimplemented "to string Con")
-(*
-        |CLit of char 
-        |Llit of lit list           
-        |SLit of string 
-        |ULit 
-        |Cons
-        | Nil     
-        | NamedCons of Ident.t
-*)
+        | NamedCons id -> ("relation "^(Ident.name id)) *)
  
-open TyD 
+
+
+
+  open TyD 
   let getType t =
         match t with 
          ILit _ -> Ty_int
@@ -297,9 +383,7 @@ open TyD
                                 Ty_list (Ty_int)            
         |SLit s  -> Ty_string
         |ULit -> Ty_unit
-        |Nil -> Ty_list (Ty_int)
-        |_ -> raise (Unimplemented "no type inference for" )
- 
+        
 end                    
 
 
@@ -793,15 +877,15 @@ end
 (*The Con.t must be replaced with the exact constructor*)
 module StructuralRelation = struct (*<R, Tr m Const x , y -> r | Nil -> r ->*)
   type t = T of {id:RelId.t ; 
-                  params : RelId.t list; mapp: 
-                  (Con.t * Ident.t list option * RelLang.term) list}
+                  params : RelId.t list; 
+                  mapp: (Tycon.t * Ident.t list option * RelLang.term) list}
   (* Not allowed in Ocaml, this can always be replaces by application of T*)
   (*let newSR data = T data*)
 
   let conMapToString mapp =
     let conmap = "{" ^ (Vector.toString (fun (c,vlo,trm) ->
         
-        let cstr = Con.toString c in 
+        let cstr = Tycon.toString c in 
     
         let vseq = match vlo with 
             None -> ""
@@ -1521,7 +1605,10 @@ struct
                                                 PRE { \n "^(Predicate.toString p1)^(" \n } \n 
                                                 RET :  ")^(toString t)^" \n { 
                                                 POST "^(Predicate.toString p2)^" \n } \n )")
-        | Sigma (vi_ti_list) -> "Sigma "
+        | Sigma (vi_ti_list) -> "Sigma "^
+                                  (List.fold_left (fun accstr (vi, rti) -> 
+                                      (accstr^"\n "^(Var.toString vi)^" : "^(toString rti)) 
+                                    ) " \n " vi_ti_list)
    (*least effect of types*)
    let lub_effects (ty1:t) (ty2:t) : Effect.t = 
         Effect.lub (get_effect ty1) (get_effect ty2)
@@ -1687,8 +1774,9 @@ module RelSpec = struct
 
 
     end
-  
+
   type t = T of {
+                typedefs : Algebraic.t list;
                 preds : Formula.t list;        
                 reldecs : StructuralRelation.t list;
                  primdecs : PrimitiveRelation.t list;
@@ -1704,8 +1792,11 @@ module RelSpec = struct
    let toString t = L.toString (layout t)   
    *)
    let toString t = 
-        let T {reldecs;primdecs;typespecs;preds} = t in 
-        let ps =  List.fold_left (fun psacc p -> (psacc^" \n "^(Formula.toString p))) " Formulas " preds in 
+        let T {typedefs;reldecs;primdecs;typespecs;preds} = t in 
+        let als = List.fold_left 
+            (fun tdacc td -> (tdacc^"\n "^(Algebraic.toString td))) " Typedefs " typedefs in 
+        let ps =  List.fold_left 
+            (fun psacc p -> (psacc^" \n "^(Formula.toString p))) " Formulas " preds in 
         let () = Printf.printf "%s" "HERE>>>" in 
         let srs = List.fold_left (fun srsacc sr -> (srsacc^" \n "^(StructuralRelation.toString sr))) " SRs " reldecs in 
         let () = Printf.printf "%s" "HERE 2>>>" in 
@@ -1719,6 +1810,7 @@ module RelSpec = struct
        ("RelSpec { "^srs^"; "^prs^"; "^tss^"; "^ps^" }")
         
    let mk_empty_relspec () = T {
+        typedefs = [];
         preds = [];
         reldecs= [];
         primdecs = [];

@@ -45,7 +45,7 @@ let parseLSpecFile file =
 
 (*Populate the Gamma, Formulas, and Sigma*)
 let elaborateEnvs ast = 
- let RelSpec.T {typespecs;preds;_} = ast in 
+ let RelSpec.T {typedefs;typespecs;preds;_} = ast in 
  let gamma = TEnv.empty in
  let sigma = ConsEnv.empty in 
 
@@ -55,6 +55,27 @@ let elaborateEnvs ast =
                                   tmap 
                               else 
                                TEnv.add tmap stringName refty) gamma typespecs in
+
+ let sigma = List.fold_left (fun sigma tdef -> 
+                                let Algebraic.TD {typename;constructors} = tdef in 
+                                
+                                let rec addToSigma  (consmap:ConsEnv.t) (cons: Algebraic.constructor list) : ConsEnv.t  =
+                                    match cons with 
+                                      | [] ->  consmap
+                                      | x :: xs -> 
+                                          let Algebraic.Const {name;args} = x in 
+                                          let argTupleTyd = TyD.Ty_tuple args in 
+                                          let argsRefTy = RefTy.fromTyD argTupleTyd in
+
+                                          let consBaseType = TyD.Ty_arrow (argTupleTyd, TyD.fromString typename) in 
+                                          let consRefType = RefTy.fromTyD consBaseType in 
+                                          let consmap = ConsEnv.add consmap name consRefType in 
+                                          addToSigma consmap xs 
+
+                                  in    
+                                 addToSigma sigma constructors
+                                 ) sigma typedefs in  
+
  let goalTypespec = List.find (fun ts -> let TypeSpec.T{name;refty;_} = ts in 
                         if name = "goal" then true else false) typespecs in 
  let TypeSpec.T{name;refty;_} = goalTypespec in 

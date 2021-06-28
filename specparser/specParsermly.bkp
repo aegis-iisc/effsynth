@@ -5,7 +5,7 @@ open Printf
 module TypeSpec = SpecLang.RelSpec.TypeSpec
 module RefTy = SpecLang.RefinementType
 module Formula = SpecLang.RelSpec.Formula
-let defaultCons = SpecLang.Con.default
+let defaultCons = SpecLang.Tycon.default
 let symbase = "sp_"
 let count = ref 0
 let genVar = fun _ -> 
@@ -18,7 +18,8 @@ let  empty = fun _ -> Vector.new0 ()
 let print msg = let () = Printf.printf "%s" msg in ()
 
 %}
-
+%token TYPE
+%token OF
 %token FORMULA
 %token REF
 %token   PRIMITIVE 
@@ -86,33 +87,33 @@ decsandtys:
    | td = typedef SEMICOLON d= decsandtys
                   {
                     match d with 
+                          RelSpec.T ({typedefs;preds;reldecs; primdecs; typespecs}) ->    
                               RelSpec.T {
                               typedefs = td :: typedefs;
                               preds = preds;
-                              reldecs = r ::reldecs; 
+                              reldecs = reldecs; 
                               primdecs = primdecs;
                               typespecs = typespecs}
-                          }
-
-
-
                   }
+
 
    | r=reldec SEMICOLON d=decsandtys 
                   {
                     match d with 
-                    RelSpec.T ({preds;reldecs; primdecs; typespecs}) -> 
-                    RelSpec.T {preds = preds;
+                    RelSpec.T ({typedefs;preds;reldecs; primdecs; typespecs}) -> 
+                    RelSpec.T {typedefs=typedefs;
+                              preds = preds;
 		    		                  reldecs = r ::reldecs; 
                               primdecs = primdecs;
                             typespecs = typespecs}
                           }
   | p= primdec SEMICOLON d=decsandtys 
                 {match d with 
-                  RelSpec.T ({preds;reldecs; primdecs; 
-                  typespecs}) -> 
-                    RelSpec.T {preds = preds;
-		    		primdecs = p :: primdecs; 
+                  RelSpec.T ({typedefs;preds;reldecs; primdecs; typespecs}) -> 
+                    RelSpec.T {
+                              typedefs=typedefs;
+                              preds = preds;
+		    		                  primdecs = p :: primdecs; 
                               reldecs=reldecs; 
                               typespecs = typespecs}
                 }
@@ -120,24 +121,33 @@ decsandtys:
 
                 {
                   match d with
-                 RelSpec.T {preds;reldecs; primdecs; 
-                  typespecs} -> 
-                    RelSpec.T {preds= preds;reldecs = reldecs; primdecs=primdecs;
+                 RelSpec.T {typedefs;preds;reldecs; primdecs;typespecs} -> 
+                    RelSpec.T {typedefs=typedefs;preds= preds;reldecs = reldecs; primdecs=primdecs;
                       typespecs = t :: typespecs}
                 }
   | p = predspec SEMICOLON d = decsandtys
   		{
 		 match d with 
-		  RelSpec.T {preds;reldecs; primdecs; typespecs} -> 
-                    RelSpec.T {preds= p :: preds;reldecs = reldecs; primdecs=primdecs;
+		  RelSpec.T {typedefs;preds;reldecs; primdecs; typespecs} -> 
+                    RelSpec.T {typedefs=typedefs;preds= p :: preds;reldecs = reldecs; primdecs=primdecs;
                       typespecs = typespecs}
 
 		}	
   |             {RelSpec.T {
-  			preds = Vector.new0 ();
-  			reldecs = [];
-                  primdecs = Vector.new0 ();
-                  typespecs = []}};
+                    typedefs=[];
+  			            preds = Vector.new0 ();
+  			            reldecs = [];
+                    primdecs = Vector.new0 ();
+                    typespecs = []}};
+
+
+typedef : TYPE tn = ID EQUALOP cons=tpatmatchseq 
+                {Algebraic.TD {
+                    typename = Var.fromString tn;   
+                    constructors = cons    
+                    }
+                }; 
+
 
 
 predspec : FORMULA i=ID EQUALOP p=pred {Formula.Form{name=Var.fromString i;pred = p}};
@@ -179,14 +189,26 @@ paramseq : i=ID     {[RelId.fromString i]}
 patmatchseq : pm=patmatch PIPE pms=patmatchseq {pm :: pms}
             | pm=patmatch {[pm]};
 
+/*returns Algebraic.constructor list */
+tpatmatchseq : tpm=tpatmatch PIPE tpms=tpatmatchseq {tpm :: tpms}
+            | tpm=tpatmatch {[tpm]};
+
+
+
+tpatmatch : i = ID  
+              {Algebraic.Const {name=i;args=[]}}
+         | i=ID OF typeargs=typenameseq {Algebraic.Const {name=i;args=typeargs}};
+
+typenameseq : typename=ID STAR tnseq = typenameseq {TyD.fromString (typename):: tnseq}
+              | typename=ID {[TyD.fromString (typename)]};
 
 patmatch : LPAREN cp=conpat RPAREN EQUALOP re=rexpr 
               {match cp with (c,vlop) -> (c, vlop, Expr re)}
-         | i=ID EQUALOP re=rexpr {(Con.fromString i, None, Expr re)};
+         | i=ID EQUALOP re=rexpr {(Tycon.fromString i, None, Expr re)};
 
 
-conpat :  i=ID {(Con.fromString i, None)}
-       |  i=ID co=conargs {(Con.fromString i, Some co)};
+conpat :  i=ID {(Tycon.fromString i, None)}
+       |  i=ID co=conargs {(Tycon.fromString i, Some co)};
 
 conargs : i=ID {Vector.fromList [Var.fromString i]}
         | LPAREN is=idseq RPAREN {Vector.fromList is};
@@ -279,9 +301,11 @@ vartyseq : vt=varty {[vt]}
 
 varty : i = ID COLON rt=refty 
 		{((Var.fromString i), rt)};
+
 tyd : 	t=ID {TyD.fromString t}
 	| LBRACE t=ID RBRACE {TyD.makeTList (TyD.fromString t)}	
 	| REF t=tyd {TyD.makeTRef t };
+
 
 basety : ty=tyd {RefinementType.Base ((Var.get_fresh_var "v"), 
                 ty,
@@ -340,7 +364,7 @@ rpatom : ANGLEFT re=rexpr ANGRIGHT {Predicate.RelPredicate.Q (re)}
        | re1=rexpr SUBSET re2=rexpr {Predicate.RelPredicate.Sub(re1,re2)}
        | re1=rexpr SUBSETEQ re2=rexpr {Predicate.RelPredicate.SubEq(re1,re2)}
        | re1=rexpr NUMEQ re2=rexpr {Predicate.RelPredicate.NEq(re1, re2) }
-       | re1=rexpr GREATERTHAN re2=rexpr {Predicate.RelPredicate.NEq(re1, re2)};
+       | re1=rexpr GREATERTHAN re2=rexpr {Predicate.RelPredicate.Grt(re1, re2)};
        	
  
 tybindseq : vty=vartybind {[vty]}

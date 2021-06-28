@@ -2,7 +2,8 @@ plen : int;
 inp : list;
 
 
-type pair = Pair of int * list;
+type pair = Pair of int * list
+			| Empty; 	
 
 
 relation proj1 (Pair (x,y)) = (x); 
@@ -41,9 +42,11 @@ content : State  {\(h : heap). sel (h, plen) > 0}
 
 
 goal : State  {\(h : heap). sel (h, plen) == 0} 
-		v : { v : pair | true} 
+		v : { v : pair | proj2 (v) = pr2 /\
+		len (pr2) = porj1 (v) - 2 } 
 		{\(h : heap), (v : pair), (h' : heap). 
 		proj2 (v) = pr2 /\
-		len (pr2) = porj1 (v) - 2 
+		proj1 (v) = pr1 /\ 
+		len (pr2) = pr1 - 2 
 		/\ sel (h', plen) ==0};
 

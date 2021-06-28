@@ -143,7 +143,8 @@ module ExploredTerms = struct
         List.filter (fun e' -> not (Var.equal e e')) t 
 
   let mem t e = List.exists (fun e' -> equal e e') t 
-
+let toString t = 
+        List.fold_left (fun stracc ti -> (stracc^(Var.toString ti))) "Terms" t
 end
 
 
@@ -157,6 +158,8 @@ module ExploredPaths = struct
 
   let mem t e = List.exists e t 
   let fromList ls = ls
+  let toString t = 
+        List.fold_left (fun stracc ti -> (stracc^(Var.toString ti))) "Paths" t
 end
 
 
