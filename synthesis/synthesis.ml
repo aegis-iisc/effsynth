@@ -109,7 +109,7 @@ let enumPureE explored gamma sigma (spec : RefTy.t) : Syn.typedMonExp option  =
 
 
 
-let rec enumerateEffAndFind explored gamma sigma delta (spec : RefTy.t)  : Syn.typedMonExp option = 
+let rec enumerateEffAndFind explored gamma sigma delta (spec : RefTy.t)  : (Explored.t * Syn.typedMonExp option) = 
    match spec with 
        | RefTy.MArrow (eff, pre, (v, t), post) -> 
          Message.show ("Spec "^(RefTy.toString spec));
@@ -125,13 +125,13 @@ let rec enumerateEffAndFind explored gamma sigma delta (spec : RefTy.t)  : Syn.t
 
          let rec verifyFound explored fs  = 
             let () = Printf.printf "%s" ("\n *********************Enumeration Iteration*****************"^(string_of_int(!itercount))) in
-            if (!itercount > 300) then 
+            if (!itercount > 1000) then 
                 let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in 
                 raise (SynthesisException "FORCED STOPPED") 
             else 
             let _ = itercount := !itercount + 1 in  
             match fs with
-             | [] -> None 
+             | [] -> (explored, None) 
              | (vi, rti) :: xs -> 
                 (*filter on effects before actuall checking the hoare triples*) 
                 let RefTy.MArrow (effi, _,_,_) = rti in  
@@ -151,7 +151,7 @@ let rec enumerateEffAndFind explored gamma sigma delta (spec : RefTy.t)  : Syn.t
                                         let explored = vi :: explored in 
                                         Message.show ("***************Selection Successful************"^(Var.toString vi));    
                                         let retMonExp = Syn.Eret ({expMon=(Syn.Evar (vi)); ofType=rti}) in 
-                                        Some {expMon = retMonExp; ofType=rti}
+                                        (explored, Some {expMon = retMonExp; ofType=rti})
                         | VCE.Failure -> 
                                         Message.show ("***************Selection Failed************"^(Var.toString vi));    
                                         verifyFound explored xs
@@ -381,14 +381,14 @@ let rec esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.type
    
     Message.show ("esynthesizeBind");
 
-  
-   let rec enumerateSubProblems explored gamma sigma delta goalspec =  
-       
-       (*We need to divide the effects and the intermediate heap constraints in a way which gives two subproblems*)
-       let RefTy.MArrow (eff, pre, t , post) = goalspec in 
+  (*We need to divide the effects and the intermediate heap constraints in a way which gives two subproblems*)
+    let RefTy.MArrow (eff, pre, t , post) = spec in 
         (*TODO break based on effects*)
-       let gamma = Gamma.filterOnEffectSet gamma eff in 
+    let gamma = Gamma.filterOnEffectSet gamma eff in 
 
+   let rec enumerateSubProblems explored   =  
+       
+       
 
        (*we need to break the interval into eff pre and post into subproblems*)
        let retResult = (Var.get_fresh_var "v") in 
@@ -396,22 +396,12 @@ let rec esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.type
        let spec1 = RefTy.MArrow (eff, pre, (retResult, unKnownType), Predicate.True) in 
        (*right now we dont have any explored set*)
        
-       let e1_res = enumerateEffAndFind explored gamma sigma delta spec1 in 
+       let (explored, e1_res) = enumerateEffAndFind explored gamma sigma delta spec1 in 
        
        match e1_res with 
             | Some e1 -> 
-                Message.show ("EXPLORED::BEFORE"^(Explored.toString explored));
-                let exp1 = Syn.getExp e1 in 
-                let explored = 
-                    match exp1 with      
-                        | Syn.Evar c1name -> Explored.add explored c1name 
-                        | Syn.Eret tme -> 
-                            let Syn.Evar c1name = Syn.getExp tme in 
-                            Explored.add explored c1name  
-                in              
-
-                Message.show ("EXPLORED::AFTER"^(Explored.toString explored));
-                Message.show "Found e1 in (x <- e1 in e2), Synthesizing now e2 ";
+                
+               Message.show "Found e1 in (x <- e1 in e2), Synthesizing now e2 ";
                let fstType = Syn.getType e1 in 
                assert (RefTy.isEffectful fstType);
                let RefTy.MArrow (eff1, pre1, (x1, t1), post1) = fstType in 
@@ -455,26 +445,22 @@ let rec esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.type
                         Message.show "Found e2 in (x <- e1 in e2)";
                         Message.show (Syn.typedMonExp_toString e2); 
                         let boundMonExp = Syn.Ebind ((Syn.Evar x1), e1, e2) in 
-                        let boundTypedMonExpp = {Syn.expMon = boundMonExp;  Syn.ofType= goalspec} in 
+                        let boundTypedMonExpp = {Syn.expMon = boundMonExp;  Syn.ofType= spec} in 
                         (explored, Some boundTypedMonExpp) 
 
                 | None -> 
-                        Message.show (Syn.typedMonExp_toString e1);
-                        Message.show ("@HERE");
                         
                         let exp1 = Syn.getExp e1 in 
                         match exp1 with      
                           | Syn.Evar c1 -> 
-                          Message.show ("EXPLORED::BEFORE"^(Explored.toString explored));
-                             let explored = Explored.add explored c1 in 
-                             Message.show ("EXPLORED::AFTER"^(Explored.toString explored));
-                             enumerateSubProblems explored gamma sigma delta spec2 
+                            (*  let explored = Explored.add explored c1 in 
+                             *) enumerateSubProblems explored  
                           | Syn.Eret tme -> 
                              let Syn.Evar c1 = Syn.getExp tme in 
-                             Message.show ("EXPLORED::BEFORE"^(Explored.toString explored));       
+                            (*  Message.show ("EXPLORED::BEFORE"^(Explored.toString explored));       
                              let explored = Explored.add explored c1 in 
                              Message.show ("EXPLORED::AFTER"^(Explored.toString explored));
-                             enumerateSubProblems explored gamma sigma delta spec2
+                             *) enumerateSubProblems explored 
                 )            
             | None ->
                     Message.show "First component finding failed"; 
@@ -483,7 +469,7 @@ let rec esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.type
 
 
     in 
-    enumerateSubProblems explored gamma sigma delta spec        
+    enumerateSubProblems explored         
 
 
 (*accumulatedMonExps are strucutured as list of component names*)
@@ -526,7 +512,7 @@ and esynthesizeEffSigma gamma sigma delta sigmaType spec : (Var.t list) option =
                 let ciType = RefTy.MArrow (eff, delta_as_predicate, (vi, ti), P.True) in  
                 (*stop when you do not find any new ci*)
         
-                let foundCi  = enumerateEffAndFind explored gamma sigma delta ciType in 
+                let (explored, foundCi)  = enumerateEffAndFind explored gamma sigma delta ciType in 
                 match foundCi with
                  | None -> Terminate
                  | Some expci ->  
@@ -596,7 +582,7 @@ and esynthesizeBindSpecial explored gamma sigma delta spec : (Syn.typedMonExp op
 (*Top level synthesis goals for effectful computation Types*)
 and   esynthesizeEff explored gamma sigma delta spec = 
 (*the order of rules is Try return e, and let x <- e1 in return e2 and finally let x <- e1 in e2*)    
-     let cres = enumerateEffAndFind explored gamma sigma delta spec in 
+     let (explored, cres) = enumerateEffAndFind explored gamma sigma delta spec in 
      match cres with
         |Some res -> 
             let () = Printf.printf "%s" "Component Enumeration Succeeded" in 
@@ -618,11 +604,8 @@ and   esynthesizeEff explored gamma sigma delta spec =
                             let (explored, bindExp) = esynthesizeBind explored gamma sigma delta spec in 
                             match bindExp with 
                              | Some t -> Some t 
-                             | None -> 
-                                    Message.show ("EXPLORED2 "^(Explored.toString explored));
-                                    let (_, res) = esynthesizeBind explored gamma sigma delta spec in 
-                                    res
-  
+                             | None -> None
+                                    
 (*In some cases the input spec can be more than the RefinementType*)
 (*synthesize : TypingEnv.t -> Constructors.t -> RefinementType.t -> Syn.typedMonExp option *)
 let rec synthesize gamma sigma spec : (Syn.typedMonExp option)=  
