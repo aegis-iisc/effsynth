@@ -1,0 +1,5355 @@
+
+ specfile :: synth_tests/eff15.specres : int;
+other : int;
+
+bar : State  {\(h : heap). sel (h, res) == 5 } 
+		v : { v : int | true} 
+		{\(h : heap), (v : int), (h' : heap). 
+		sel (h', res) == sel (h, res) + 2
+		/\ sel (h', other) == sel (h, other)};
+
+foo : State  {\(h : heap). true} 
+	v : { v : int |  [v=5]} 
+	{\(h : heap), (v : int), (h' : heap). sel (h', res) == v 
+	/\ [v=5]
+	/\ sel (h', other) == sel (h, other)};
+
+
+
+
+baz : State  {\(h : heap). sel (h, res) == 7 } 
+		v : { v : int | true} 
+		{\(h : heap), (v : int), (h' : heap). 
+		sel (h', res) == sel (h, res) + 3
+		/\ sel (h', other) == sel (h, other)};
+
+c3' : State  {\(h : heap). not (sel (h, res) > 8)
+		/\ sel (h, other) == 0} 
+		v : { v : int | true} 
+		{\(h : heap), (v : int), (h' : heap). 
+		 sel (h', res) == sel (h, res) + 5 /\
+		sel (h', other) == sel (h, other) + 5};
+
+
+
+goal : State  {\(h : heap). sel (h, res) == 0 
+		/\ sel (h, other) == 0} 
+		v : { v : int | true} 
+		{\(h : heap), (v : int), (h' : heap). 
+		 sel (h', res) == 10 
+		/\ sel (h', other) == 0};
+
+var: res
+whitespace colon
+whitespace var: int
+semicolon
+var: other
+whitespace colon
+whitespace var: int
+semicolon
+var: bar
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace int: 5
+whitespace rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: int
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: int
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace pluswhitespace int: 2
+whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: other
+rparen
+rcurly
+semicolon
+var: foo
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace truercurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: int
+whitespace pipe
+whitespace lbrace
+var: v
+equalopint: 5
+rbrace
+rcurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: int
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace var: v
+whitespace whitespace conjwhitespace lbrace
+var: v
+equalopint: 5
+rbrace
+whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: other
+rparen
+rcurly
+semicolon
+var: baz
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace int: 7
+whitespace rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: int
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: int
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace pluswhitespace int: 3
+whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: other
+rparen
+rcurly
+semicolon
+var: c3'
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace notwhitespace lparen
+var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace lessthanopwhitespace int: 8
+rparen
+whitespace conjwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace int: 0
+rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: int
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: int
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace pluswhitespace int: 5
+whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: other
+rparen
+whitespace pluswhitespace int: 5
+rcurly
+semicolon
+var: goal
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace int: 0
+whitespace whitespace conjwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace int: 0
+rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: int
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: int
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: res
+rparen
+whitespace equalopwhitespace int: 10
+whitespace whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: other
+rparen
+whitespace equalopwhitespace int: 0
+rcurly
+semicolon
+RelSpec {  SRs ;  PRs ;  TSs  
+ Assume false
+ name res : 
+ params :
+ Type Base {var_v0:Ty_int | true} 
+ Assume false
+ name other : 
+ params :
+ Type Base {var_v1:Ty_int | true} 
+ Assume false
+ name bar : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ ) 
+ Assume false
+ name foo : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ true } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | v = 5} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  } 
+ } 
+ ) 
+ Assume false
+ name baz : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ ) 
+ Assume false
+ name c3' : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c Not (sel)( , h, res ) > (8)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (5))
+ 	 , (sel)( , h', other ) ==((sel)( , h, other ) + (5)) >c  } 
+ } 
+ ) 
+ Assume false
+ name goal : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ );  Formulas  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+c3'
+baz
+foo
+bar
+ *********************Enumeration Iteration*****************0
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c Not (sel)( , h, res ) > (8)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (5))
+ 	 , (sel)( , h', other ) ==((sel)( , h, other ) + (5)) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (5))
+ 	 , (sel)( , h', other ) ==((sel)( , h, other ) + (5)) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h2 --->  Ty_heap  
+ var__temp_v3 --->  Ty_int  
+ var__temp_h'4 --->  Ty_heap  
+ var__temp_v_err5 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h2, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h2, other ) ==(0) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h2, res ) > (8) AND 
+ 	 Rel (sel)( , var__temp_h2, other ) ==(0) AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h2, res ) > (8) AND 
+ 	 Rel (sel)( , var__temp_h2, other ) ==(0) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'4, res ) ==((sel)( , var__temp_h2, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h'4, other ) ==((sel)( , var__temp_h2, other ) + (5)) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'4, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'4, other ) ==(0)
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h2 T0)
+(declare-const var__temp_v3 Int)
+(declare-const |var__temp_h'4| T0)
+(declare-const var__temp_v_err5 T1)
+(declare-const err T14)
+
+solver 
+ (declare-sort T0)
+(declare-fun sel (T0 Int) Int)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'4| () T0)
+(declare-fun res () Int)
+(declare-fun var__temp_h2 () T0)
+(assert true)
+(assert (let ((a!1 (and (not (> (sel var__temp_h2 res) 8))
+                (= (sel var__temp_h2 other) 0)))
+      (a!3 (and (= (sel |var__temp_h'4| res) (+ (sel var__temp_h2 res) 5))
+                (= (sel |var__temp_h'4| other) (+ (sel var__temp_h2 other) 5)))))
+(let ((a!2 (=> (and (= (sel var__temp_h2 res) 0) (= (sel var__temp_h2 other) 0))
+               a!1))
+      (a!4 (=> a!3
+               (and (= (sel |var__temp_h'4| res) 10)
+                    (= (sel |var__temp_h'4| other) 0)))))
+  (not (and a!2 (=> a!1 a!4))))))
+
+***************Selection Failed************c3'
+ *********************Enumeration Iteration*****************1
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h6 --->  Ty_heap  
+ var__temp_v7 --->  Ty_int  
+ var__temp_h'8 --->  Ty_heap  
+ var__temp_v_err9 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h6, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h6, other ) ==(0) => 
+ 	 Rel (sel)( , var__temp_h6, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h6, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'8, res ) ==((sel)( , var__temp_h6, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'8, other ) ==(sel)( , var__temp_h6, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'8, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'8, other ) ==(0)
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h6 T17)
+(declare-const var__temp_v7 Int)
+(declare-const |var__temp_h'8| T17)
+(declare-const var__temp_v_err9 T18)
+(declare-const err T31)
+
+solver 
+ (declare-sort T17)
+(declare-fun sel (T17 Int) Int)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'8| () T17)
+(declare-fun res () Int)
+(declare-fun var__temp_h6 () T17)
+(assert true)
+(assert (let ((a!1 (=> (and (= (sel var__temp_h6 res) 0) (= (sel var__temp_h6 other) 0))
+               (= (sel var__temp_h6 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'8| res) (+ (sel var__temp_h6 res) 3))
+                (= (sel |var__temp_h'8| other) (sel var__temp_h6 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'8| res) 10)
+                    (= (sel |var__temp_h'8| other) 0)))))
+(let ((a!4 (and a!1 (=> (= (sel var__temp_h6 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************2
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ true } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | v = 5} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h10 --->  Ty_heap  
+ var__temp_v11 --->  Ty_int  
+ var__temp_h'12 --->  Ty_heap  
+ var__temp_v_err13 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h10, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h10, other ) ==(0) => 
+ 	 True AND 
+ 	 True => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'12, res ) ==(var__temp_v11) AND 
+ 	 Base var__temp_v11 = 5 AND 
+ 	 Rel (sel)( , var__temp_h'12, other ) ==(sel)( , var__temp_h10, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'12, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'12, other ) ==(0)
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h10 T34)
+(declare-const var__temp_v11 Int)
+(declare-const |var__temp_h'12| T34)
+(declare-const var__temp_v_err13 T35)
+(declare-const err T48)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T34)
+(declare-fun |5| () Int)
+(declare-fun sel (T34 Int) Int)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'12| () T34)
+(declare-fun res () Int)
+(declare-fun var__temp_h10 () T34)
+(declare-fun var__temp_v11 () Int)
+(assert true)
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h10 res) 0)
+                    (= (sel var__temp_h10 other) 0))
+               true))
+      (a!2 (=> (and (= (sel |var__temp_h'12| res) var__temp_v11)
+                    (= var__temp_v11 |5|)
+                    (= (sel |var__temp_h'12| other) (sel var__temp_h10 other)))
+               (and (= (sel |var__temp_h'12| res) 10)
+                    (= (sel |var__temp_h'12| other) 0)))))
+  (not (and a!1 (=> true a!2)))))
+
+***************Selection Failed************foo
+ *********************Enumeration Iteration*****************3
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h14 --->  Ty_heap  
+ var__temp_v15 --->  Ty_int  
+ var__temp_h'16 --->  Ty_heap  
+ var__temp_v_err17 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h14, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h14, other ) ==(0) => 
+ 	 Rel (sel)( , var__temp_h14, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h14, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'16, res ) ==((sel)( , var__temp_h14, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'16, other ) ==(sel)( , var__temp_h14, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'16, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'16, other ) ==(0)
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h14 T51)
+(declare-const var__temp_v15 Int)
+(declare-const |var__temp_h'16| T51)
+(declare-const var__temp_v_err17 T52)
+(declare-const err T65)
+
+solver 
+ (declare-sort T51)
+(declare-fun sel (T51 Int) Int)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'16| () T51)
+(declare-fun res () Int)
+(declare-fun var__temp_h14 () T51)
+(assert true)
+(assert (let ((a!1 (=> (and (= (sel var__temp_h14 res) 0)
+                    (= (sel var__temp_h14 other) 0))
+               (= (sel var__temp_h14 res) 5)))
+      (a!2 (and (= (sel |var__temp_h'16| res) (+ (sel var__temp_h14 res) 2))
+                (= (sel |var__temp_h'16| other) (sel var__temp_h14 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'16| res) 10)
+                    (= (sel |var__temp_h'16| other) 0)))))
+(let ((a!4 (and a!1 (=> (= (sel var__temp_h14 res) 5) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************bar
+ *********************Enumeration Iteration*****************4
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {v:Ty_int | true}
+isynthesizeConstApp
+Spec Base {v:Ty_int | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Terms
+esynthesizeBind
+PARTIAL PATH
+SUB 
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v18:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+c3'
+baz
+foo
+bar
+ *********************Enumeration Iteration*****************5
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c Not (sel)( , h, res ) > (8)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (5))
+ 	 , (sel)( , h', other ) ==((sel)( , h, other ) + (5)) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v18:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (5))
+ 	 , (sel)( , h', other ) ==((sel)( , h, other ) + (5)) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h19 --->  Ty_heap  
+ var__temp_v20 --->  Ty_int  
+ var__temp_h'21 --->  Ty_heap  
+ var__temp_v_err22 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h19, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h19, other ) ==(0) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h19, res ) > (8) AND 
+ 	 Rel (sel)( , var__temp_h19, other ) ==(0) AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h19, res ) > (8) AND 
+ 	 Rel (sel)( , var__temp_h19, other ) ==(0) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'21, res ) ==((sel)( , var__temp_h19, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h'21, other ) ==((sel)( , var__temp_h19, other ) + (5)) => 
+ 	 True
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h19 T68)
+(declare-const var__temp_v20 Int)
+(declare-const |var__temp_h'21| T68)
+(declare-const var__temp_v_err22 T69)
+(declare-const err T82)
+
+solver 
+ (declare-sort T68)
+(declare-fun sel (T68 Int) Int)
+(declare-fun other () Int)
+(declare-fun var__temp_h19 () T68)
+(declare-fun |var__temp_h'21| () T68)
+(declare-fun res () Int)
+(assert true)
+(assert (let ((a!1 (and (not (> (sel var__temp_h19 res) 8))
+                (= (sel var__temp_h19 other) 0)))
+      (a!3 (and (= (sel |var__temp_h'21| res) (+ (sel var__temp_h19 res) 5))
+                (= (sel |var__temp_h'21| other) (+ (sel var__temp_h19 other) 5)))))
+(let ((a!2 (=> (and (= (sel var__temp_h19 res) 0)
+                    (= (sel var__temp_h19 other) 0))
+               a!1)))
+  (not (and a!2 (=> a!1 (=> a!3 true)))))))
+
+***************Selection Successful************c3'
+PARTIAL PATH NEW
+NEW 	 --c3'
+post_substituted Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v25:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+foo
+bar
+ *********************Enumeration Iteration*****************6
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v25:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h26 --->  Ty_heap  
+ var__temp_v27 --->  Ty_int  
+ var__temp_h'28 --->  Ty_heap  
+ var__temp_v_err29 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h26, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h26, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 Rel (sel)( , var__temp_h26, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h26, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'28, res ) ==((sel)( , var__temp_h26, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'28, other ) ==(sel)( , var__temp_h26, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'28, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'28, other ) ==(0)
+ 
+VC_END(declare-const var_h_i24 T85)
+(declare-const var_h23 T85)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h26 T85)
+(declare-const var__temp_v27 Int)
+(declare-const |var__temp_h'28| T85)
+(declare-const var__temp_v_err29 T86)
+(declare-const var_h23 T85)
+(declare-const err T99)
+
+solver 
+ (declare-sort T85)
+(declare-fun sel (T85 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T85)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'28| () T85)
+(declare-fun var__temp_h26 () T85)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h26 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h26 other) (+ (sel var_h23 other) 5))))
+      (a!2 (and (= (sel |var__temp_h'28| res) (+ (sel var__temp_h26 res) 3))
+                (= (sel |var__temp_h'28| other) (sel var__temp_h26 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'28| res) 10)
+                    (= (sel |var__temp_h'28| other) 0)))))
+(let ((a!4 (and (=> a!1 (= (sel var__temp_h26 res) 7))
+                (=> (= (sel var__temp_h26 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************7
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ true } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | v = 5} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v25:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h30 --->  Ty_heap  
+ var__temp_v31 --->  Ty_int  
+ var__temp_h'32 --->  Ty_heap  
+ var__temp_v_err33 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h30, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h30, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 True AND 
+ 	 True => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'32, res ) ==(var__temp_v31) AND 
+ 	 Base var__temp_v31 = 5 AND 
+ 	 Rel (sel)( , var__temp_h'32, other ) ==(sel)( , var__temp_h30, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'32, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'32, other ) ==(0)
+ 
+VC_END(declare-const var_h_i24 T102)
+(declare-const var_h23 T102)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h30 T102)
+(declare-const var__temp_v31 Int)
+(declare-const |var__temp_h'32| T102)
+(declare-const var__temp_v_err33 T103)
+(declare-const var_h23 T102)
+(declare-const err T116)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T102)
+(declare-fun sel (T102 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T102)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun |var__temp_h'32| () T102)
+(declare-fun var__temp_h30 () T102)
+(declare-fun var__temp_v31 () Int)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (and (= (sel var__temp_h30 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h30 other) (+ (sel var_h23 other) 5))))
+      (a!2 (=> (and (= (sel |var__temp_h'32| res) var__temp_v31)
+                    (= var__temp_v31 |5|)
+                    (= (sel |var__temp_h'32| other) (sel var__temp_h30 other)))
+               (and (= (sel |var__temp_h'32| res) 10)
+                    (= (sel |var__temp_h'32| other) 0)))))
+  (not (and (=> a!1 true) (=> true a!2)))))
+
+***************Selection Failed************foo
+ *********************Enumeration Iteration*****************8
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v25:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h34 --->  Ty_heap  
+ var__temp_v35 --->  Ty_int  
+ var__temp_h'36 --->  Ty_heap  
+ var__temp_v_err37 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h34, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h34, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 Rel (sel)( , var__temp_h34, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h34, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'36, res ) ==((sel)( , var__temp_h34, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'36, other ) ==(sel)( , var__temp_h34, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'36, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'36, other ) ==(0)
+ 
+VC_END(declare-const var_h_i24 T119)
+(declare-const var_h23 T119)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h34 T119)
+(declare-const var__temp_v35 Int)
+(declare-const |var__temp_h'36| T119)
+(declare-const var__temp_v_err37 T120)
+(declare-const var_h23 T119)
+(declare-const err T133)
+
+solver 
+ (declare-sort T119)
+(declare-fun sel (T119 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T119)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'36| () T119)
+(declare-fun var__temp_h34 () T119)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h34 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h34 other) (+ (sel var_h23 other) 5))))
+      (a!2 (and (= (sel |var__temp_h'36| res) (+ (sel var__temp_h34 res) 2))
+                (= (sel |var__temp_h'36| other) (sel var__temp_h34 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'36| res) 10)
+                    (= (sel |var__temp_h'36| other) 0)))))
+(let ((a!4 (and (=> a!1 (= (sel var__temp_h34 res) 5))
+                (=> (= (sel var__temp_h34 res) 5) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************bar
+ *********************Enumeration Iteration*****************9
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v25:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v25:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --c3'
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v38:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+foo
+bar
+ *********************Enumeration Iteration*****************10
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v38:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h39 --->  Ty_heap  
+ var__temp_v40 --->  Ty_int  
+ var__temp_h'41 --->  Ty_heap  
+ var__temp_v_err42 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h39, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h39, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 Rel (sel)( , var__temp_h39, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h39, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'41, res ) ==((sel)( , var__temp_h39, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'41, other ) ==(sel)( , var__temp_h39, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i24 T136)
+(declare-const var_h23 T136)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h39 T136)
+(declare-const var__temp_v40 Int)
+(declare-const |var__temp_h'41| T136)
+(declare-const var__temp_v_err42 T137)
+(declare-const var_h23 T136)
+(declare-const err T150)
+
+solver 
+ (declare-sort T136)
+(declare-fun sel (T136 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T136)
+(declare-fun other () Int)
+(declare-fun var__temp_h39 () T136)
+(declare-fun |var__temp_h'41| () T136)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h39 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h39 other) (+ (sel var_h23 other) 5))))
+      (a!2 (and (= (sel |var__temp_h'41| res) (+ (sel var__temp_h39 res) 3))
+                (= (sel |var__temp_h'41| other) (sel var__temp_h39 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h39 res) 7))
+                (=> (= (sel var__temp_h39 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************11
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ true } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | v = 5} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v38:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h43 --->  Ty_heap  
+ var__temp_v44 --->  Ty_int  
+ var__temp_h'45 --->  Ty_heap  
+ var__temp_v_err46 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h43, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h43, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 True AND 
+ 	 True => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'45, res ) ==(var__temp_v44) AND 
+ 	 Base var__temp_v44 = 5 AND 
+ 	 Rel (sel)( , var__temp_h'45, other ) ==(sel)( , var__temp_h43, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i24 T153)
+(declare-const var_h23 T153)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h43 T153)
+(declare-const var__temp_v44 Int)
+(declare-const |var__temp_h'45| T153)
+(declare-const var__temp_v_err46 T154)
+(declare-const var_h23 T153)
+(declare-const err T167)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T153)
+(declare-fun sel (T153 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T153)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h43 () T153)
+(declare-fun |var__temp_h'45| () T153)
+(declare-fun var__temp_v44 () Int)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (and (= (sel var__temp_h43 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h43 other) (+ (sel var_h23 other) 5))))
+      (a!2 (=> (and (= (sel |var__temp_h'45| res) var__temp_v44)
+                    (= var__temp_v44 |5|)
+                    (= (sel |var__temp_h'45| other) (sel var__temp_h43 other)))
+               true)))
+  (not (and (=> a!1 true) (=> true a!2)))))
+
+***************Selection Successful************foo
+PARTIAL PATH NEW
+NEW 	 --c3'	 --foo
+post_substituted Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v49:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+bar
+ *********************Enumeration Iteration*****************12
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v49:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h50 --->  Ty_heap  
+ var__temp_v51 --->  Ty_int  
+ var__temp_h'52 --->  Ty_heap  
+ var__temp_v_err53 --->  error  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h50, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h50, other ) ==(sel)( , var_h47, other ) => 
+ 	 Rel (sel)( , var__temp_h50, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h50, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'52, res ) ==((sel)( , var__temp_h50, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'52, other ) ==(sel)( , var__temp_h50, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'52, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'52, other ) ==(0)
+ 
+VC_END(declare-const var_h_i48 T170)
+(declare-const var_h47 T170)
+(declare-const v Int)
+(declare-const var_h_i24 T170)
+(declare-const var_h23 T170)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h50 T170)
+(declare-const var__temp_v51 Int)
+(declare-const |var__temp_h'52| T170)
+(declare-const var__temp_v_err53 T171)
+(declare-const var_h47 T170)
+(declare-const var_h23 T170)
+(declare-const err T184)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T170)
+(declare-fun sel (T170 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T170)
+(declare-fun var_h47 () T170)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun |var__temp_h'52| () T170)
+(declare-fun var__temp_h50 () T170)
+(declare-fun v () Int)
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h50 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h50 other) (sel var_h47 other)))
+               (= (sel var__temp_h50 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'52| res) (+ (sel var__temp_h50 res) 3))
+                (= (sel |var__temp_h'52| other) (sel var__temp_h50 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'52| res) 10)
+                    (= (sel |var__temp_h'52| other) 0)))))
+(let ((a!4 (and a!1 (=> (= (sel var__temp_h50 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************13
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v49:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h54 --->  Ty_heap  
+ var__temp_v55 --->  Ty_int  
+ var__temp_h'56 --->  Ty_heap  
+ var__temp_v_err57 --->  error  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h54, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h54, other ) ==(sel)( , var_h47, other ) => 
+ 	 Rel (sel)( , var__temp_h54, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h54, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'56, res ) ==((sel)( , var__temp_h54, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'56, other ) ==(sel)( , var__temp_h54, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'56, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'56, other ) ==(0)
+ 
+VC_END(declare-const var_h_i48 T187)
+(declare-const var_h47 T187)
+(declare-const v Int)
+(declare-const var_h_i24 T187)
+(declare-const var_h23 T187)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h54 T187)
+(declare-const var__temp_v55 Int)
+(declare-const |var__temp_h'56| T187)
+(declare-const var__temp_v_err57 T188)
+(declare-const var_h47 T187)
+(declare-const var_h23 T187)
+(declare-const err T201)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T187)
+(declare-fun sel (T187 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T187)
+(declare-fun var_h47 () T187)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun |var__temp_h'56| () T187)
+(declare-fun var__temp_h54 () T187)
+(declare-fun v () Int)
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h54 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h54 other) (sel var_h47 other)))
+               (= (sel var__temp_h54 res) 5)))
+      (a!2 (and (= (sel |var__temp_h'56| res) (+ (sel var__temp_h54 res) 2))
+                (= (sel |var__temp_h'56| other) (sel var__temp_h54 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'56| res) 10)
+                    (= (sel |var__temp_h'56| other) 0)))))
+(let ((a!4 (and a!1 (=> (= (sel var__temp_h54 res) 5) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************bar
+ *********************Enumeration Iteration*****************14
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v49:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v49:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --c3'	 --foo
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v58:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+bar
+ *********************Enumeration Iteration*****************15
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v58:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h59 --->  Ty_heap  
+ var__temp_v60 --->  Ty_int  
+ var__temp_h'61 --->  Ty_heap  
+ var__temp_v_err62 --->  error  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h59, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h59, other ) ==(sel)( , var_h47, other ) => 
+ 	 Rel (sel)( , var__temp_h59, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h59, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'61, res ) ==((sel)( , var__temp_h59, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'61, other ) ==(sel)( , var__temp_h59, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i48 T204)
+(declare-const var_h47 T204)
+(declare-const v Int)
+(declare-const var_h_i24 T204)
+(declare-const var_h23 T204)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h59 T204)
+(declare-const var__temp_v60 Int)
+(declare-const |var__temp_h'61| T204)
+(declare-const var__temp_v_err62 T205)
+(declare-const var_h47 T204)
+(declare-const var_h23 T204)
+(declare-const err T218)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T204)
+(declare-fun sel (T204 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T204)
+(declare-fun var_h47 () T204)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h59 () T204)
+(declare-fun |var__temp_h'61| () T204)
+(declare-fun v () Int)
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h59 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h59 other) (sel var_h47 other)))
+               (= (sel var__temp_h59 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'61| res) (+ (sel var__temp_h59 res) 3))
+                (= (sel |var__temp_h'61| other) (sel var__temp_h59 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h59 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************16
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v58:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h63 --->  Ty_heap  
+ var__temp_v64 --->  Ty_int  
+ var__temp_h'65 --->  Ty_heap  
+ var__temp_v_err66 --->  error  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h63, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h63, other ) ==(sel)( , var_h47, other ) => 
+ 	 Rel (sel)( , var__temp_h63, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h63, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'65, res ) ==((sel)( , var__temp_h63, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'65, other ) ==(sel)( , var__temp_h63, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i48 T221)
+(declare-const var_h47 T221)
+(declare-const v Int)
+(declare-const var_h_i24 T221)
+(declare-const var_h23 T221)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h63 T221)
+(declare-const var__temp_v64 Int)
+(declare-const |var__temp_h'65| T221)
+(declare-const var__temp_v_err66 T222)
+(declare-const var_h47 T221)
+(declare-const var_h23 T221)
+(declare-const err T235)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T221)
+(declare-fun sel (T221 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T221)
+(declare-fun var_h47 () T221)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h63 () T221)
+(declare-fun |var__temp_h'65| () T221)
+(declare-fun v () Int)
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h63 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h63 other) (sel var_h47 other)))
+               (= (sel var__temp_h63 res) 5)))
+      (a!2 (and (= (sel |var__temp_h'65| res) (+ (sel var__temp_h63 res) 2))
+                (= (sel |var__temp_h'65| other) (sel var__temp_h63 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h63 res) 5) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Successful************bar
+PARTIAL PATH NEW
+NEW 	 --c3'	 --foo	 --bar
+post_substituted Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i68, res ) ==((sel)( , var_h67, res ) + (2))
+ 	 , (sel)( , var_h_i68, other ) ==(sel)( , var_h67, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v69:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************17
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i68, res ) ==((sel)( , var_h67, res ) + (2))
+ 	 , (sel)( , var_h_i68, other ) ==(sel)( , var_h67, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v69:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i68 --->  Ty_heap  
+ var_h67 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h70 --->  Ty_heap  
+ var__temp_v71 --->  Ty_int  
+ var__temp_h'72 --->  Ty_heap  
+ var__temp_v_err73 --->  error  
+ var_h67 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h67, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var_h67, other ) ==(sel)( , var_h47, other ) AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h70, res ) ==((sel)( , var_h67, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h70, other ) ==(sel)( , var_h67, other ) => 
+ 	 Rel (sel)( , var__temp_h70, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h70, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'72, res ) ==((sel)( , var__temp_h70, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'72, other ) ==(sel)( , var__temp_h70, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'72, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'72, other ) ==(0)
+ 
+VC_END(declare-const var_h_i68 T238)
+(declare-const var_h67 T238)
+(declare-const v Int)
+(declare-const var_h_i48 T238)
+(declare-const var_h47 T238)
+(declare-const v Int)
+(declare-const var_h_i24 T238)
+(declare-const var_h23 T238)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h70 T238)
+(declare-const var__temp_v71 Int)
+(declare-const |var__temp_h'72| T238)
+(declare-const var__temp_v_err73 T239)
+(declare-const var_h67 T238)
+(declare-const var_h47 T238)
+(declare-const var_h23 T238)
+(declare-const err T252)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T238)
+(declare-fun v () Int)
+(declare-fun sel (T238 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h67 () T238)
+(declare-fun |5| () Int)
+(declare-fun other () Int)
+(declare-fun var_h47 () T238)
+(declare-fun var_h23 () T238)
+(declare-fun |var__temp_h'72| () T238)
+(declare-fun var__temp_h70 () T238)
+(assert (= (sel var_h67 res) v))
+(assert (= |5| 5))
+(assert (= v |5|))
+(assert (= (sel var_h67 other) (sel var_h47 other)))
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h70 res) (+ (sel var_h67 res) 2))
+                (= (sel var__temp_h70 other) (sel var_h67 other))))
+      (a!2 (and (= (sel |var__temp_h'72| res) (+ (sel var__temp_h70 res) 3))
+                (= (sel |var__temp_h'72| other) (sel var__temp_h70 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'72| res) 10)
+                    (= (sel |var__temp_h'72| other) 0)))))
+(let ((a!4 (and (=> a!1 (= (sel var__temp_h70 res) 7))
+                (=> (= (sel var__temp_h70 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************18
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v69:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v69:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsbarfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --c3'	 --foo	 --bar
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i68, res ) ==((sel)( , var_h67, res ) + (2))
+ 	 , (sel)( , var_h_i68, other ) ==(sel)( , var_h67, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v74:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************19
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i68, res ) ==((sel)( , var_h67, res ) + (2))
+ 	 , (sel)( , var_h_i68, other ) ==(sel)( , var_h67, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v74:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i68 --->  Ty_heap  
+ var_h67 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h75 --->  Ty_heap  
+ var__temp_v76 --->  Ty_int  
+ var__temp_h'77 --->  Ty_heap  
+ var__temp_v_err78 --->  error  
+ var_h67 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h67, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var_h67, other ) ==(sel)( , var_h47, other ) AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h75, res ) ==((sel)( , var_h67, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h75, other ) ==(sel)( , var_h67, other ) => 
+ 	 Rel (sel)( , var__temp_h75, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h75, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'77, res ) ==((sel)( , var__temp_h75, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'77, other ) ==(sel)( , var__temp_h75, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i68 T255)
+(declare-const var_h67 T255)
+(declare-const v Int)
+(declare-const var_h_i48 T255)
+(declare-const var_h47 T255)
+(declare-const v Int)
+(declare-const var_h_i24 T255)
+(declare-const var_h23 T255)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h75 T255)
+(declare-const var__temp_v76 Int)
+(declare-const |var__temp_h'77| T255)
+(declare-const var__temp_v_err78 T256)
+(declare-const var_h67 T255)
+(declare-const var_h47 T255)
+(declare-const var_h23 T255)
+(declare-const err T269)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T255)
+(declare-fun v () Int)
+(declare-fun sel (T255 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h67 () T255)
+(declare-fun |5| () Int)
+(declare-fun other () Int)
+(declare-fun var_h47 () T255)
+(declare-fun var_h23 () T255)
+(declare-fun var__temp_h75 () T255)
+(declare-fun |var__temp_h'77| () T255)
+(assert (= (sel var_h67 res) v))
+(assert (= |5| 5))
+(assert (= v |5|))
+(assert (= (sel var_h67 other) (sel var_h47 other)))
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h75 res) (+ (sel var_h67 res) 2))
+                (= (sel var__temp_h75 other) (sel var_h67 other))))
+      (a!2 (and (= (sel |var__temp_h'77| res) (+ (sel var__temp_h75 res) 3))
+                (= (sel |var__temp_h'77| other) (sel var__temp_h75 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h75 res) 7))
+                (=> (= (sel var__temp_h75 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Successful************baz
+PARTIAL PATH NEW
+NEW 	 --c3'	 --foo	 --bar	 --baz
+post_substituted Forall 
+ 	 
+ Key =var_h_i80 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i80 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i80, res ) ==((sel)( , var_h79, res ) + (3))
+ 	 , (sel)( , var_h_i80, other ) ==(sel)( , var_h79, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v81:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i80 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************20
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v81:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v81:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsbazbarfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --c3'	 --foo	 --bar	 --baz
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i80 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i80, res ) ==((sel)( , var_h79, res ) + (3))
+ 	 , (sel)( , var_h_i80, other ) ==(sel)( , var_h79, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v82:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************21
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT baz
+PARTIAL PATH
+SUB 	 --c3'	 --foo	 --bar
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i68 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i68, res ) ==((sel)( , var_h67, res ) + (2))
+ 	 , (sel)( , var_h_i68, other ) ==(sel)( , var_h67, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v83:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************22
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT baz
+PARTIAL PATH
+SUB 	 --c3'	 --foo
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v84:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************23
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i48 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i48, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i48, other ) ==(sel)( , var_h47, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v84:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i48 --->  Ty_heap  
+ var_h47 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h85 --->  Ty_heap  
+ var__temp_v86 --->  Ty_int  
+ var__temp_h'87 --->  Ty_heap  
+ var__temp_v_err88 --->  error  
+ var_h47 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h47, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h47, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h85, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h85, other ) ==(sel)( , var_h47, other ) => 
+ 	 Rel (sel)( , var__temp_h85, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h85, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'87, res ) ==((sel)( , var__temp_h85, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'87, other ) ==(sel)( , var__temp_h85, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i48 T272)
+(declare-const var_h47 T272)
+(declare-const v Int)
+(declare-const var_h_i24 T272)
+(declare-const var_h23 T272)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h85 T272)
+(declare-const var__temp_v86 Int)
+(declare-const |var__temp_h'87| T272)
+(declare-const var__temp_v_err88 T273)
+(declare-const var_h47 T272)
+(declare-const var_h23 T272)
+(declare-const err T286)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T272)
+(declare-fun sel (T272 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T272)
+(declare-fun var_h47 () T272)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h85 () T272)
+(declare-fun |var__temp_h'87| () T272)
+(declare-fun v () Int)
+(assert (= (sel var_h47 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h47 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h85 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h85 other) (sel var_h47 other)))
+               (= (sel var__temp_h85 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'87| res) (+ (sel var__temp_h85 res) 3))
+                (= (sel |var__temp_h'87| other) (sel var__temp_h85 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h85 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************24
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT bar
+PARTIAL PATH
+SUB 	 --c3'
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v89:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+bar
+ *********************Enumeration Iteration*****************25
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v89:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h90 --->  Ty_heap  
+ var__temp_v91 --->  Ty_int  
+ var__temp_h'92 --->  Ty_heap  
+ var__temp_v_err93 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h90, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h90, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 Rel (sel)( , var__temp_h90, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h90, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'92, res ) ==((sel)( , var__temp_h90, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'92, other ) ==(sel)( , var__temp_h90, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i24 T289)
+(declare-const var_h23 T289)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h90 T289)
+(declare-const var__temp_v91 Int)
+(declare-const |var__temp_h'92| T289)
+(declare-const var__temp_v_err93 T290)
+(declare-const var_h23 T289)
+(declare-const err T303)
+
+solver 
+ (declare-sort T289)
+(declare-fun sel (T289 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T289)
+(declare-fun other () Int)
+(declare-fun var__temp_h90 () T289)
+(declare-fun |var__temp_h'92| () T289)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h90 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h90 other) (+ (sel var_h23 other) 5))))
+      (a!2 (and (= (sel |var__temp_h'92| res) (+ (sel var__temp_h90 res) 3))
+                (= (sel |var__temp_h'92| other) (sel var__temp_h90 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h90 res) 7))
+                (=> (= (sel var__temp_h90 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************26
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v89:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h94 --->  Ty_heap  
+ var__temp_v95 --->  Ty_int  
+ var__temp_h'96 --->  Ty_heap  
+ var__temp_v_err97 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h94, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h94, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 Rel (sel)( , var__temp_h94, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h94, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'96, res ) ==((sel)( , var__temp_h94, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'96, other ) ==(sel)( , var__temp_h94, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i24 T306)
+(declare-const var_h23 T306)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h94 T306)
+(declare-const var__temp_v95 Int)
+(declare-const |var__temp_h'96| T306)
+(declare-const var__temp_v_err97 T307)
+(declare-const var_h23 T306)
+(declare-const err T320)
+
+solver 
+ (declare-sort T306)
+(declare-fun sel (T306 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T306)
+(declare-fun other () Int)
+(declare-fun var__temp_h94 () T306)
+(declare-fun |var__temp_h'96| () T306)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h94 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h94 other) (+ (sel var_h23 other) 5))))
+      (a!2 (and (= (sel |var__temp_h'96| res) (+ (sel var__temp_h94 res) 2))
+                (= (sel |var__temp_h'96| other) (sel var__temp_h94 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h94 res) 5))
+                (=> (= (sel var__temp_h94 res) 5) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Successful************bar
+PARTIAL PATH NEW
+NEW 	 --c3'	 --bar
+post_substituted Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i99, res ) ==((sel)( , var_h98, res ) + (2))
+ 	 , (sel)( , var_h_i99, other ) ==(sel)( , var_h98, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v100:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************27
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i99, res ) ==((sel)( , var_h98, res ) + (2))
+ 	 , (sel)( , var_h_i99, other ) ==(sel)( , var_h98, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v100:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i99 --->  Ty_heap  
+ var_h98 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h101 --->  Ty_heap  
+ var__temp_v102 --->  Ty_int  
+ var__temp_h'103 --->  Ty_heap  
+ var__temp_v_err104 --->  error  
+ var_h98 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h98, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h98, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h101, res ) ==((sel)( , var_h98, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h101, other ) ==(sel)( , var_h98, other ) => 
+ 	 Rel (sel)( , var__temp_h101, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h101, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'103, res ) ==((sel)( , var__temp_h101, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'103, other ) ==(sel)( , var__temp_h101, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'103, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'103, other ) ==(0)
+ 
+VC_END(declare-const var_h_i99 T323)
+(declare-const var_h98 T323)
+(declare-const v Int)
+(declare-const var_h_i24 T323)
+(declare-const var_h23 T323)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h101 T323)
+(declare-const var__temp_v102 Int)
+(declare-const |var__temp_h'103| T323)
+(declare-const var__temp_v_err104 T324)
+(declare-const var_h98 T323)
+(declare-const var_h23 T323)
+(declare-const err T337)
+
+solver 
+ (declare-sort T323)
+(declare-fun sel (T323 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T323)
+(declare-fun var_h98 () T323)
+(declare-fun other () Int)
+(declare-fun |var__temp_h'103| () T323)
+(declare-fun var__temp_h101 () T323)
+(assert (= (sel var_h98 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h98 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h101 res) (+ (sel var_h98 res) 2))
+                (= (sel var__temp_h101 other) (sel var_h98 other))))
+      (a!2 (and (= (sel |var__temp_h'103| res) (+ (sel var__temp_h101 res) 3))
+                (= (sel |var__temp_h'103| other) (sel var__temp_h101 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'103| res) 10)
+                    (= (sel |var__temp_h'103| other) 0)))))
+(let ((a!4 (and (=> a!1 (= (sel var__temp_h101 res) 7))
+                (=> (= (sel var__temp_h101 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************28
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v100:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v100:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsbarfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --c3'	 --bar
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i99, res ) ==((sel)( , var_h98, res ) + (2))
+ 	 , (sel)( , var_h_i99, other ) ==(sel)( , var_h98, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v105:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************29
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i99, res ) ==((sel)( , var_h98, res ) + (2))
+ 	 , (sel)( , var_h_i99, other ) ==(sel)( , var_h98, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v105:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i99 --->  Ty_heap  
+ var_h98 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h106 --->  Ty_heap  
+ var__temp_v107 --->  Ty_int  
+ var__temp_h'108 --->  Ty_heap  
+ var__temp_v_err109 --->  error  
+ var_h98 --->  Ty_heap  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h98, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var_h98, other ) ==((sel)( , var_h23, other ) + (5)) AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h106, res ) ==((sel)( , var_h98, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h106, other ) ==(sel)( , var_h98, other ) => 
+ 	 Rel (sel)( , var__temp_h106, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h106, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'108, res ) ==((sel)( , var__temp_h106, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'108, other ) ==(sel)( , var__temp_h106, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i99 T340)
+(declare-const var_h98 T340)
+(declare-const v Int)
+(declare-const var_h_i24 T340)
+(declare-const var_h23 T340)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h106 T340)
+(declare-const var__temp_v107 Int)
+(declare-const |var__temp_h'108| T340)
+(declare-const var__temp_v_err109 T341)
+(declare-const var_h98 T340)
+(declare-const var_h23 T340)
+(declare-const err T354)
+
+solver 
+ (declare-sort T340)
+(declare-fun sel (T340 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T340)
+(declare-fun var_h98 () T340)
+(declare-fun other () Int)
+(declare-fun var__temp_h106 () T340)
+(declare-fun |var__temp_h'108| () T340)
+(assert (= (sel var_h98 res) (+ (sel var_h23 res) 5)))
+(assert (= (sel var_h98 other) (+ (sel var_h23 other) 5)))
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h106 res) (+ (sel var_h98 res) 2))
+                (= (sel var__temp_h106 other) (sel var_h98 other))))
+      (a!2 (and (= (sel |var__temp_h'108| res) (+ (sel var__temp_h106 res) 3))
+                (= (sel |var__temp_h'108| other) (sel var__temp_h106 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h106 res) 7))
+                (=> (= (sel var__temp_h106 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Successful************baz
+PARTIAL PATH NEW
+NEW 	 --c3'	 --bar	 --baz
+post_substituted Forall 
+ 	 
+ Key =var_h_i111 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i111 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i111, res ) ==((sel)( , var_h110, res ) + (3))
+ 	 , (sel)( , var_h_i111, other ) ==(sel)( , var_h110, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v112:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i111 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************30
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v112:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v112:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsbazbarfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --c3'	 --bar	 --baz
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i111 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i111, res ) ==((sel)( , var_h110, res ) + (3))
+ 	 , (sel)( , var_h_i111, other ) ==(sel)( , var_h110, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v113:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************31
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT baz
+PARTIAL PATH
+SUB 	 --c3'	 --bar
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i99 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i99, res ) ==((sel)( , var_h98, res ) + (2))
+ 	 , (sel)( , var_h_i99, other ) ==(sel)( , var_h98, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v114:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************32
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT baz
+PARTIAL PATH
+SUB 	 --c3'
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v115:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************33
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i24 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i24, res ) ==((sel)( , var_h23, res ) + (5))
+ 	 , (sel)( , var_h_i24, other ) ==((sel)( , var_h23, other ) + (5)) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v115:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i24 --->  Ty_heap  
+ var_h23 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h116 --->  Ty_heap  
+ var__temp_v117 --->  Ty_int  
+ var__temp_h'118 --->  Ty_heap  
+ var__temp_v_err119 --->  error  
+ var_h23 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h23, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h23, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h116, res ) ==((sel)( , var_h23, res ) + (5)) AND 
+ 	 Rel (sel)( , var__temp_h116, other ) ==((sel)( , var_h23, other ) + (5)) => 
+ 	 Rel (sel)( , var__temp_h116, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h116, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'118, res ) ==((sel)( , var__temp_h116, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'118, other ) ==(sel)( , var__temp_h116, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i24 T357)
+(declare-const var_h23 T357)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h116 T357)
+(declare-const var__temp_v117 Int)
+(declare-const |var__temp_h'118| T357)
+(declare-const var__temp_v_err119 T358)
+(declare-const var_h23 T357)
+(declare-const err T371)
+
+solver 
+ (declare-sort T357)
+(declare-fun sel (T357 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h23 () T357)
+(declare-fun other () Int)
+(declare-fun var__temp_h116 () T357)
+(declare-fun |var__temp_h'118| () T357)
+(assert (= (sel var_h23 res) 0))
+(assert (= (sel var_h23 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h116 res) (+ (sel var_h23 res) 5))
+                (= (sel var__temp_h116 other) (+ (sel var_h23 other) 5))))
+      (a!2 (and (= (sel |var__temp_h'118| res) (+ (sel var__temp_h116 res) 3))
+                (= (sel |var__temp_h'118| other) (sel var__temp_h116 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h116 res) 7))
+                (=> (= (sel var__temp_h116 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************34
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT bar
+PARTIAL PATH
+SUB 
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v120:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+foo
+bar
+ *********************Enumeration Iteration*****************35
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v120:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h121 --->  Ty_heap  
+ var__temp_v122 --->  Ty_int  
+ var__temp_h'123 --->  Ty_heap  
+ var__temp_v_err124 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h121, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h121, other ) ==(0) => 
+ 	 Rel (sel)( , var__temp_h121, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h121, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'123, res ) ==((sel)( , var__temp_h121, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'123, other ) ==(sel)( , var__temp_h121, other ) => 
+ 	 True
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h121 T374)
+(declare-const var__temp_v122 Int)
+(declare-const |var__temp_h'123| T374)
+(declare-const var__temp_v_err124 T375)
+(declare-const err T388)
+
+solver 
+ (declare-sort T374)
+(declare-fun sel (T374 Int) Int)
+(declare-fun other () Int)
+(declare-fun var__temp_h121 () T374)
+(declare-fun |var__temp_h'123| () T374)
+(declare-fun res () Int)
+(assert true)
+(assert (let ((a!1 (=> (and (= (sel var__temp_h121 res) 0)
+                    (= (sel var__temp_h121 other) 0))
+               (= (sel var__temp_h121 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'123| res) (+ (sel var__temp_h121 res) 3))
+                (= (sel |var__temp_h'123| other) (sel var__temp_h121 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h121 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************36
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ true } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | v = 5} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v120:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h125 --->  Ty_heap  
+ var__temp_v126 --->  Ty_int  
+ var__temp_h'127 --->  Ty_heap  
+ var__temp_v_err128 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h125, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h125, other ) ==(0) => 
+ 	 True AND 
+ 	 True => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'127, res ) ==(var__temp_v126) AND 
+ 	 Base var__temp_v126 = 5 AND 
+ 	 Rel (sel)( , var__temp_h'127, other ) ==(sel)( , var__temp_h125, other ) => 
+ 	 True
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h125 T391)
+(declare-const var__temp_v126 Int)
+(declare-const |var__temp_h'127| T391)
+(declare-const var__temp_v_err128 T392)
+(declare-const err T405)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T391)
+(declare-fun |5| () Int)
+(declare-fun sel (T391 Int) Int)
+(declare-fun other () Int)
+(declare-fun var__temp_h125 () T391)
+(declare-fun |var__temp_h'127| () T391)
+(declare-fun var__temp_v126 () Int)
+(declare-fun res () Int)
+(assert true)
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h125 res) 0)
+                    (= (sel var__temp_h125 other) 0))
+               true))
+      (a!2 (=> (and (= (sel |var__temp_h'127| res) var__temp_v126)
+                    (= var__temp_v126 |5|)
+                    (= (sel |var__temp_h'127| other) (sel var__temp_h125 other)))
+               true)))
+  (not (and a!1 (=> true a!2)))))
+
+***************Selection Successful************foo
+PARTIAL PATH NEW
+NEW 	 --foo
+post_substituted Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v131:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+bar
+ *********************Enumeration Iteration*****************37
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v131:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h132 --->  Ty_heap  
+ var__temp_v133 --->  Ty_int  
+ var__temp_h'134 --->  Ty_heap  
+ var__temp_v_err135 --->  error  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h132, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h132, other ) ==(sel)( , var_h129, other ) => 
+ 	 Rel (sel)( , var__temp_h132, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h132, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'134, res ) ==((sel)( , var__temp_h132, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'134, other ) ==(sel)( , var__temp_h132, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'134, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'134, other ) ==(0)
+ 
+VC_END(declare-const var_h_i130 T408)
+(declare-const var_h129 T408)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h132 T408)
+(declare-const var__temp_v133 Int)
+(declare-const |var__temp_h'134| T408)
+(declare-const var__temp_v_err135 T409)
+(declare-const var_h129 T408)
+(declare-const err T422)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T408)
+(declare-fun sel (T408 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h129 () T408)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun |var__temp_h'134| () T408)
+(declare-fun var__temp_h132 () T408)
+(declare-fun v () Int)
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h132 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h132 other) (sel var_h129 other)))
+               (= (sel var__temp_h132 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'134| res) (+ (sel var__temp_h132 res) 3))
+                (= (sel |var__temp_h'134| other) (sel var__temp_h132 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'134| res) 10)
+                    (= (sel |var__temp_h'134| other) 0)))))
+(let ((a!4 (and a!1 (=> (= (sel var__temp_h132 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************38
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v131:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h136 --->  Ty_heap  
+ var__temp_v137 --->  Ty_int  
+ var__temp_h'138 --->  Ty_heap  
+ var__temp_v_err139 --->  error  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h136, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h136, other ) ==(sel)( , var_h129, other ) => 
+ 	 Rel (sel)( , var__temp_h136, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h136, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'138, res ) ==((sel)( , var__temp_h136, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'138, other ) ==(sel)( , var__temp_h136, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'138, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'138, other ) ==(0)
+ 
+VC_END(declare-const var_h_i130 T425)
+(declare-const var_h129 T425)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h136 T425)
+(declare-const var__temp_v137 Int)
+(declare-const |var__temp_h'138| T425)
+(declare-const var__temp_v_err139 T426)
+(declare-const var_h129 T425)
+(declare-const err T439)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T425)
+(declare-fun sel (T425 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h129 () T425)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun |var__temp_h'138| () T425)
+(declare-fun var__temp_h136 () T425)
+(declare-fun v () Int)
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h136 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h136 other) (sel var_h129 other)))
+               (= (sel var__temp_h136 res) 5)))
+      (a!2 (and (= (sel |var__temp_h'138| res) (+ (sel var__temp_h136 res) 2))
+                (= (sel |var__temp_h'138| other) (sel var__temp_h136 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'138| res) 10)
+                    (= (sel |var__temp_h'138| other) 0)))))
+(let ((a!4 (and a!1 (=> (= (sel var__temp_h136 res) 5) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************bar
+ *********************Enumeration Iteration*****************39
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v131:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v131:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --foo
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v140:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+bar
+ *********************Enumeration Iteration*****************40
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v140:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h141 --->  Ty_heap  
+ var__temp_v142 --->  Ty_int  
+ var__temp_h'143 --->  Ty_heap  
+ var__temp_v_err144 --->  error  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h141, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h141, other ) ==(sel)( , var_h129, other ) => 
+ 	 Rel (sel)( , var__temp_h141, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h141, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'143, res ) ==((sel)( , var__temp_h141, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'143, other ) ==(sel)( , var__temp_h141, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i130 T442)
+(declare-const var_h129 T442)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h141 T442)
+(declare-const var__temp_v142 Int)
+(declare-const |var__temp_h'143| T442)
+(declare-const var__temp_v_err144 T443)
+(declare-const var_h129 T442)
+(declare-const err T456)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T442)
+(declare-fun sel (T442 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h129 () T442)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h141 () T442)
+(declare-fun |var__temp_h'143| () T442)
+(declare-fun v () Int)
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h141 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h141 other) (sel var_h129 other)))
+               (= (sel var__temp_h141 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'143| res) (+ (sel var__temp_h141 res) 3))
+                (= (sel |var__temp_h'143| other) (sel var__temp_h141 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h141 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************41
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v140:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h145 --->  Ty_heap  
+ var__temp_v146 --->  Ty_int  
+ var__temp_h'147 --->  Ty_heap  
+ var__temp_v_err148 --->  error  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h145, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h145, other ) ==(sel)( , var_h129, other ) => 
+ 	 Rel (sel)( , var__temp_h145, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h145, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'147, res ) ==((sel)( , var__temp_h145, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'147, other ) ==(sel)( , var__temp_h145, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i130 T459)
+(declare-const var_h129 T459)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h145 T459)
+(declare-const var__temp_v146 Int)
+(declare-const |var__temp_h'147| T459)
+(declare-const var__temp_v_err148 T460)
+(declare-const var_h129 T459)
+(declare-const err T473)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T459)
+(declare-fun sel (T459 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h129 () T459)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h145 () T459)
+(declare-fun |var__temp_h'147| () T459)
+(declare-fun v () Int)
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h145 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h145 other) (sel var_h129 other)))
+               (= (sel var__temp_h145 res) 5)))
+      (a!2 (and (= (sel |var__temp_h'147| res) (+ (sel var__temp_h145 res) 2))
+                (= (sel |var__temp_h'147| other) (sel var__temp_h145 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h145 res) 5) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Successful************bar
+PARTIAL PATH NEW
+NEW 	 --foo	 --bar
+post_substituted Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i150, res ) ==((sel)( , var_h149, res ) + (2))
+ 	 , (sel)( , var_h_i150, other ) ==(sel)( , var_h149, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v151:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************42
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i150, res ) ==((sel)( , var_h149, res ) + (2))
+ 	 , (sel)( , var_h_i150, other ) ==(sel)( , var_h149, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v151:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i150 --->  Ty_heap  
+ var_h149 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h152 --->  Ty_heap  
+ var__temp_v153 --->  Ty_int  
+ var__temp_h'154 --->  Ty_heap  
+ var__temp_v_err155 --->  error  
+ var_h149 --->  Ty_heap  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h149, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var_h149, other ) ==(sel)( , var_h129, other ) AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h152, res ) ==((sel)( , var_h149, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h152, other ) ==(sel)( , var_h149, other ) => 
+ 	 Rel (sel)( , var__temp_h152, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h152, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'154, res ) ==((sel)( , var__temp_h152, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'154, other ) ==(sel)( , var__temp_h152, other ) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'154, res ) ==(10) AND 
+ 	 Rel (sel)( , var__temp_h'154, other ) ==(0)
+ 
+VC_END(declare-const var_h_i150 T476)
+(declare-const var_h149 T476)
+(declare-const v Int)
+(declare-const var_h_i130 T476)
+(declare-const var_h129 T476)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h152 T476)
+(declare-const var__temp_v153 Int)
+(declare-const |var__temp_h'154| T476)
+(declare-const var__temp_v_err155 T477)
+(declare-const var_h149 T476)
+(declare-const var_h129 T476)
+(declare-const err T490)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T476)
+(declare-fun v () Int)
+(declare-fun sel (T476 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h149 () T476)
+(declare-fun |5| () Int)
+(declare-fun other () Int)
+(declare-fun var_h129 () T476)
+(declare-fun |var__temp_h'154| () T476)
+(declare-fun var__temp_h152 () T476)
+(assert (= (sel var_h149 res) v))
+(assert (= |5| 5))
+(assert (= v |5|))
+(assert (= (sel var_h149 other) (sel var_h129 other)))
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h152 res) (+ (sel var_h149 res) 2))
+                (= (sel var__temp_h152 other) (sel var_h149 other))))
+      (a!2 (and (= (sel |var__temp_h'154| res) (+ (sel var__temp_h152 res) 3))
+                (= (sel |var__temp_h'154| other) (sel var__temp_h152 other)))))
+(let ((a!3 (=> a!2
+               (and (= (sel |var__temp_h'154| res) 10)
+                    (= (sel |var__temp_h'154| other) 0)))))
+(let ((a!4 (and (=> a!1 (= (sel var__temp_h152 res) 7))
+                (=> (= (sel var__temp_h152 res) 7) a!3))))
+  (not a!4)))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************43
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v151:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v151:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsbarfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --foo	 --bar
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i150, res ) ==((sel)( , var_h149, res ) + (2))
+ 	 , (sel)( , var_h_i150, other ) ==(sel)( , var_h149, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v156:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************44
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i150, res ) ==((sel)( , var_h149, res ) + (2))
+ 	 , (sel)( , var_h_i150, other ) ==(sel)( , var_h149, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v156:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i150 --->  Ty_heap  
+ var_h149 --->  Ty_heap  
+ v --->  Ty_int  
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h157 --->  Ty_heap  
+ var__temp_v158 --->  Ty_int  
+ var__temp_h'159 --->  Ty_heap  
+ var__temp_v_err160 --->  error  
+ var_h149 --->  Ty_heap  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h149, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var_h149, other ) ==(sel)( , var_h129, other ) AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h157, res ) ==((sel)( , var_h149, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h157, other ) ==(sel)( , var_h149, other ) => 
+ 	 Rel (sel)( , var__temp_h157, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h157, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'159, res ) ==((sel)( , var__temp_h157, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'159, other ) ==(sel)( , var__temp_h157, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i150 T493)
+(declare-const var_h149 T493)
+(declare-const v Int)
+(declare-const var_h_i130 T493)
+(declare-const var_h129 T493)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h157 T493)
+(declare-const var__temp_v158 Int)
+(declare-const |var__temp_h'159| T493)
+(declare-const var__temp_v_err160 T494)
+(declare-const var_h149 T493)
+(declare-const var_h129 T493)
+(declare-const err T507)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T493)
+(declare-fun v () Int)
+(declare-fun sel (T493 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h149 () T493)
+(declare-fun |5| () Int)
+(declare-fun other () Int)
+(declare-fun var_h129 () T493)
+(declare-fun var__temp_h157 () T493)
+(declare-fun |var__temp_h'159| () T493)
+(assert (= (sel var_h149 res) v))
+(assert (= |5| 5))
+(assert (= v |5|))
+(assert (= (sel var_h149 other) (sel var_h129 other)))
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (let ((a!1 (and (= (sel var__temp_h157 res) (+ (sel var_h149 res) 2))
+                (= (sel var__temp_h157 other) (sel var_h149 other))))
+      (a!2 (and (= (sel |var__temp_h'159| res) (+ (sel var__temp_h157 res) 3))
+                (= (sel |var__temp_h'159| other) (sel var__temp_h157 other)))))
+(let ((a!3 (and (=> a!1 (= (sel var__temp_h157 res) 7))
+                (=> (= (sel var__temp_h157 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Successful************baz
+PARTIAL PATH NEW
+NEW 	 --foo	 --bar	 --baz
+post_substituted Forall 
+ 	 
+ Key =var_h_i162 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i162 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i162, res ) ==((sel)( , var_h161, res ) + (3))
+ 	 , (sel)( , var_h_i162, other ) ==(sel)( , var_h161, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v163:Ty_unknown | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =var_h_i162 Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==(10)
+ 	 , (sel)( , h', other ) ==(0) >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************45
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {var_v163:Ty_unknown | true}
+isynthesizeConstApp
+Spec Base {var_v163:Ty_unknown | true}
+Found Cons
+Non constructors found,  try another approachNo Holes from the return type
+bindSpecial failed, Attempting Simple Bind Enumeration
+EXPLORED1 Termsbazbarfooc3'
+esynthesizeBind
+PARTIAL PATH
+SUB 	 --foo	 --bar	 --baz
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i162 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i162, res ) ==((sel)( , var_h161, res ) + (3))
+ 	 , (sel)( , var_h_i162, other ) ==(sel)( , var_h161, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v164:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************46
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT baz
+PARTIAL PATH
+SUB 	 --foo	 --bar
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i150 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i150, res ) ==((sel)( , var_h149, res ) + (2))
+ 	 , (sel)( , var_h_i150, other ) ==(sel)( , var_h149, other ) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v165:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************47
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT baz
+PARTIAL PATH
+SUB 	 --foo
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v166:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+ *********************Enumeration Iteration*****************48
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =var_h_i130 Value = Ty_heap{ 
+ Conj <c (sel)( , var_h_i130, res ) ==(v)
+ 	 , 
+ Conj <c v = 5
+ 	 , (sel)( , var_h_i130, other ) ==(sel)( , var_h129, other ) >c  >c  } 
+ } 
+ 
+                                                RET :  Base {var_v166:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ var_h_i130 --->  Ty_heap  
+ var_h129 --->  Ty_heap  
+ v --->  Ty_int  
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h167 --->  Ty_heap  
+ var__temp_v168 --->  Ty_int  
+ var__temp_h'169 --->  Ty_heap  
+ var__temp_v_err170 --->  error  
+ var_h129 --->  Ty_heap 
+ 	 ANTE Conj  AND 
+ 	 Rel (sel)( , var_h129, res ) ==(0) AND 
+ 	 Rel (sel)( , var_h129, other ) ==(0) 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h167, res ) ==(v) AND 
+ 	 Base v = 5 AND 
+ 	 Rel (sel)( , var__temp_h167, other ) ==(sel)( , var_h129, other ) => 
+ 	 Rel (sel)( , var__temp_h167, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h167, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'169, res ) ==((sel)( , var__temp_h167, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'169, other ) ==(sel)( , var__temp_h167, other ) => 
+ 	 True
+ 
+VC_END(declare-const var_h_i130 T510)
+(declare-const var_h129 T510)
+(declare-const v Int)
+(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h167 T510)
+(declare-const var__temp_v168 Int)
+(declare-const |var__temp_h'169| T510)
+(declare-const var__temp_v_err170 T511)
+(declare-const var_h129 T510)
+(declare-const err T524)
+    (declare-const |5| Int)
+  
+solver 
+ (declare-sort T510)
+(declare-fun sel (T510 Int) Int)
+(declare-fun res () Int)
+(declare-fun var_h129 () T510)
+(declare-fun other () Int)
+(declare-fun |5| () Int)
+(declare-fun var__temp_h167 () T510)
+(declare-fun |var__temp_h'169| () T510)
+(declare-fun v () Int)
+(assert (= (sel var_h129 res) 0))
+(assert (= (sel var_h129 other) 0))
+(assert (= |5| 5))
+(assert (let ((a!1 (=> (and (= (sel var__temp_h167 res) v)
+                    (= v |5|)
+                    (= (sel var__temp_h167 other) (sel var_h129 other)))
+               (= (sel var__temp_h167 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'169| res) (+ (sel var__temp_h167 res) 3))
+                (= (sel |var__temp_h'169| other) (sel var__temp_h167 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h167 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************49
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT bar
+PARTIAL PATH
+SUB 
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v171:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+FOUND COMPONENTS 
+baz
+bar
+ *********************Enumeration Iteration*****************50
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(7) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v171:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (3))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h172 --->  Ty_heap  
+ var__temp_v173 --->  Ty_int  
+ var__temp_h'174 --->  Ty_heap  
+ var__temp_v_err175 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h172, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h172, other ) ==(0) => 
+ 	 Rel (sel)( , var__temp_h172, res ) ==(7) AND 
+ 	 Rel (sel)( , var__temp_h172, res ) ==(7) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'174, res ) ==((sel)( , var__temp_h172, res ) + (3)) AND 
+ 	 Rel (sel)( , var__temp_h'174, other ) ==(sel)( , var__temp_h172, other ) => 
+ 	 True
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h172 T527)
+(declare-const var__temp_v173 Int)
+(declare-const |var__temp_h'174| T527)
+(declare-const var__temp_v_err175 T528)
+(declare-const err T541)
+
+solver 
+ (declare-sort T527)
+(declare-fun sel (T527 Int) Int)
+(declare-fun other () Int)
+(declare-fun var__temp_h172 () T527)
+(declare-fun |var__temp_h'174| () T527)
+(declare-fun res () Int)
+(assert true)
+(assert (let ((a!1 (=> (and (= (sel var__temp_h172 res) 0)
+                    (= (sel var__temp_h172 other) 0))
+               (= (sel var__temp_h172 res) 7)))
+      (a!2 (and (= (sel |var__temp_h'174| res) (+ (sel var__temp_h172 res) 3))
+                (= (sel |var__temp_h'174| other) (sel var__temp_h172 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h172 res) 7) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************baz
+ *********************Enumeration Iteration*****************51
+Found after Enumeration MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, res ) ==(5) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  } 
+ } 
+ )
+Compared Against Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ 
+ Conj <c (sel)( , h, res ) ==(0)
+ 	 , (sel)( , h, other ) ==(0) >c  } 
+ } 
+ 
+                                                RET :  Base {var_v171:Ty_unknown | true} 
+ { 
+                                                POST true 
+ } 
+ )
+ Case Non-Exceptional: Original Inferred post Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', res ) ==((sel)( , h, res ) + (2))
+ 	 , (sel)( , h', other ) ==(sel)( , h, other ) >c  }
+ Standardizing verification conditions 
+STANDARD VC_BEGIN TyDBINDS  
+ 
+ c3' --->  Ty_int  
+ baz --->  Ty_int  
+ foo --->  Ty_int  
+ bar --->  Ty_int  
+ other --->  Ty_int  
+ res --->  Ty_int  
+ var__temp_h176 --->  Ty_heap  
+ var__temp_v177 --->  Ty_int  
+ var__temp_h'178 --->  Ty_heap  
+ var__temp_v_err179 --->  error 
+ 	 ANTE True 
+ 	 ------------------------
+
+	 CONS Conj  AND 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h176, res ) ==(0) AND 
+ 	 Rel (sel)( , var__temp_h176, other ) ==(0) => 
+ 	 Rel (sel)( , var__temp_h176, res ) ==(5) AND 
+ 	 Rel (sel)( , var__temp_h176, res ) ==(5) => 
+ 	 Conj  AND 
+ 	 Rel (sel)( , var__temp_h'178, res ) ==((sel)( , var__temp_h176, res ) + (2)) AND 
+ 	 Rel (sel)( , var__temp_h'178, other ) ==(sel)( , var__temp_h176, other ) => 
+ 	 True
+ 
+VC_END(declare-const |c3'| Int)
+(declare-const baz Int)
+(declare-const foo Int)
+(declare-const bar Int)
+(declare-const other Int)
+(declare-const res Int)
+(declare-const var__temp_h176 T544)
+(declare-const var__temp_v177 Int)
+(declare-const |var__temp_h'178| T544)
+(declare-const var__temp_v_err179 T545)
+(declare-const err T558)
+
+solver 
+ (declare-sort T544)
+(declare-fun sel (T544 Int) Int)
+(declare-fun other () Int)
+(declare-fun var__temp_h176 () T544)
+(declare-fun |var__temp_h'178| () T544)
+(declare-fun res () Int)
+(assert true)
+(assert (let ((a!1 (=> (and (= (sel var__temp_h176 res) 0)
+                    (= (sel var__temp_h176 other) 0))
+               (= (sel var__temp_h176 res) 5)))
+      (a!2 (and (= (sel |var__temp_h'178| res) (+ (sel var__temp_h176 res) 2))
+                (= (sel |var__temp_h'178| other) (sel var__temp_h176 other)))))
+(let ((a!3 (and a!1 (=> (= (sel var__temp_h176 res) 5) (=> a!2 true)))))
+  (not a!3))))
+
+***************Selection Failed************bar
+ *********************Enumeration Iteration*****************52
+THE PATH ENDED WITHOUT RESULT
+THE LAST COMPONENT foo
+ENUM ::bar::baz::baz::baz::baz::bar::baz::bar::baz::foo::baz::baz::baz::baz::bar::baz::baz::baz::baz::bar::baz::bar::baz::foo::baz::bar::foo::baz::c3'::bar::foo::baz::c3'
+SUB Synthesis returned witout result

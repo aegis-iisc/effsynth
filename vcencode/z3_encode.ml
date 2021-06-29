@@ -22,13 +22,13 @@ open Arithmetic
 open FuncDecl
 open Integer
 open Quantifier    
- (* 
+ (*  
 module Printf = struct 
   let printf f s = ()
 
 
 end  
-  *)
+  *) 
 
 
 
@@ -844,6 +844,10 @@ let mkOr asrv = mk_or asrv
 
 let mkConstEqAssertion (AST (x1,s1) as ast1, AST (x2,s2)) = 
   (typeCheckAst (ast1,s2); mk_eq x1 x2)
+
+let mkConstGtAssertion (AST (x1,s1) as ast1, AST (x2,s2)) = 
+  (typeCheckAst (ast1,s2); mk_gt x1 x2)
+
 (* 
 let mkInt i = AST (Symbol.mk_int i,  mk_int_sort)
  *)

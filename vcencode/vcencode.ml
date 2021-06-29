@@ -865,7 +865,8 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
               mkIff ( (encodeBasePred (tyMap, constMap, relMap) bp1),
                 (encodeBasePred (tyMap, constMap, relMap) bp2))
            | Gt (e1, e2) -> 
-                raise (Unimplemented "encodeBasePred Gt case is missing") 
+                mkConstGtAssertion (encodeBaseExpr e1, encodeBaseExpr e2)
+                (* raise (Unimplemented "encodeBasePred Gt case is missing")  *)
         in 
       (*encoding for r*)        
      let rec encodeRelExpr (tyMap, constMap, relMap) (e) =

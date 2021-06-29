@@ -1797,15 +1797,11 @@ module RelSpec = struct
             (fun tdacc td -> (tdacc^"\n "^(Algebraic.toString td))) " Typedefs " typedefs in 
         let ps =  List.fold_left 
             (fun psacc p -> (psacc^" \n "^(Formula.toString p))) " Formulas " preds in 
-        let () = Printf.printf "%s" "HERE>>>" in 
         let srs = List.fold_left (fun srsacc sr -> (srsacc^" \n "^(StructuralRelation.toString sr))) " SRs " reldecs in 
-        let () = Printf.printf "%s" "HERE 2>>>" in 
         
         let prs = List.fold_left (fun prsacc pr -> (prsacc^" \n "^(PrimitiveRelation.toString pr))) " PRs " primdecs in 
-        let () = Printf.printf "%s" "HERE 3 >>>" in 
         
         let tss = List.fold_left (fun tsacc ts -> (tsacc^" \n "^(TypeSpec.toString ts))) " TSs " typespecs in 
-        let () = Printf.printf "%s" "HERE 4>>>" in 
         
        ("RelSpec { "^srs^"; "^prs^"; "^tss^"; "^ps^" }")
         

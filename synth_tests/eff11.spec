@@ -1,5 +1,5 @@
 res : int;
-c1 : State  {\(h : heap). true} 
+foo : State  {\(h : heap). true} 
 	v : { v : int |  [v=5]} 
 	{\(h : heap), (v : int), (h' : heap). sel (h', res) == v /\ [v=5]};
 

@@ -1,0 +1,567 @@
+
+ specfile :: synth_tests/simple-len.specplen : int;
+inp : list;
+pr2 : list;
+pr1 : int;
+
+
+
+type pair = Pair of int * list
+			| Empty; 	
+
+
+relation proj1 (Pair (x,y)) = (x); 
+relation proj2 (Pair (x,y)) = (y);
+
+
+
+len : State  {\(h : heap). sel (h, plen) == 0 } 
+	         v : { v : int | true} 
+			 {\(h : heap), (v : int), (h' : heap). 
+				 sel (h', plen) == sel (h, plen) + v 
+				/\ [v > 2] };
+
+
+ts : State  {\(h : heap). sel (h, plen) > 2} 
+		    v : { v : list | true } 
+		    {\(h : heap), (v : list), (h' : heap). 
+			 len (v) == 2   
+		     /\ sel (h', plen) == sel (h, plen) -- 2};
+
+
+content : State  {\(h : heap). sel (h, plen) > 0} 
+				v : { v : list | true } 
+				{\(h : heap), (v : list), (h' : heap). 
+				len (v) == sel (h, plen)  
+				/\ sel (h', plen) == 0};
+
+
+
+goal : State  {\(h : heap). sel (h, plen) == 0} 
+		v : { v : pair | true} 
+		{\(h : heap), (v : pair), (h' : heap). 
+		proj2 (v) = pr2 /\
+		proj1 (v) = pr1 /\ 
+		len (pr2) = pr1 -- 2 
+		/\ sel (h', plen) ==0};
+
+var: plen
+whitespace colon
+whitespace var: int
+semicolon
+var: inp
+whitespace colon
+whitespace var: list
+semicolon
+var: pr2
+whitespace colon
+whitespace var: list
+semicolon
+var: pr1
+whitespace colon
+whitespace var: int
+semicolon
+typewhitespace var: pair
+whitespace equalopwhitespace var: Pair
+whitespace ofwhitespace var: int
+whitespace star
+whitespace var: list
+whitespace pipe
+whitespace var: Empty
+semicolon
+whitespace relationwhitespace var: proj1
+whitespace lparen
+var: Pair
+whitespace lparen
+var: x
+comma
+var: y
+rparen
+rparen
+whitespace equalopwhitespace lparen
+var: x
+rparen
+semicolon
+whitespace relationwhitespace var: proj2
+whitespace lparen
+var: Pair
+whitespace lparen
+var: x
+comma
+var: y
+rparen
+rparen
+whitespace equalopwhitespace lparen
+var: y
+rparen
+semicolon
+var: len
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace equalopwhitespace int: 0
+whitespace rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: int
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: int
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: plen
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace pluswhitespace var: v
+whitespace whitespace conjwhitespace lbrace
+var: v
+whitespace lessthanopwhitespace int: 2
+rbrace
+whitespace rcurly
+semicolon
+var: ts
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace lessthanopwhitespace int: 2
+rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: list
+whitespace pipe
+whitespace truewhitespace rcurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: list
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: len
+whitespace lparen
+var: v
+rparen
+whitespace equalopwhitespace int: 2
+whitespace whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: plen
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace ar-minuswhitespace int: 2
+rcurly
+semicolon
+var: content
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace lessthanopwhitespace int: 0
+rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: list
+whitespace pipe
+whitespace truewhitespace rcurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: list
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: len
+whitespace lparen
+var: v
+rparen
+whitespace equalopwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: plen
+rparen
+whitespace equalopwhitespace int: 0
+rcurly
+semicolon
+var: goal
+whitespace colon
+whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace var: sel
+whitespace lparen
+var: h
+comma
+whitespace var: plen
+rparen
+whitespace equalopwhitespace int: 0
+rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: pair
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+comma
+whitespace lparen
+var: v
+whitespace colon
+whitespace var: pair
+rparen
+comma
+whitespace lparen
+var: h'
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace var: proj2
+whitespace lparen
+var: v
+rparen
+whitespace equalopwhitespace var: pr2
+whitespace conjwhitespace var: proj1
+whitespace lparen
+var: v
+rparen
+whitespace equalopwhitespace var: pr1
+whitespace conjwhitespace whitespace var: len
+whitespace lparen
+var: pr2
+rparen
+whitespace equalopwhitespace var: pr1
+whitespace ar-minuswhitespace int: 2
+whitespace whitespace conjwhitespace var: sel
+whitespace lparen
+var: h'
+comma
+whitespace var: plen
+rparen
+whitespace equalopint: 0
+rcurly
+semicolon
+
+ List of components availableHERE>>>HERE 2>>>HERE 3 >>>HERE 4>>>RelSpec {  SRs  
+ relation (proj1) = {:Pair:xy => {(x)}}
+ 
+ relation (proj2) = {:Pair:xy => {(y)}}
+;  PRs ;  TSs  
+ Assume false
+ name plen : 
+ params :
+ Type Base {var_v0:Ty_int | true} 
+ Assume false
+ name inp : 
+ params :
+ Type Base {var_v1:list | true} 
+ Assume false
+ name pr2 : 
+ params :
+ Type Base {var_v2:list | true} 
+ Assume false
+ name pr1 : 
+ params :
+ Type Base {var_v3:Ty_int | true} 
+ Assume false
+ name len : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, plen ) ==(0) } 
+ } 
+ 
+                                                RET :  Base {v:Ty_int | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_int
+ Key =h' Value = Ty_heap{ 
+ Conj <c (sel)( , h', plen ) ==((sel)( , h, plen ) + (v))
+ 	 , v > 2 >c  } 
+ } 
+ ) 
+ Assume false
+ name ts : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, plen ) > (2) } 
+ } 
+ 
+                                                RET :  Base {v:list | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = list
+ Key =h' Value = Ty_heap{ 
+ Conj <c (len)(v) ==(2)
+ 	 , (sel)( , h', plen ) ==((sel)( , h, plen ) -- (2)) >c  } 
+ } 
+ ) 
+ Assume false
+ name content : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, plen ) > (0) } 
+ } 
+ 
+                                                RET :  Base {v:list | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = list
+ Key =h' Value = Ty_heap{ 
+ Conj <c (len)(v) ==(sel)( , h, plen )
+ 	 , (sel)( , h', plen ) ==(0) >c  } 
+ } 
+ ) 
+ Assume false
+ name goal : 
+ params :
+ Type MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, plen ) ==(0) } 
+ } 
+ 
+                                                RET :  Base {v:pair | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = pair
+ Key =h' Value = Ty_heap{ 
+ Conj <c (proj2)(v) = (pr2)
+ 	 , 
+ Conj <c (proj1)(v) = (pr1)
+ 	 , 
+ Conj <c (len)(pr2) = ((pr1) -- (2))
+ 	 , (sel)( , h', plen ) ==(0) >c  >c  >c  } 
+ } 
+ );  Formulas  }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, plen ) ==(0) } 
+ } 
+ 
+                                                RET :  Base {v:pair | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = pair
+ Key =h' Value = Ty_heap{ 
+ Conj <c (proj2)(v) = (pr2)
+ 	 , 
+ Conj <c (proj1)(v) = (pr1)
+ 	 , 
+ Conj <c (len)(pr2) = ((pr1) -- (2))
+ 	 , (sel)( , h', plen ) ==(0) >c  >c  >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************0
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeBase {v:pair | true}
+isynthesizeConstApp
+Spec Base {v:pair | true}
+Found Cons
+Pair
+Empty<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>
+ConsApp { 
+Ecapp Pair ( , Evar var_x41, Evar var_x52 ) 
+ }
+var_x41 : Base {var_x41:Ty_int | 
+ Conj <c true
+ 	 , true >c }
+var_x52 : Base {var_x52:list | 
+ Conj <c true
+ 	 , true >c }
+SigmaType Sigma  
+ 
+ var_x41 : Base {var_x41:Ty_int | 
+ Conj <c true
+ 	 , true >c }
+ var_x52 : Base {var_x52:list | 
+ Conj <c true
+ 	 , true >c }
+Spec MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ (sel)( , h, plen ) ==(0) } 
+ } 
+ 
+                                                RET :  Sigma  
+ 
+ var_x41 : Base {var_x41:Ty_int | 
+ Conj <c true
+ 	 , true >c }
+ var_x52 : Base {var_x52:list | 
+ Conj <c true
+ 	 , true >c } 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = pair
+ Key =h' Value = Ty_heap{ 
+ Conj <c (proj2)(v) = (pr2)
+ 	 , 
+ Conj <c (proj1)(v) = (pr1)
+ 	 , 
+ Conj <c (len)(pr2) = ((pr1) -- (2))
+ 	 , (sel)( , h', plen ) ==(0) >c  >c  >c  } 
+ } 
+ )
+FOUND COMPONENTS 
+ *********************Enumeration Iteration*****************1
+ Single Component Enumeration Failed, trying the eRet Case
+ eRet Failed, the effect is not Pure, Attempting esynthesizeBindSpecial
+EsynthesizeBindSpecial Return TypeSigma  
+ 
+ var_x41 : Base {var_x41:Ty_int | 
+ Conj <c true
+ 	 , true >c }
+ var_x52 : Base {var_x52:list | 
+ Conj <c true
+ 	 , true >c }
+isynthesizeConstApp
+Spec Sigma  
+ 
+ var_x41 : Base {var_x41:Ty_int | 
+ Conj <c true
+ 	 , true >c }
+ var_x52 : Base {var_x52:list | 
+ Conj <c true
+ 	 , true >c }
