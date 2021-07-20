@@ -41,7 +41,9 @@ let remove map k = List.remove_assoc k map
 
 let map f t = List.map f t
 
-  	
+let replace map k v = 
+    let l = remove map k in 
+    add l k v  
 
 
 end 

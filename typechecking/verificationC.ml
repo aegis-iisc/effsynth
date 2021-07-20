@@ -263,17 +263,18 @@ let string_pc (pcv : pc) =
 (*alias for Predicate.reduce *)
 let subs_pred  = Predicate.reduce
 
-let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list) (_phi : Predicate.t) = 
+let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list) 
+        (_phi : Predicate.t) = 
    match subs_bindings with 
      [] -> _phi 
     | x :: xs -> (*exact definition of [v/x]phi*)
-          let (var_old, t1 ), (var_new, t2) = x in 
+          let (var_new, t2), (var_old, t1 )  = x in 
           (*compare types*)
           let check_types = 
              if (not (TyD.sametype t1 t2)) then 
                   raise (Error ("substitution type mismatch t1:  "^(TyD.toString t1)^" t2: "^(TyD.toString t2)))
              else(*TODO for now TyD.sametype t1 t2 in *) true in 
-                let reduced_phi = Predicate.reduce (var_old, var_new) (_phi) in 
+                let reduced_phi = Predicate.reduce (var_new, var_old) (_phi) in 
                 subst (xs) reduced_phi 
                   
  let rec replaceelem ls i elem =
@@ -291,7 +292,9 @@ let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list) (_phi : Pr
             assert (i <= len_varbindall);
             
             let ith_bind_old = List.nth varbindall (i-1) in 
-            let _phi' = subst [(ith_bind_old,bind_new)] _phi in 
+            let () = Printf.printf "%s" ("********"^(Predicate.toString _phi)) in 
+            let _phi' = subst [(bind_new,ith_bind_old)] _phi in
+            let () = Printf.printf "%s" ("********"^(Predicate.toString _phi')) in  
             let varbindall' = replaceelem varbindall (i-1) bind_new in 
             Predicate.Forall (varbindall', _phi' )
 

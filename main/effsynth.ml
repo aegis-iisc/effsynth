@@ -14,6 +14,11 @@ let () =
     let string_ast = RelSpec.toString ast in 
     let () = Printf.printf "%s" string_ast in 
     let (gamma, sigma, goal) = SEL.elaborateEnvs ast in 
+
+(*     let () = Printf.printf "%s" " INITIAL GAMMA \n " in 
+    let () = List.iter (fun (vi, rti) -> Printf.printf "%s" 
+                      ("\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) gamma in 
+ *)
     let synthterm = Synth.synthesize gamma sigma goal in   
     	    (*run the initial environment builder*)    
     match synthterm with 

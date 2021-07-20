@@ -6,6 +6,9 @@ module Sigma = Environment.Constructors
 module Components = Environment.Components
 module Explored = Environment.ExploredTerms                 
 module VCE = Vcencode 
+module DPred = Knowledge.DiffPredicate
+module DMap = Knowledge.DistinguisherMap
+module CDCL = Learning
 module P = Predicate  
 exception SynthesisException of string 
 exception Unhandled
@@ -378,6 +381,10 @@ let esynthesizeRet gamma sigma spec : (Syn.typedMonExp option)=
        | _ -> None
      )
  
+
+
+
+
 (*The general bind rule for let \Sigma (xi : \taui) <- e1 in e2
  * delta  = . | pred :: delta
 TODO :: FInish this definition*)
@@ -654,6 +661,7 @@ and   esynthesizeEff explored gamma sigma delta spec =
                             Message.show "bindSpecial failed, Attempting Simple Bind Enumeration";             
                             Message.show ("EXPLORED1 "^(Explored.toString explored));
                             let (explored, bindExp) = esynthesizeBind explored gamma sigma delta spec in 
+                            
                             match bindExp with 
                              | Some t -> Some t 
                              | None -> None
@@ -664,11 +672,16 @@ let rec synthesize gamma sigma spec : (Syn.typedMonExp option)=
    match spec with 
       | RefTy.Base (v, t, pred) -> esynthesizeScalar gamma sigma spec  
       | RefTy.Arrow (rta, rtb) -> isynthesizeFun gamma sigma spec  (*applies Tfix and Tabs one after the other*)
-      | RefTy.MArrow (eff, pre, t, post) -> let res = esynthesizeEff Explored.empty gamma sigma VC.empty_delta spec in 
+      | RefTy.MArrow (eff, pre, t, post) -> (* let res = esynthesizeEff Explored.empty gamma sigma VC.empty_delta spec in 
                  let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in 
                  let () = Message.show (List.fold_left (fun str vi -> (str^"\n \t --"^(Var.toString vi))) "SUB " !subprobplem) in 
-                 
-                 res
+                  *)
+                  Message.show "***********Calling CDCL synthesize***************";
+                 (*testing cdcl approach*)
+                 let gammacap = DPred.T {gamma = gamma; sigma=sigma;delta= P.True} in 
+                 let dps_empty = DMap.empty in 
+                 let res = Learning.cdcleffSynthesizeBind gammacap dps_empty spec in 
+                 Some {Syn.expMon=res;Syn.ofType = spec} 
                 (*main effectful synthesis rules*)
       | _ -> None  
 

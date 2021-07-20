@@ -14,11 +14,18 @@ relation proj2 (Pair (x,y)) = (y);
 
 
 
-len : State  {\(h : heap). sel (h, plen) == 0 } 
+len : State  {\(h : heap). sel (h, plen) == -1 } 
 	         v : { v : int | true} 
 			 {\(h : heap), (v : int), (h' : heap). 
 				 sel (h', plen) == sel (h, plen) + v 
 				/\ [v > 2] };
+
+len'  : State  {\(h : heap). sel (h, plen) == -1 } 
+	         v : { v : int | true} 
+			 {\(h : heap), (v : int), (h' : heap). 
+				 sel (h', plen) == sel (h, plen) + v 
+				/\ [v > 1] };
+ 
 
 
 ts : State  {\(h : heap). sel (h, plen) > 2} 
@@ -36,7 +43,25 @@ content : State  {\(h : heap). sel (h, plen) > 0}
 
 
 
-goal : State  {\(h : heap). sel (h, plen) == 0} 
+content' : State  {\(h : heap). sel (h, plen) > 0} 
+				v : { v : list | true } 
+				{\(h : heap), (v : list), (h' : heap). 
+				len (v) == sel (h, plen)  
+				/\ sel (h', plen) == sel (h, plen) -- 1};
+
+
+
+
+ts' : State  {\(h : heap). sel (h, plen) > 1} 
+		    v : { v : list | true } 
+		    {\(h : heap), (v : list), (h' : heap). 
+			 len (v) == 2   
+		     /\ sel (h', plen) == sel (h, plen) -- 1};
+
+
+
+
+goal : State  {\(h : heap). sel (h, plen) == -1} 
 		v : { v : pair | true} 
 		{\(h : heap), (v : pair), (h' : heap). 
 		proj2 (v) = pr2 /\

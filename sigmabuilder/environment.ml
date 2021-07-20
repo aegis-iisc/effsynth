@@ -32,6 +32,11 @@ let find t var =
 let add = fun t -> fun var rt -> TyMap.add t var rt
 let remove = TyMap.remove
 
+let toString t = 
+    List.fold_left (fun accstr (vi, rti) -> (accstr^"\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) " " t 
+
+    
+
 (*enumerate variables and find macthing types*)
 let enumerateAndFind t (rt:TypingEnvValue.t) : ((TypingEnvKey.t*TypingEnvValue.t) list)   = 
         TyMap.enumerate t rt 

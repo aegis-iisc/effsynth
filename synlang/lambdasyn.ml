@@ -95,4 +95,6 @@ let getExp (t : typedMonExp) =
 let getType (t : typedMonExp) = 
    let {ofType;_} = t in ofType
 
-
+(*placeholder , TODO implement complete later*)
+let buildProgramTerm (ci : Var.t) (path : Var.t list) =  
+        Evar ci
