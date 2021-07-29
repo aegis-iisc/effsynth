@@ -4,7 +4,8 @@ open SpecLang
 module Gamma = Environment.TypingEnv 
 module Sigma = Environment.Constructors
 module Components = Environment.Components
-module Explored = Environment.ExploredTerms                 
+module Explored = Environment.ExploredPaths  
+
 module VCE = Vcencode 
 module P = Predicate  
 module SynTC = Syntypechecker
@@ -238,7 +239,7 @@ let distinguish gamma dps spec path ci rti=
 
 
 
-let rec chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gammaCap * PGMap.t * choiceResult)= 
+let rec chooseC gammacap exploredpaths path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gammaCap * Explored.t * PGMap.t * choiceResult)= 
     let RefTy.MArrow (eff, pre, (v, t), post) = spec in 
     let gamma = DPred.getGamma gammacap in 
     let c_wellRetType = Gamma.enumerateAndFind gamma spec in 
@@ -251,7 +252,8 @@ let rec chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.g
 
     (*choosing a component
     The failing disjunct keeps the list of failing Predicates while checking the Hoare Post => Pre implication*)
-    let rec choice potentialChoices gammacap dps (failingDisjuncts : Predicate.t list) (p2gMap : PGMap.t) : (DPred.gammaCap * PGMap.t * choiceResult)= 
+    let rec choice potentialChoices gammacap exploredpaths dps 
+    			(failingDisjuncts : Predicate.t list) (p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * choiceResult)= 
     	Message.show "Choice ";
     	
     	(* let potentialChoices = List.filter (fun (vi, _) -> not (Explored.mem explored vi)) foundTypes in  
@@ -260,92 +262,38 @@ let rec chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.g
  *)
     	match potentialChoices with 
     		| [] -> 
-    		    (gammacap, p2gMap,  Nothing (dps, failingDisjuncts)) 
+    		    (gammacap, exploredpaths,  p2gMap,  Nothing (dps, failingDisjuncts)) 
     		| (vi, rti) :: xs -> 
     			
     			(*check the hoare pre-condition rule*)
-    			    
-    			let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path vi rti in 
-    			if (allowed) then 
-    				(
-    				Message.show (" Show *************** Hoare-Allowed : Now Checking distingushing Predicate ************"^(Var.toString vi));
-    				let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi rti in 
-    				if (isDistinguished) then 
-	                	(
-	                	Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
-    				(* 	Message.show (" Show *************** PGMap Before ************"^(PGMap.toString p2gMap));  
-    				 *)	
-    					let p2gMap = PGMap.add p2gMap (path@[vi]) gamma_with_ci in 
-    				(* 	Message.show (" Show *************** PGMap After ************"^(PGMap.toString p2gMap));  
-    				 *)	(*chosen a ci s.t. path--> ci is allowed and distinguished*)
-    					(gamma_with_ci, p2gMap, Chosen (dps, vi, path@[vi]))  
-    				)
-	                else
-	                	(Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi)); 
-    				 
-	                   (*~phi_ci'*)
-	                   let not_phi_ci' =  Predicate.Not phi_ci' in 
-	                   (*D(ci)*)
-	                  
-	                   let dp_ci = 
-	                   			try 
-	                   				DMap.find dps vi 
-	                   			with 
-	                   			 	Knowledge.NoMappingForVar e -> DPred.empty
-
-	                   in 
-
-	                   let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'} in
-	                   (*The two gamma will have overlap, requires thinking*)
-	                   let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
-	                   let updated_dps = DMap.replace dps vi updated_dp_ci in 
-	                   (*make a different choice*)
-	                   choice xs gammacap updated_dps failingDisjuncts p2gMap)
-	                )	
-	             else
-
-	             	(
-	             	Message.show (" Show *************** Hoare-Not-Allowed : Now Adding Disjuncts ************"); 
-    				let failing_predicate = post_imp_phi_ci' in 
-	             	(*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
-	             	let dps= 
-	             		if (List.length path > 0) then 
-		             		(*D(ci)*)               
-		 					let c_terminial = List.hd (List.rev (path)) in 
-			                let dp_cterminal = 
-			                   			try 
-			                   				DMap.find dps c_terminial 
-			                   			with 
-			                   			 	Knowledge.NoMappingForVar e -> DPred.empty
-
-			                   in 
-			                  
-			                let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate} in
-			                   (*The two gamma will have overlap, requires thinking
-			                     take disjunction*)
-			                let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
-			                let dps = DMap.replace dps c_terminial updated_dp_cterminal in 
-			                dps  
-			            else 
-			            	dps  
-			        in     	
-	                let failingDisjuncts = failing_predicate :: failingDisjuncts in 
-	                choice xs gammacap dps failingDisjuncts p2gMap
-	               )
-	             (*?? Add (phi' => phi_ci_pre) as a disjunct in the Differentiating predicate
-	             TODO add the disjunction predicate learnt from the failure of choosing a component*)	
-
+    			let potential_path = path@[vi] in 
+    			if (Explored.mem exploredpaths potential_path) then 
+    					choice xs gammacap exploredpaths dps failingDisjuncts p2gMap
+	            		
+				else    
+	    			let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path vi rti in 
+	    			if (allowed) then 
+	    				(
+	    				Message.show (" Show *************** Hoare-Allowed : ********"^(Var.toString vi));
+						(gammacap, exploredpaths, p2gMap, Chosen (dps, vi, path@[vi]))  
+		                )	
+		             else
+		             	(
+		             	Message.show (" Show *************** Hoare-Not-Allowed : Chose another************"); 
+	    				choice xs gammacap exploredpaths dps failingDisjuncts p2gMap
+		               )
+		
      in 
     let failingDisjuncts = [] in  
-    choice c_es gammacap dps failingDisjuncts p2gMap
+    choice c_es gammacap exploredpaths dps failingDisjuncts p2gMap
    
 
 
-and deduceR (gamma:DPred.gammaCap) (compi:Var.t) (path:path) (spec: RefTy.t) 
-				(dps : DMap.t) (p2gMap : PGMap.t) : (DPred.gammaCap * PGMap.t * deduceResult) = 
-	
+and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Var.t) (path:path) (spec: RefTy.t) 
+				(dps : DMap.t) (p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * deduceResult) = 
 	Message.show (" EXPLORED :: "^(pathToString path));
-	    
+	
+	
 	if (!itercount > 100) then 
                 (* let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in  *)
          raise (LearningException "FORCED STOPPED") 
@@ -362,17 +310,18 @@ and deduceR (gamma:DPred.gammaCap) (compi:Var.t) (path:path) (spec: RefTy.t)
 		if (verified) then 
 			 (
 			 Message.show ("Show :: Found a correct Path "^(pathToString path));
-			 (gamma, p2gMap, Success path)
+			 (gamma, exploredpaths, p2gMap, Success path)
 			 ) 
 		else 
 			(
 				Message.show ("Show :: Incomplete Path "^(pathToString path)^" Now chosing Next component "^(Var.toString compi));
 			
-				let (gamma, p2gMap, nextComponent) = chooseC gamma path spec dps p2gMap in 
+				let (gamma, exploredpaths, p2gMap, nextComponent) = chooseC gamma exploredpaths path spec dps p2gMap in 
 				match nextComponent with 
 					| Nothing (dps', failingDisjuncts) ->  
 									Message.show ("Show :: Conflicting path found "^(pathToString path));
 										(gamma, 
+										exploredpaths,
 										p2gMap, 
 										Conflict 
 										{env=gamma;
@@ -382,7 +331,7 @@ and deduceR (gamma:DPred.gammaCap) (compi:Var.t) (path:path) (spec: RefTy.t)
 										 disjuncts= failingDisjuncts}
 										)
 					(*see if we also need to return an updated gamma*)					
-					| Chosen	(dps', ci', pi') -> deduceR gamma ci' pi' spec dps' p2gMap				
+					| Chosen	(dps', ci', pi') -> deduceR gamma exploredpaths ci' pi' spec dps' p2gMap				
 			)
 				 
 
@@ -443,43 +392,7 @@ let backtrackC gamma dps path p2gMap spec =
 	match previousPath path with 
 		| None -> raise (LearningException "No possible backtracking")
 		| Some p_kminus1 ->
-			try 
-				if (List.length p_kminus1 > 0) then 
-					let k_minus1 = List.hd (List.rev p_kminus1) in 
-					let gamma_kminus1 = PGMap.find p2gMap p_kminus1  in 
-
-					let gammaMap_km1 = DPred.getGamma gamma_kminus1 in 
-					let sigmaMap_km1 = DPred.getSigma gamma_kminus1 in 
-					let deltaPred_km1 = DPred.getDelta gamma_kminus1 in 
-
-					(*TODO :: This might lead to unsoundness as the two paths will have two different Gamma*)
-					
-					let (gammaMap_km1, deltaPred_km1, type_pkminus1) = SynTC.typeForPath gammaMap_km1 sigmaMap_km1 deltaPred_km1 spec p_kminus1 in 
-					let RefTy.MArrow (_, _, (_,_), post_kminus1 ) = type_pkminus1 in 
-					let ann_k_type = Gamma.find gammaMap_km1 conflict_node in
-					
-					let RefTy.MArrow (_, pre_k,(_,_),_) = ann_k_type in 
-
-					let gamma_kminus1 = DPred.T{gamma=gammaMap_km1; sigma = sigmaMap_km1; delta= deltaPred_km1} in 
-					
-					let learnt_predicate = Predicate.Not (Predicate.If (post_kminus1, pre_k)) in 
-					let diffpred_kminus1_k = DPred.DP {gammacap = gamma_kminus1; learnt=learnt_predicate} in 
-					let dp_kminus1 = 
-		                   			try 
-		                   				DMap.find dps k_minus1
-		                   			with 
-		                   			 	Knowledge.NoMappingForVar e -> DPred.empty
-
-		            in 
-		                
-		    		let updated_dp_kminus1 = DPred.conjunction dp_kminus1 diffpred_kminus1_k in 
-		    		let updated_dps = DMap.replace dps k_minus1 updated_dp_kminus1 in 
-		    		(gamma_kminus1, p_kminus1, updated_dps, p2gMap) 
-		     
-		    	else 
-		    		(gamma, p_kminus1, dps, p2gMap)		
-			with 
-				e -> raise e
+			 (gamma, p_kminus1, dps, p2gMap)		
 			  (*e -> raise (LearningException ("No gamma for Path "^(pathToString p_kminus1)))*)			
 
 (*cdcleffSynthesizeBind : DPred.gammaCap -> DMap.t -> RefTy.t -> Syn.monExp*)
@@ -490,12 +403,12 @@ let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)
 (* 	Message.show ("Gamma at CDCL"^(Gamma.toString (DPred.getGamma gammaCap)));				
  *)	let p = [] in 
 	let pathGammaMap = PGMap.empty in 
+	let exploredpaths = Explored.empty in 
 	(*the main while loop in the paper*)
-	let rec loop gammacap path spec dps path2GammaMap =
-		
+	let rec loop gammacap exploredpaths path spec dps path2GammaMap =
 		Message.show (" EXPLORED :: "^(pathToString path));
-	             	         	
-		let (gammacap, p2gMap, chooseres) = chooseC gammacap path spec dps path2GammaMap in 
+		         	
+		let (gammacap, exploredpaths, p2gMap, chooseres) = chooseC gammacap exploredpaths path spec dps path2GammaMap in 
 		
 		match chooseres with 
 			| Nothing _ -> 
@@ -510,59 +423,42 @@ let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)
 
 					let conflictpath = path in 
 					
-					let (gammaMap, deltaPred, conflictpathtype) = 
-								SynTC.typeForPath gammaMap sigmaMap deltaPred spec conflictpath in 
-				
+					let exploredpaths = Explored.add exploredpaths conflictpath in 
+	             			
+					
 					let gammacap = DPred.T {gamma = gammaMap; sigma=sigmaMap; delta= deltaPred} in 
 					
 
 					(*TODO :: hack passing empty disjunct, but disjuncts are not needed anyway*)
-					let dps = learnP gammacap dps path conflictpathtype [] in 
-			    	Message.show ("**************Show :: Backtracking From ********"^(pathToString conflictpath));
+					Message.show ("**************Show :: Backtracking From ********"^(pathToString conflictpath));
 	             	let (gammacap, backpath, dps, p2gMap) = backtrackC gammacap dps conflictpath p2gMap spec in
 	         		Message.show ("**************Show :: Backtracked To ********"^(pathToString backpath));
 	             	
-	         		loop gammacap backpath spec dps p2gMap 
+	         		loop gammacap exploredpaths backpath spec dps p2gMap 
  				else			
 					raise (LearningException "No program and No possible backtracking")
 			| Chosen (dps', ci, pi) ->  
-				
 				Message.show (" EXPLORED :: "^(pathToString pi));
 	    
 				Message.show (" ShowPath :: "^pathToString pi);
-	    
-				Message.show ("Show :: Chosen "^(Var.toString ci));
-			(* 	Message.show ("New DPS "^(DMap.toString dps));
-			 *)	Message.show(" Run deduceR");
-				let (gammacap, p2gMap, deduceres) = deduceR gammacap ci pi spec dps' p2gMap in 
+	    		Message.show ("Show :: Chosen "^(Var.toString ci));
+				Message.show(" Run deduceR");
+				let (gammacap, exploredpaths, p2gMap, deduceres) = deduceR gammacap exploredpaths ci pi spec dps' p2gMap in 
 			    match deduceres with 
-			    	| Success p ->
-			    			Message.show (" EXPLORED :: "^(pathToString p));
-	    	 
-			    			Syn.buildProgramTerm  p
+			    	| Success p -> 
+						Message.show (" EXPLORED :: "^(pathToString p));
+	    	    		Syn.buildProgramTerm  p
 			    	| Conflict {env;dps;conflictpath;conflictpathtype;disjuncts} -> 
-			    			Message.show (" Show :: Conflict Path  Found  :: Calling learnP Now");
-	             			(* Message.show ("**************Show :: Printing The Learnt DPS Before LP ********"^((DMap.toString dps)));
-	             			Message.show ("**************Show :: Printing The CPTYPE Before LP ********"^((RefTy.toString conflictpathtype)));
-	             			Message.show ("**************Show :: Printing The GammaCap Before LP ********"^((DPred.gammaCapToString env)));
-	             			 *)
-	             			let dps = learnP env dps conflictpath conflictpathtype disjuncts in 
-			    			
-			    		(* 	Message.show ("**************Show :: Printing The Learnt DPS Before BT ********"^((DMap.toString dps)));
-	             		 *)	Message.show ("**************Show :: Backtracking From ********"^(pathToString conflictpath));
+			    			Message.show (" Show :: Conflict Path  Found  ");
+	             			let exploredpaths = Explored.add exploredpaths conflictpath in 
+	             			Message.show ("**************Show :: Backtracking From ********"^(pathToString conflictpath));
 	             			
-	             			
+
 	             			let (gammacap, backpath, dps, p2gMap) = backtrackC env dps conflictpath p2gMap spec in
 	             			Message.show ("**************Show :: Backtracked to ********"^(pathToString backpath));
 	             			
-	             			(* Message.show ("**************Show :: Printing The Learnt DPS After BT ********"^((DMap.toString dps)));
-	             			 *)(*  Syn.buildProgramTerm  conflictpath
-	              			 *) 
-	             			 
-	             			Message.show ("**************Show :: LOOP ********"^(pathToString backpath));
-	             			(* Message.show ("**************Show :: Printing The GammaCap After BT ********"^((DPred.gammaCapToString env)));
-  *)
-	             			loop gammacap backpath spec dps p2gMap 
+	             		
+	             			loop gammacap exploredpaths backpath spec dps p2gMap 
  							 
 	              			
 			    		(*let dp = learnP gamma tk ck pk dp in 
@@ -572,7 +468,7 @@ let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)
 		
 	in 
 
-	loop gammaCap p spec dps pathGammaMap
+	loop gammaCap exploredpaths p spec dps pathGammaMap
 
 
 

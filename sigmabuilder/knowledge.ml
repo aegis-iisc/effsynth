@@ -7,11 +7,13 @@ module P = Predicate
 exception NoMappingForVar of string
     
 (*A var to refinement type mapping typing environment*)
-
+(*TODO : In  order to improve performance , try using Map or HashTables*)
 module DiffPredicate = struct
 	type gammaCap =  T of {gamma : Gamma.t; sigma : Sigma.t; delta : P.t}
+	(*NOTE : May be keeping separate predicates for conjunts and disjuncts will be a better idea *)
 	type t = DP of {gammacap : gammaCap; learnt : P.t}
 
+	let equalGammaCap g1 g2 = true 
 
 	let emptyGammaCap = T {gamma= Gamma.empty; sigma = Sigma.empty; delta = P.True}
 
@@ -43,10 +45,10 @@ module DiffPredicate = struct
 	let gammaCapToString g = 
 		let T {gamma;sigma;delta} = g in 
 		let str = 
-			let gammaStr = "gamma TBU" in 
+			let gammaStr = "gamma TBU " (*Gamma.toString gamma*) in 
 			let sigmaStr = "sigma TBU" in 
-			let deltaStr = Predicate.toString delta in 
-			(gammaStr^sigmaStr^deltaStr) in 
+			let deltaStr = "delat TBU "(*Predicate.toString delta*) in 
+			(" *******Gamma********** \n"^gammaStr^" \n *************Sigma**********\n  "^sigmaStr^"\n ************Delta ***********\n"^deltaStr) in 
 		str	 
 
 	let appendGammaCap gcap1 gcap2 = 
@@ -57,7 +59,11 @@ module DiffPredicate = struct
 			delta= P.Conj (delta1, delta2)} 
 
 
-	let toString t = "DiffPredicate TBU"
+	let toString t = 
+	 let DP {gammacap;learnt} = t in 
+	 let str = "\n -----------Gammacap-------------\n : "^(gammaCapToString gammacap) in 
+	 let str = str^"\n --------------Learnt-----------\n "^(Predicate.toString learnt) in 
+	 str
 
 	let equal t1 t2 = 
 	 (*TODO ??*)
@@ -78,6 +84,15 @@ module DiffPredicate = struct
 		let gamma = appendGammaCap gcap1 gcap2 in 
 		let pred = Predicate.Conj(learnt1, learnt2) in 
 		DP {gammacap=gamma;learnt=pred} 
+
+	let disjunction t1 t2 = 
+		(*the pollution of gammas must be *)
+		let DP {gammacap=gcap1; learnt=learnt1} = t1 in 
+		let DP {gammacap =gcap2; learnt=learnt2} = t2 in 
+		assert (no_pollution  gcap1 gcap2);
+		let gamma = appendGammaCap gcap1 gcap2 in 
+		let pred = Predicate.Disj(learnt1, learnt2) in 
+		DP {gammacap=gamma;learnt=pred} 	
 end
 
 module DistinguisherMap = struct
@@ -108,7 +123,103 @@ let find t var =
 let add = fun t -> fun var rt -> Map.add t var rt
 let remove = Map.remove
 let replace = Map.replace 
+let toString t =
+List.fold_left (fun accstr (ci, dpi) -> (accstr^"\n "^(Var.toString ci)^" |-> "^(DiffPredicate.toString dpi))) " " t  
+
+end 
+
+module PathGammaMap = struct
+
+module ProgramPath =
+       struct
+         type t = Syn.path(*a variable capturing the  name*)
+         let equal (t1,t2)  =  
+         						try 
+         							List.fold_left2  
+         						 	(fun accBool ci cj -> accBool && 
+         						 		Var.equal ci cj) true t1 t2
+         						with 
+         							Invalid_argument e-> false 	
+       end
+
+module Value =
+       struct
+         (*Need to change later to scehema*)
+         type t = DiffPredicate.gammaCap
+         let equal (t1,t2) = DiffPredicate.equalGammaCap t1 t2           
+end
+
+module Map   = Applicativemap.ApplicativeMap (ProgramPath) (Value) 
+
+type t = Map.t
+let empty = Map.empty
+let mem =  Map.mem
+let find t var = 
+    try (Map.find t var) 
+  with 
+  | (Map.KeyNotFound k) -> raise (NoMappingForVar (Syn.pathToString k))
+
+let add = fun t -> fun var rt -> Map.add t var rt
+let remove = Map.remove
+let replace = Map.replace 
+
+let toString t =
+List.fold_left (fun accstr (pi, gammai) -> (accstr^"\n "^(Syn.pathToString pi)^" |-> "^(DiffPredicate.gammaCapToString gammai))) " " t  
 
 
 end 
 
+
+module PathChildrenMap = struct
+
+module Key =
+       struct
+         type t = Syn.path(*a variable capturing the  name*)
+         let equal (t1,t2)  =  
+         						try 
+         							List.fold_left2  
+         						 	(fun accBool ci cj -> accBool && 
+         						 		Var.equal ci cj) true t1 t2
+         						with 
+         							Invalid_argument e-> false 	
+       end
+
+module Value =
+       struct
+         (*a list of visited components*)
+         type t = Var.t list
+         let equal (t1, t2)  =  
+   	 	  try 
+        	List.fold_left2  
+        	(fun accBool ci cj -> accBool && 
+            	Var.equal ci cj) true t1 t2
+    	  with 
+        	Invalid_argument e-> false  
+
+         let toString t = 
+         	(
+         		(List.fold_left 
+         				(fun accStr ci -> accstr^(" : ")^(Var.toString t)) "[ " t)
+         		^" ]") 	
+             
+end
+
+module Map   = Applicativemap.ApplicativeMap (Ket) (Value) 
+
+type t = Map.t
+let empty = Map.empty
+let mem =  Map.mem
+let find t var = 
+    try (Map.find t var) 
+  with 
+  | (Map.KeyNotFound k) -> raise (NoMappingForVar (Syn.pathToString k))
+
+let add = fun t -> fun var rt -> Map.add t var rt
+let remove = Map.remove
+let replace = Map.replace 
+
+let toString t =
+List.fold_left (fun accstr (pi, childreni) -> (accstr^"\n "^(Syn.pathToString pi)^" |-> "^(Value.toString childreni))) " " t  
+
+
+end 

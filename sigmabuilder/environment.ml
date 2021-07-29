@@ -154,17 +154,24 @@ end
 
 
 module ExploredPaths = struct 
-  type t = Var.t list
+  type t = Syn.path list
+  let equal t1 t2  =  
+    try 
+        List.fold_left2  
+        (fun accBool ci cj -> accBool && 
+            Var.equal ci cj) true t1 t2
+    with 
+        Invalid_argument e-> false  
   let empty = []  
-  let find t (e:Var.t) = List.find (fun e' -> (Var.equal e e')) t 
+  let find t (e: Syn.path) = List.find (fun e' -> (equal e e')) t 
   let add t e = e::t
   let remove t e  =
-        List.filter (fun e' -> not (Var.equal e e')) t 
+        List.filter (fun e' -> not (equal e e')) t 
 
-  let mem t e = List.exists e t 
+  let mem t e = List.exists (fun ei -> equal e ei) t 
   let fromList ls = ls
   let toString t = 
-        List.fold_left (fun stracc ti -> (stracc^(Var.toString ti))) "Paths" t
+        List.fold_left (fun stracc ti -> (stracc^"\n"^(Syn.pathToString ti))) "Paths" t
 end
 
 

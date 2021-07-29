@@ -6,9 +6,13 @@ module RefTy = RefinementType
 
 type var = Var.t 
 
+type path =  Var.t list 
+
+
 type caseExp = {constuctor : var;
                 args : var list ;
                 exp : typedMonExp}
+
 
 
 
@@ -96,5 +100,21 @@ let getType (t : typedMonExp) =
    let {ofType;_} = t in ofType
 
 (*placeholder , TODO implement complete later*)
-let buildProgramTerm (ci : Var.t) (path : Var.t list) =  
-        Evar ci
+let buildProgramTerm (path : Var.t list) =  
+        match path with
+            | [] -> Eskip
+            | x :: _ -> Evar x
+
+
+let pathToString (p:path) = 
+        (List.fold_left (fun accstr ci -> accstr^("--->")^(Var.toString ci)) "PATH " p)^"\n"
+
+let previousComponent (p:path) = 
+    if (List.length p < 2) then None 
+        else 
+         Some (List.nth (p) ((List.length p) - 2))
+
+let previousPath (p : path) =
+        if (List.length p < 1) then None
+        else 
+         Some (List.rev (List.tl (List.rev p)))

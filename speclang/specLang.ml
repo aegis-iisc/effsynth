@@ -1253,7 +1253,7 @@ let rec toString t = match t with
       | Not t -> ("Not "^(toString t))
       | Conj (e1,e2) -> ("\n Conj <c "^(toString e1 )^"\n \t , "^(toString e2)^" >c ")
                       
-      | Disj (e1,e2) ->  ("Disj \n  "^(toString e1 )^"\n  "^(toString e2))
+      | Disj (e1,e2) ->  ("\n Disj <d  "^(toString e1 )^"\n \t,   "^(toString e2)^ ">d ")
       
       | If (e1,e2) -> ("\n Impl < "^(toString e1 )^"\n \t "^(toString e2)^" >"  )
 
@@ -1391,6 +1391,7 @@ let rec toString t = match t with
 
   let pred_conjunction (_pred_list : t list) = 
           List.fold_left (fun conjunct p -> Conj (conjunct, p)) (True) _pred_list  
+
 
 
 (*{v : tau | pred} {v : tau | v = Inl x /\ pred x*)

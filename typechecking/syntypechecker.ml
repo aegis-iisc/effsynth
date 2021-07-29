@@ -4,7 +4,11 @@ open SpecLang
 module Gamma = Environment.TypingEnv 
 module Sigma = Environment.Constructors
 module Components = Environment.Components
-module Explored = Environment.ExploredTerms                 
+module Explored = Environment.ExploredTerms 
+module DPred = Knowledge.DiffPredicate
+module DMap = Knowledge.DistinguisherMap
+
+
 module VCE = Vcencode 
 module P = Predicate  
 exception SynthesisException of string 
@@ -26,9 +30,9 @@ let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (ac
      match (acc_type, ci_type) with 
       | (RefTy.MArrow (eff1, phi1, (v1,t1), phi1') , RefTy.MArrow (eff2,phi2, (v2, t2), phi2')) -> 
               
-                let () = Printf.printf "%s" ("\n Type t1 "^(RefTy.toString t1)) in
+                (* let () = Printf.printf "%s" ("\n Type t1 "^(RefTy.toString t1)) in
                 let () = Printf.printf "%s" ("\n Type t2 "^(RefTy.toString t2)) in
-  
+   *)
                 let fresh_h_int = Var.get_fresh_var "h_int" in 
                 let _Gamma = VC.extend_gamma (fresh_h_int, (RefTy.lift_base Ty_heap)) acc_gamma in 
       
@@ -53,8 +57,8 @@ let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (ac
                 
 
                 
-                let () = Printf.printf "%s" "\n Generating The Path Induction pre " in 
-               
+               (*  let () = Printf.printf "%s" "\n Generating The Path Induction pre " in 
+                *)
                 
                 let f2_pre =  P.If ((VC.apply phi1' [(bv_h, Ty_heap); (bv_x, RefTy.toTyD t1); (fresh_h_int, Ty_heap)]), 
                                     ((VC.apply phi2 [(fresh_h_int, Ty_heap)]))
@@ -66,10 +70,10 @@ let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (ac
                 in
 
                 let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], P.Conj (f1_pre, f2_pre))  in 
-                let () = Printf.printf "%s" ("\n PRE \n "^(Predicate.toString bind_pre)) in  
-             
-                let () = Printf.printf "%s" "\n Generating The Path Induction post " in 
-                
+                (* let () = Printf.printf "%s" ("\n PRE \n "^(Predicate.toString bind_pre)) in  
+              *)
+                (* let () = Printf.printf "%s" "\n Generating The Path Induction post " in 
+                 *)
                 (*creating post*)
                 (*forall v h h' x h_int. phi1 x h h_int*)
                 
@@ -87,8 +91,8 @@ let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (ac
                                in 
 
  
-                let () = Printf.printf "%s" ("\n POST \n "^(Predicate.toString bind_post)) in  
-                                       
+             (*    let () = Printf.printf "%s" ("\n POST \n "^(Predicate.toString bind_post)) in  
+              *)                          
                
                 (*least uppper bound*)
                 let lubM = Effect.lub eff1 eff2  in                 
@@ -105,7 +109,10 @@ let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (ac
 
 
 
-(*path is a list of variables*)
+(*path is a list of variables
+This seems to be a bit broken, we should be able to get a type for a path without a pre-condition
+c1 : c2 .... ck 
+*)
 let typeForPath gamma sigma delta spec path  = 
 	let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
 	
@@ -163,3 +170,38 @@ let typeForPathSuffix gamma sigma delta suffix prefixType =
    
 	 accumulatePathType suffix gamma delta prefixType   
 
+let typeCheckPath gammaMap sigmaMap deltaPred (path : Var.t list) (spec : RefTy.t) = 
+
+
+	
+	let (gammaMap, deltaPred, path_type) = 
+			typeForPath gammaMap sigmaMap deltaPred spec path in 
+	
+	let gammacap = DPred.T{gamma=gammaMap;
+							sigma = sigmaMap;
+							delta = deltaPred} in 
+			 
+
+	let RefTy.MArrow (eff, _,_,_) = spec in 
+	let RefTy.MArrow (effi, _,_,_) = path_type in 
+	 
+    if (not (Effect.isSubEffect effi eff))  
+            then (false, gammacap, path_type)   
+    else    
+          (*   let () = Printf.printf "%s" ("Found Path Type "^(RefTy.toString path_type)) in 
+            let () = Printf.printf "%s" ("Compared Against Spec "^(RefTy.toString spec)) in 
+	       *)  
+	       	let vc = VC.fromTypeCheck gammaMap [deltaPred] (path_type, spec) in  
+
+	        (*make a direct call to the SMT solver*)
+	        let vcStandard = VC.standardize vc in 
+	        let () = Printf.printf "%s" (VC.string_for_vc_stt vcStandard) in  
+	        let result = VCE.discharge vcStandard  in 
+	        match result with 
+	        | VCE.Success -> 
+	                      (true, gammacap, path_type)
+	        | VCE.Failure -> 
+	                      (false, gammacap, path_type) 
+	        | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
+	        
+	     

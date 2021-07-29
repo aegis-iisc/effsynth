@@ -1,6 +1,7 @@
 *.cmi
 *.native
 *.swp
+*.out
 
 **/_build/**
 

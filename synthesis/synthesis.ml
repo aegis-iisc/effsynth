@@ -525,7 +525,7 @@ and esynthesizeEffSigma gamma sigma delta sigmaType spec : (Var.t list) option =
    (*accumulateMonExps are the list of componensts c1 ; c2 ;..., ck*)
    (*TODO this is similar to esynthesizeBind buth it  has an extra information in Tuple list from the sigma type
    REDO this*)
-   let rec esynthesizePath explored gamma sigma delta accumulatedMonExps ltuples : ((Var.t list), (Environment.ExploredPaths.t)) result = 
+   let rec esynthesizePath explored gamma sigma delta accumulatedMonExps ltuples : ((Var.t list), (Environment.ExploredTerms.t)) result = 
      match ltuples with 
         | [] -> 
                 (*create a condition [\Gaamma\ |= delta =>  post*)
@@ -668,7 +668,7 @@ and   esynthesizeEff explored gamma sigma delta spec =
                                     
 (*In some cases the input spec can be more than the RefinementType*)
 (*synthesize : TypingEnv.t -> Constructors.t -> RefinementType.t -> Syn.typedMonExp option *)
-let rec synthesize gamma sigma spec : (Syn.typedMonExp option)=  
+let rec synthesize gamma sigma spec learning : (Syn.typedMonExp option)=  
    match spec with 
       | RefTy.Base (v, t, pred) -> esynthesizeScalar gamma sigma spec  
       | RefTy.Arrow (rta, rtb) -> isynthesizeFun gamma sigma spec  (*applies Tfix and Tabs one after the other*)
@@ -680,7 +680,12 @@ let rec synthesize gamma sigma spec : (Syn.typedMonExp option)=
                  (*testing cdcl approach*)
                  let gammacap = DPred.T {gamma = gamma; sigma=sigma;delta= P.True} in 
                  let dps_empty = DMap.empty in 
-                 let res = Learning.cdcleffSynthesizeBind gammacap dps_empty spec in 
+                 let res = 
+                    if (learning) then 
+                     Learning.cdcleffSynthesizeBind gammacap dps_empty spec 
+                    else  
+                     NoLearning.cdcleffSynthesizeBind gammacap dps_empty spec 
+                 in     
                  Some {Syn.expMon=res;Syn.ofType = spec} 
                 (*main effectful synthesis rules*)
       | _ -> None  
