@@ -41,6 +41,24 @@ let toString t =
 let enumerateAndFind t (rt:TypingEnvValue.t) : ((TypingEnvKey.t*TypingEnvValue.t) list)   = 
         TyMap.enumerate t rt 
 
+let lambdas4RetType t (rt:TypingEnvValue.t)  : ((TypingEnvKey.t*TypingEnvValue.t) list) =
+   
+   let rec loop gamma (filtered:(TypingEnvKey.t*TypingEnvValue.t) list) =
+        match gamma with 
+            [] -> filtered
+            | (vi, rti) :: xs-> 
+                    match rti with 
+                        | RefinementType.Arrow ((arg, argty), retty) -> 
+                            if (RefinementType.compare_types rt retty) then  
+                                let filtered = filtered@[(vi, rti)] in 
+                                loop xs  filtered
+                            else 
+                                loop xs  filtered
+                        | _ ->  loop xs  filtered          
+  in 
+ loop t []
+
+
 (*TODO :: Currently the filter directly returns the same gamma, needs updation later*)          
 let filterOnEffectSet t eff = 
       t            
@@ -130,14 +148,32 @@ let add = fun t -> fun name comp -> CompMap.add t name comp
 let remove = CompMap.remove
 
 end
-
+(* 
 (*To be populated later*)
 module RelationalEnv = struct
+
+module RelationId =
+       struct
+         type t = RelId.t
+         let equal(t1,t2)  =  RelId.equal t1 t2
+       end
+
+module Relation =
+       struct
+         Need to change later to scehema
+         type t = StructuralRelation.t
+         let equal (t1,t2) = true           
+
+end
+
+module ConsMap   = Applicativemap.ApplicativeMap (ConstructorEnvKey) (ConstructorEnvValue) 
+
+
 
 
 
 end
-
+ *)
 module ExploredTerms = struct 
   type t = Var.t list
   let equal t1 t2 = Var.equal t1 t2    

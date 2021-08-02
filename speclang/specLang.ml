@@ -231,7 +231,7 @@ type t =
  val instantiateTyvars : (t * Tyvar.t)list -> t ->  t 
  val unifiable : t * t -> bool  
  val unify : t -> t ->  t
-     
+ val isList : t -> bool      
 
  
 
@@ -291,7 +291,7 @@ type t =
  let rec toString t = 
       match t with
         | Ty_unknown -> "Ty_unknown" 
-        | Ty_alpha tvar -> Tyvar.toString tvar
+        | Ty_alpha tvar -> ("Ty_alpha"^Tyvar.toString tvar)
         | Ty_unit -> "Ty_unit"
         | Ty_ref  t -> ("Ty_ref "^(toString t)) 
         | Ty_list  t -> ("Ty_list "^(toString t))
@@ -302,6 +302,12 @@ type t =
         | Ty_string -> "Ty_string"
         | Ty_arrow  (_ , _)-> "Function type"
         | Ty_alg at -> Algebraic.toString at
+
+ let isList t = 
+  match t with 
+    | Ty_list _ -> true 
+    | Ty_alpha v -> Tyvar.toString v = "list" 
+    | _ -> false
 
  let makeTunknown () = Ty_unknown           
  let makeTList t = Ty_list t 

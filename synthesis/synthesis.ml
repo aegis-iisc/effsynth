@@ -10,6 +10,8 @@ module DPred = Knowledge.DiffPredicate
 module DMap = Knowledge.DistinguisherMap
 module CDCL = Learning
 module P = Predicate  
+module SynTC = Syntypechecker
+
 exception SynthesisException of string 
 exception Unhandled
 open Syn
@@ -24,6 +26,9 @@ end
 let itercount = ref 0 
 let enumerated = ref [] 
 let subprobplem = ref []
+
+let learnConst = true 
+let noLearnConst = false
 
 type ('a, 'b) result = 
             Success of 'a 
@@ -231,22 +236,6 @@ let project (goalPred:Predicate.t) gamma (args:RefTy.t list)  : (Var.t * RefTy.t
 
 
 
-
-(*Top level syntheis goals for Lambda, same as the traditional syntehsis rules *)
-let rec isynthesizeFun gamma sigma spec = 
-  (*TODO unhandled case of isynthesize*)   
-  None
-
-       
-(*enumerates and finds function term variable of functional type*)
-let esynthesizeFun explored gamma sigma spec : Syn.typedMonExp option = 
-       let foundbyEnum = enumPureE explored gamma sigma spec in 
-       match foundbyEnum with 
-               | Some t -> Some t 
-               | None -> 
-                     (*if we cannot find a function of the given type we can make a call to iRule for function synthesis*)   
-                     isynthesizeFun gamma sigma spec               
-
           
 
 
@@ -257,7 +246,7 @@ let rec esynthesizeApp gamma sigma spec  : Syn.typedMonExp option =
         let funType = RefTy.Arrow ((Var.get_fresh_var "v", RefTy.fromTyD Ty_unknown), spec) in  
         let explored = Explored.empty in 
         let rec choose explored ftype : (Syn.typedMonExp option)=  
-                let efun =  esynthesizeFun explored gamma sigma ftype in 
+                let efun =  esynthesizeFun explored gamma sigma P.True ftype in 
                 match efun with 
                         | None -> None
                         | Some {expMon=lam;ofType=rtlam} -> 
@@ -359,14 +348,14 @@ and isynthesizeConstApp gamma sigma spec : ((Var.t * RefTy.t) list * Syn.typedMo
 
 
 (*creates a list of missing args required while synthesizing the intro term for spec*)
-let isynthesizeHoles gamma sigma spec : ((Var.t * RefTy.t) list* Syn.typedMonExp) option  = 
+and  isynthesizeHoles gamma sigma spec : ((Var.t * RefTy.t) list* Syn.typedMonExp) option  = 
         (*To syntesize holes, try applying Consrtructors in sigma or functions in gamma
          * Currently only trying constructor application*)
         let missingTypedArgsList_constAppExp = isynthesizeConstApp gamma sigma spec in 
          missingTypedArgsList_constAppExp 
 
 (*T-ret rule*)
-let esynthesizeRet gamma sigma spec : (Syn.typedMonExp option)=  
+and  esynthesizeRet gamma sigma spec : (Syn.typedMonExp option)=  
      let RefTy.MArrow (eff, pre, (v, t), post) = spec in
      (match eff with 
        | Effect.Pure -> 
@@ -388,7 +377,7 @@ let esynthesizeRet gamma sigma spec : (Syn.typedMonExp option)=
 (*The general bind rule for let \Sigma (xi : \taui) <- e1 in e2
  * delta  = . | pred :: delta
 TODO :: FInish this definition*)
-let rec esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.typedMonExp option)) = 
+and  esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.typedMonExp option)) = 
    
     Message.show ("esynthesizeBind");
    (*actual knapsack*)
@@ -665,20 +654,112 @@ and   esynthesizeEff explored gamma sigma delta spec =
                             match bindExp with 
                              | Some t -> Some t 
                              | None -> None
+
+(* TODO :: First implement a special rule for list, then generalize it to ant algebraic type, say tree*)
+and isynthesizeMatch gamma sigma delta matchingArg matchingArgType spec : Syn.typedMonExp option = 
+    Message.show ("Show :: Synthesize Match "^(RefTy.toString spec));
+   
+    let RefTy.Base(_, argBase, argBasePhi) = matchingArgType in 
+     
+    Message.show ("Show :: List "^(TyD.toString argBase));
+           
+ (*list constructor case, work on the genaral case later*)   
+  match argBase with 
+    | Ty_list _ 
+    | Ty_alpha _ -> 
+          
+          assert (TyD.isList argBase);      
+          Message.show ("Show LIST CASE ??"^(TyD.toString argBase)^" PHI "^(Predicate.toString argBasePhi));
+          
+          let x_var = Var.get_fresh_var "x" in 
+          let xs_var = Var.get_fresh_var "xs" in 
+          
+          let gamma_c= Gamma.add gamma x_var (RefTy.fromTyD (TyD.Ty_int)) in 
+          let gamma_c = Gamma.add gamma_c xs_var ((RefTy.fromTyD (TyD.Ty_list TyD.Ty_int))) in 
+
+
+          let phi_c = SynTC.generateConsConstraints  matchingArg x_var xs_var in 
+          let phi_n = SynTC.generateNilConstraints   matchingArg in 
+          Message.show ("Show :: "^(Predicate.toString phi_c));
+          Message.show ("Show :: "^(Predicate.toString phi_n));
+
+
+          let delta_n = Predicate.Conj (delta, phi_n) in 
+          let delta_c = Predicate.Conj (delta, phi_c) in 
+
+
+          
+
+          let gamma_n = gamma in 
+          let e_n = synthesize gamma_n sigma delta_n spec learnConst in 
+          let e_c = synthesize gamma_c sigma delta_c spec learnConst in 
+
+          (match (e_n, e_c) with 
+           | (Some exp_n, Some exp_c)-> 
+                  let caseExps = [exp_n; exp_c] in 
+                  let consArgs = [[];[x_var;xs_var]] in
+                  (*General Case : we will have the constructor name in the Sigma*)
+                  let cons = [Var.fromString "Nil"; Var.fromString "Cons"] in 
+                  let matchingArg = {Syn.expMon = Syn.Evar matchingArg; 
+                                        Syn.ofType = matchingArgType} in  
+                  let matchExp = Syn.merge matchingArg cons consArgs caseExps in
+
+                  Some {Syn.expMon = matchExp;
+                        Syn.ofType = spec} 
+            |(_,_) -> None)      
+ 
+    | _ ->   
+        Message.show "Show :: Non List Case";
+        synthesize gamma sigma delta spec learnConst 
+  
+  
+
                                     
+
+
+(*Top level syntheis goals for Lambda, same as the traditional syntehsis rules
+calls the top-level macthing and application followed by the standard learning based rule *)
+and isynthesizeFun gamma sigma delta spec : Syn.typedMonExp option= 
+  (*TODO unhandled case of isynthesize*)   
+  let RefTy.Arrow ((x, argT), retT) = spec in 
+  (*extend gamma*)
+  (*first try a match case, if it does not succeed, try the non-matching case*)
+  let gamma_extended = Gamma.add gamma x argT in 
+  let macth_expression = isynthesizeMatch gamma_extended sigma delta x argT retT in 
+  match macth_expression with 
+    | Some e -> Some e
+    | None ->  
+        (*TODO *make a call to conditional case*)
+        synthesize gamma_extended sigma delta retT learnConst 
+  
+       
+(*enumerates and finds function term variable of functional type*)
+and esynthesizeFun explored gamma sigma delta spec : Syn.typedMonExp option = 
+       let foundbyEnum = enumPureE explored gamma sigma spec in 
+       match foundbyEnum with 
+               | Some t -> Some t 
+               | None -> 
+                     (*if we cannot find a function of the given type we can make a call to iRule for function synthesis*)   
+                     isynthesizeFun gamma sigma delta spec               
+
+
+
 (*In some cases the input spec can be more than the RefinementType*)
 (*synthesize : TypingEnv.t -> Constructors.t -> RefinementType.t -> Syn.typedMonExp option *)
-let rec synthesize gamma sigma spec learning : (Syn.typedMonExp option)=  
+and  synthesize gamma sigma delta spec learning : (Syn.typedMonExp option)=  
    match spec with 
       | RefTy.Base (v, t, pred) -> esynthesizeScalar gamma sigma spec  
-      | RefTy.Arrow (rta, rtb) -> isynthesizeFun gamma sigma spec  (*applies Tfix and Tabs one after the other*)
+      | RefTy.Arrow (rta, rtb) -> 
+                 Message.show "***********Calling S-FUNC synthesize***************";
+                    
+                isynthesizeFun gamma sigma delta spec  (*applies Tfix and Tabs one after the other*)
       | RefTy.MArrow (eff, pre, t, post) -> (* let res = esynthesizeEff Explored.empty gamma sigma VC.empty_delta spec in 
                  let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in 
                  let () = Message.show (List.fold_left (fun str vi -> (str^"\n \t --"^(Var.toString vi))) "SUB " !subprobplem) in 
                   *)
                   Message.show "***********Calling CDCL synthesize***************";
                  (*testing cdcl approach*)
-                 let gammacap = DPred.T {gamma = gamma; sigma=sigma;delta= P.True} in 
+                 let gammacap = DPred.T {gamma = gamma; sigma=sigma;delta= delta} in 
                  let dps_empty = DMap.empty in 
                  let res = 
                     if (learning) then 

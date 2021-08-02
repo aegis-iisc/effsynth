@@ -11,11 +11,45 @@ module DMap = Knowledge.DistinguisherMap
 
 module VCE = Vcencode 
 module P = Predicate  
+module RP = Predicate.RelPredicate
 exception SynthesisException of string 
 exception Unhandled
 open Syn
 
 
+
+(*TODO : 1. This needs to be generalized for different alfgebraic constructors 
+        2. Currently mannualy generating nil and cons preds, this has to be populated 
+        by parsing relations from the programmer*)       
+let generateNilConstraints (macthedArg) = 
+      (*len (ls) = 0*)
+      let nil_length = 
+        P.Rel(RP.NEq 
+              ( R (RelLang.instOfRel (RelId.fromString "len"), macthedArg),
+                RelLang.relexpr_for_int 0
+              )
+              )  
+      in 
+      let () = Printf.printf "%s" ("Nil Length "^(Predicate.toString nil_length)) in 
+      nil_length  
+
+
+
+
+let generateConsConstraints (macthedArg : Var.t) (arg_x: Var.t) (arg_xs : Var.t) = 
+    let cons_length =  P.Rel
+      (RP.NEq( 
+        R( (RelLang.instOfRel (RelId.fromString "len")), macthedArg),
+                        
+       ADD(
+          R ( RelLang.instOfRel (RelId.fromString "len"), 
+                arg_xs
+              ),
+          RelLang.relexpr_for_int 1))
+        )  in 
+  let () = Printf.printf "%s" ("Cons Length "^(Predicate.toString cons_length)) in 
+      
+    cons_length
 
 
 (*TODO :: build a typechecker for the *)
@@ -204,4 +238,3 @@ let typeCheckPath gammaMap sigmaMap deltaPred (path : Var.t list) (spec : RefTy.
 	                      (false, gammacap, path_type) 
 	        | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
 	        
-	     

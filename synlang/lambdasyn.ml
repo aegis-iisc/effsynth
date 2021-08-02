@@ -118,3 +118,21 @@ let previousPath (p : path) =
         if (List.length p < 1) then None
         else 
          Some (List.rev (List.tl (List.rev p)))
+
+
+let merge matchingArg constructors consArgsList caseBodyList = 
+       assert (List.length constructors == List.length consArgsList);
+       assert (List.length consArgsList == List.length caseBodyList);
+       
+            
+       let loop c a b cexpList = 
+            match (c, a, b) with 
+                | ([],[],[]) -> cexpList
+                | (x::xs, y::ys, z::zs) -> 
+                     let caseExp_i = {constuctor =x;args=y;exp=z} in 
+                     cexpList@[caseExp_i]     
+        in 
+        
+       let megerdCaseExpList = loop constructors consArgsList caseBodyList [] in 
+       let mergedExp = Ematch(matchingArg, megerdCaseExpList) in 
+       mergedExp

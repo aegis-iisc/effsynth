@@ -197,14 +197,13 @@ module Value =
         	Invalid_argument e-> false  
 
          let toString t = 
-         	(
-         		(List.fold_left 
-         				(fun accStr ci -> accstr^(" : ")^(Var.toString t)) "[ " t)
-         		^" ]") 	
+         	List.fold_left 
+         	(fun accStr ci -> (accStr^" : "^(Var.toString ci))) "[ " t
+        	
              
 end
 
-module Map   = Applicativemap.ApplicativeMap (Ket) (Value) 
+module Map   = Applicativemap.ApplicativeMap (Key) (Value) 
 
 type t = Map.t
 let empty = Map.empty

@@ -11,6 +11,7 @@ module SynTC = Syntypechecker
 module DPred = Knowledge.DiffPredicate
 module DMap = Knowledge.DistinguisherMap
 module PGMap = Knowledge.PathGammaMap
+
 exception LearningException of string 
 exception Unhandled
 open Syn
@@ -41,9 +42,10 @@ type deduceResult =
 						}
 
 (*The standard hoare-pecondition check*)
-let hoarePre gamma spec path ci rti = 
-	let () =Message.show ("Potential Component  "^(Var.toString ci)) in 
-	let RefTy.MArrow (_, ci_pre,  (_,_), c_post) = rti in 
+let rec hoarePre gamma spec path ci rti = 
+	let () =Message.show ("Potential Component/Function  "^(Var.toString ci)) in 
+    let RefTy.MArrow (_, ci_pre,  (_,_), c_post) = rti in  
+
 	(*extract fields from gamma^*)
 	let gammaMap = DPred.getGamma gamma in 
 	let sigmaMap = DPred.getSigma gamma in 
@@ -115,6 +117,8 @@ let hoarePre gamma spec path ci rti =
 	(gammaCap, ci_pre, allowed)
 
 
+
+	
 
 
 (*a routine to verify that the choice ci, in the current gamma satisfies the distinguishing constraints*)
@@ -243,11 +247,12 @@ let rec chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.g
     let gamma = DPred.getGamma gammacap in 
     let c_wellRetType = Gamma.enumerateAndFind gamma spec in 
    
+    let c_wellRetTypeLambda = Gamma.lambdas4RetType gamma spec in 
     let c_es = List.filter (fun (vi, ti) -> 
     					let RefTy.MArrow (effi, _,(_,_), _) = ti in 
 						Effect.isSubEffect effi eff) c_wellRetType in 
     
-    
+    let c_es = c_es@c_wellRetTypeLambda in 
 
     (*choosing a component
     The failing disjunct keeps the list of failing Predicates while checking the Hoare Post => Pre implication*)
@@ -259,80 +264,147 @@ let rec chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.g
          let () = List.iter (fun (vi,_) -> Message.show (Var.toString vi)) foundTypes in 
  *)
     	match potentialChoices with 
-    		| [] -> 
-    		    (gammacap, p2gMap,  Nothing (dps, failingDisjuncts)) 
-    		| (vi, rti) :: xs -> 
-    			
+		| [] -> 
+		    (gammacap, p2gMap,  Nothing (dps, failingDisjuncts)) 
+		| (vi, rti) :: xs -> 
+			match rti with 
+    			| RefTy.Arrow ((varg, argty), retty) -> 
+					Message.show (" Show *************** Arrow Component ************"^(Var.toString vi));
+				
+					let gammaMap = DPred.getGamma gamma in 
+					let sigmaMap = DPred.getSigma gamma in 
+					let deltaPred = DPred.getDelta gamma in 
+					let e_arg = Synthesis.synthesize gammaMap sigmaMap deltaPred argty true in 
+					(match e_arg with (*BEGIN1*)
+						| None -> choice xs gammacap dps failingDisjuncts p2gMap
+						| Some e -> 
+						 	let (gammacap, post_imp_phi_ci, allowed) =  hoarePre gamma spec path ci retty in
+						 	if (allowed) then 
+			    				let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi rti in 
+			    				if (isDistinguished) then 
+				                	let p2gMap = PGMap.add p2gMap (path@[vi]) gamma_with_ci in 
+			    					(*chosen a ci s.t. path--> ci is allowed and distinguished*)
+			    					(gamma_with_ci, p2gMap, Chosen (dps, vi, path@[vi]))  
+			    				else
+				                 	(*~phi_ci'*)
+				                   let not_phi_ci' =  Predicate.Not phi_ci' in 
+				                   (*D(ci)*)
+				                   let dp_ci = 
+				                   			try 
+				                   				DMap.find dps vi 
+				                   			with 
+				                   			 	Knowledge.NoMappingForVar e -> DPred.empty
+
+				                   in 
+								   let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'} in
+				                   (*The two gamma will have overlap, requires thinking*)
+				                   let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
+				                   let updated_dps = DMap.replace dps vi updated_dp_ci in 
+				                   (*make a different choice*)
+				                   choice xs gammacap updated_dps failingDisjuncts p2gMap
+				                	
+		             		else
+							    let failing_predicate = post_imp_phi_ci' in 
+				             	(*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
+				             	let dps= 
+				             		if (List.length path > 0) then 
+					             		(*D(ci)*)               
+					 					let c_terminial = List.hd (List.rev (path)) in 
+						                let dp_cterminal = 
+						                   			try 
+						                   				DMap.find dps c_terminial 
+						                   			with 
+						                   			 	Knowledge.NoMappingForVar e -> DPred.empty
+
+						                   in 
+						                  
+						                let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate} in
+						                   (*The two gamma will have overlap, requires thinking
+						                     take disjunction*)
+						                let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
+						                let dps = DMap.replace dps c_terminial updated_dp_cterminal in 
+						                dps  
+						            else 
+						            	dps  
+						        in     	
+				                let failingDisjuncts = failing_predicate :: failingDisjuncts in 
+				                choice xs gammacap dps failingDisjuncts p2gMap
+				              
+
+					) (*END1*)	
+
+    		
+    			| RefTy.MArrow (_,_,(_,_),_) -> 
     			(*check the hoare pre-condition rule*)
-    			    
-    			let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path vi rti in 
-    			if (allowed) then 
-    				(
-    				Message.show (" Show *************** Hoare-Allowed : Now Checking distingushing Predicate ************"^(Var.toString vi));
-    				let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi rti in 
-    				if (isDistinguished) then 
-	                	(
-	                	Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
-    				(* 	Message.show (" Show *************** PGMap Before ************"^(PGMap.toString p2gMap));  
-    				 *)	
-    					let p2gMap = PGMap.add p2gMap (path@[vi]) gamma_with_ci in 
-    				(* 	Message.show (" Show *************** PGMap After ************"^(PGMap.toString p2gMap));  
-    				 *)	(*chosen a ci s.t. path--> ci is allowed and distinguished*)
-    					(gamma_with_ci, p2gMap, Chosen (dps, vi, path@[vi]))  
-    				)
-	                else
-	                	(Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi)); 
-    				 
-	                   (*~phi_ci'*)
-	                   let not_phi_ci' =  Predicate.Not phi_ci' in 
-	                   (*D(ci)*)
-	                  
-	                   let dp_ci = 
-	                   			try 
-	                   				DMap.find dps vi 
-	                   			with 
-	                   			 	Knowledge.NoMappingForVar e -> DPred.empty
-
-	                   in 
-
-	                   let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'} in
-	                   (*The two gamma will have overlap, requires thinking*)
-	                   let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
-	                   let updated_dps = DMap.replace dps vi updated_dp_ci in 
-	                   (*make a different choice*)
-	                   choice xs gammacap updated_dps failingDisjuncts p2gMap)
-	                )	
-	             else
-
-	             	(
-	             	Message.show (" Show *************** Hoare-Not-Allowed : Now Adding Disjuncts ************"); 
-    				let failing_predicate = post_imp_phi_ci' in 
-	             	(*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
-	             	let dps= 
-	             		if (List.length path > 0) then 
-		             		(*D(ci)*)               
-		 					let c_terminial = List.hd (List.rev (path)) in 
-			                let dp_cterminal = 
+		    			    
+		    			let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path vi rti in 
+		    			if (allowed) then 
+		    				(
+		    				Message.show (" Show *************** Hoare-Allowed : Now Checking distingushing Predicate ************"^(Var.toString vi));
+		    				let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi rti in 
+		    				if (isDistinguished) then 
+			                	(
+			                	Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
+		    				(* 	Message.show (" Show *************** PGMap Before ************"^(PGMap.toString p2gMap));  
+		    				 *)	
+		    					let p2gMap = PGMap.add p2gMap (path@[vi]) gamma_with_ci in 
+		    				(* 	Message.show (" Show *************** PGMap After ************"^(PGMap.toString p2gMap));  
+		    				 *)	(*chosen a ci s.t. path--> ci is allowed and distinguished*)
+		    					(gamma_with_ci, p2gMap, Chosen (dps, vi, path@[vi]))  
+		    				)
+			                else
+			                	(Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi)); 
+		    				 
+			                   (*~phi_ci'*)
+			                   let not_phi_ci' =  Predicate.Not phi_ci' in 
+			                   (*D(ci)*)
+			                  
+			                   let dp_ci = 
 			                   			try 
-			                   				DMap.find dps c_terminial 
+			                   				DMap.find dps vi 
 			                   			with 
 			                   			 	Knowledge.NoMappingForVar e -> DPred.empty
 
 			                   in 
-			                  
-			                let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate} in
-			                   (*The two gamma will have overlap, requires thinking
-			                     take disjunction*)
-			                let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
-			                let dps = DMap.replace dps c_terminial updated_dp_cterminal in 
-			                dps  
-			            else 
-			            	dps  
-			        in     	
-	                let failingDisjuncts = failing_predicate :: failingDisjuncts in 
-	                choice xs gammacap dps failingDisjuncts p2gMap
-	               )
-	             (*?? Add (phi' => phi_ci_pre) as a disjunct in the Differentiating predicate
+
+			                   let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'} in
+			                   (*The two gamma will have overlap, requires thinking*)
+			                   let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
+			                   let updated_dps = DMap.replace dps vi updated_dp_ci in 
+			                   (*make a different choice*)
+			                   choice xs gammacap updated_dps failingDisjuncts p2gMap)
+			                )	
+			             else
+
+			             	(
+			             	Message.show (" Show *************** Hoare-Not-Allowed : Now Adding Disjuncts ************"); 
+		    				let failing_predicate = post_imp_phi_ci' in 
+			             	(*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
+			             	let dps= 
+			             		if (List.length path > 0) then 
+				             		(*D(ci)*)               
+				 					let c_terminial = List.hd (List.rev (path)) in 
+					                let dp_cterminal = 
+					                   			try 
+					                   				DMap.find dps c_terminial 
+					                   			with 
+					                   			 	Knowledge.NoMappingForVar e -> DPred.empty
+
+					                   in 
+					                  
+					                let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate} in
+					                   (*The two gamma will have overlap, requires thinking
+					                     take disjunction*)
+					                let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
+					                let dps = DMap.replace dps c_terminial updated_dp_cterminal in 
+					                dps  
+					            else 
+					            	dps  
+					        in     	
+			                let failingDisjuncts = failing_predicate :: failingDisjuncts in 
+			                choice xs gammacap dps failingDisjuncts p2gMap
+			               )
+			             (*?? Add (phi' => phi_ci_pre) as a disjunct in the Differentiating predicate
 	             TODO add the disjunction predicate learnt from the failure of choosing a component*)	
 
      in 
