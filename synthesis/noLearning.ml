@@ -132,7 +132,7 @@ let distinguish gamma dps spec path ci rti=
 	
 	let potential_path = path@[ci] in 
 	let (gammaMap, deltaPred, potential_path_type) = 
-					SynTC.typeForPathSuffix gammaMap sigmaMap deltaPred [ci] path_type in 
+					SynTC.typeForPathSuffix gammaMap sigmaMap deltaPred [(ci, rti)] path_type in 
 
 
 (* 

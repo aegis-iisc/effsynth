@@ -47,6 +47,14 @@ let generateConsConstraints (macthedArg : Var.t) (arg_x: Var.t) (arg_xs : Var.t)
               ),
           RelLang.relexpr_for_int 1))
         )  in 
+     let cons_length_grt_0 = 
+      P.Rel(RP.Grt 
+              ( R (RelLang.instOfRel (RelId.fromString "len"), macthedArg),
+                RelLang.relexpr_for_int 0
+              )
+              )
+      in 
+      let cons_length = Predicate.Conj (cons_length, cons_length_grt_0) in 
   let () = Printf.printf "%s" ("Cons Length "^(Predicate.toString cons_length)) in 
       
     cons_length
@@ -154,7 +162,12 @@ let typeForPath gamma sigma delta spec path  =
         match remaining_path with 
 	         [] -> (acc_gamma, acc_delta, acc_type) 
 	         | ci :: cs -> 
-	          	let ci_type = Gamma.find gamma ci in 
+	          	let found_type = Gamma.find gamma ci in 
+              let ci_type = 
+                 match found_type with 
+                   | RefTy.MArrow (_,_,(_,_),_) -> found_type
+                   | RefTy.Arrow ((_,_), retTy) -> retTy 
+              in        
 	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma  acc_type ci_type in
 	                  accumulatePathType cs acc_gamma acc_delta acc_type
 	        
@@ -193,8 +206,8 @@ let typeForPathSuffix gamma sigma delta suffix prefixType =
          	
          	match remaining_path with 
 	         [] -> (acc_gamma, acc_delta, acc_type) 
-	         | ci ::  cs -> 
-	          	let ci_type = Gamma.find gamma ci in 
+	         | (ci, rti) ::  cs -> 
+	          	let ci_type = rti in 
 	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma  acc_type ci_type in
 	                  accumulatePathType cs acc_gamma acc_delta acc_type
 	        

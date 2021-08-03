@@ -6,15 +6,12 @@ module RefTy = RefinementType
 
 type var = Var.t 
 
-type path =  Var.t list 
+type path =  monExp list 
 
 
 type caseExp = {constuctor : var;
                 args : var list ;
                 exp : typedMonExp}
-
-
-
 
 and  monExp = 
         | Evar of var 
@@ -25,14 +22,13 @@ and  monExp =
         | Elet of monExp * typedMonExp * typedMonExp
         | Eret of typedMonExp 
         | Ebind of monExp * typedMonExp * typedMonExp
-        | Elloc of typedMonExp           
-        | Eget of typedMonExp 
-        | Eset of typedMonExp * typedMonExp
         | Ecapp of var * ( monExp list ) 
         | Ehole (*a hole in place of an expression*)
         | Edo of monExp * monExp (*do E; retrun K*)
         | Eskip   
+
 and typedMonExp = {expMon:monExp; ofType:RefTy.t }
+
 
 
 
@@ -83,6 +79,12 @@ let rec monExp_toString (m:monExp) =
                                                 accstr^", "^(monExp_toString ai)) "" argls
 
                                                 )^" )" 
+        | Ematch (matchingArg, caselist) -> 
+                let caselist_toString = 
+                    List.fold_left (fun accstr casei -> (accstr^" \n | "^(caseExp_toString casei))) " " caselist 
+                in 
+                ("Ematch "^(typedMonExp_toString matchingArg)^" with "^caselist_toString)
+
         | _ -> "Other expression"  
 
 
@@ -91,7 +93,9 @@ and typedMonExp_toString (t:typedMonExp) : string =
    let {expMon;ofType} = t in  
    ("{ \n"^monExp_toString expMon^" \n }") 
 
-
+and caseExp_toString (t : caseExp) : string = 
+    let argsToString = List.fold_left (fun accstr argi -> (accstr^" ,"^(Var.toString argi))) " " t.args in 
+    ("CASE "^(Var.toString t.constuctor)^" ( "^(argsToString)^" ) -> "^(typedMonExp_toString t.exp))
 
 let getExp (t : typedMonExp) =
     let {expMon;_} = t in expMon
@@ -121,18 +125,20 @@ let previousPath (p : path) =
 
 
 let merge matchingArg constructors consArgsList caseBodyList = 
+       let () = Printf.printf "%s" (string_of_int (List.length constructors) )in 
        assert (List.length constructors == List.length consArgsList);
        assert (List.length consArgsList == List.length caseBodyList);
        
             
-       let loop c a b cexpList = 
+       let rec loop c a b cexpList = 
             match (c, a, b) with 
                 | ([],[],[]) -> cexpList
                 | (x::xs, y::ys, z::zs) -> 
                      let caseExp_i = {constuctor =x;args=y;exp=z} in 
-                     cexpList@[caseExp_i]     
+                     loop xs ys zs (cexpList@[caseExp_i])     
         in 
         
        let megerdCaseExpList = loop constructors consArgsList caseBodyList [] in 
+       
        let mergedExp = Ematch(matchingArg, megerdCaseExpList) in 
        mergedExp

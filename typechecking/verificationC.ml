@@ -496,7 +496,9 @@ let rec fromTypeCheck (_gamma) _delta (subTy, supTy) =
         let _ = assert (TyD.sametype t1 t2) in 
         let p2 = P.applySubst (v1,v2) p2 in 
         let _gamma = extend_gamma (v1, subTy) _gamma in 
-        VC (_gamma, p1, p2) 
+        
+        let delta_pred = Predicate.list_conjunction _delta in 
+        VC (_gamma, P.Conj(delta_pred,p1), p2) 
 
         | (RefTy.MArrow (_,_,_,_), RefTy.MArrow (_,_,_,_)) ->     
          trans_subtyping env supTy subTy 

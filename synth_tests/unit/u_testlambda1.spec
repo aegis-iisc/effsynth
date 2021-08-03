@@ -33,7 +33,7 @@ baz : State  {\(h : heap). sel (h, res) == 7}
 
 
 
-goal : (ls : list) -> 
+goal : (ls : {v : list | true}) -> 
 	State  
         {\(h : heap). sel( h, res) == 0 } 
 	v : { v : int | true} 

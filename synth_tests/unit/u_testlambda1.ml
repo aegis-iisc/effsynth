@@ -7,10 +7,10 @@ bar : State  {\(h : heap). sel (h, res) == 5}
 		sel (h', res) == sel (h, res) + 2};
 
 
-foo : State  {\(h : heap). (sel (h, res) == 0)} 
+foo : (ls : { v : list | len (v) > 0}) -> 
+	  State  {\(h : heap). (sel (h, res) == 0)} 
 	v : { v : int |  [v=5]} 
 	{\(h : heap), (v : int), (h' : heap).  sel (h', res) == v /\ [v=5]};
-
 
 foo' : (ls : { v : list | len (v) == 0}) -> 
 	
@@ -35,7 +35,7 @@ goal ls =
 		foo' ls
 	| x :: xs -> 
 		(*pre /\ len ls = 1 + len (xs)*) 
-			x1 <- foo;
+			x1 <- foo ls;
 			x2 <- bar;
 			x4 <- baz;  
 			return x4

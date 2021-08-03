@@ -21,7 +21,7 @@ let () =
     let () = List.iter (fun (vi, rti) -> Printf.printf "%s" 
                       ("\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) gamma in 
  *)
-    let synthterm = Synth.synthesize gamma sigma  delta goal learningON in   
+    let synthterm = Synth.Bidirectional.synthesize gamma sigma  delta goal learningON in   
     	    (*run the initial environment builder*)    
     match synthterm with 
         | None -> Printf.printf "%s" "Synthesis returned witout result"

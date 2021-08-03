@@ -23,6 +23,40 @@ module Message = struct
 
 end
 
+
+module Learning :  sig
+  
+  val itercount : int ref   
+  type exploredTree = Leaf 
+                    | Node of exploredTree list 
+  type choiceResult = 
+        | Nothing of DMap.t * Predicate.t list 
+        | Chosen of (DMap.t *  Var.t * path)
+
+  type deduceResult = 
+        | Success of path
+        | Conflict of { env :DPred.gammaCap; 
+                        dps:DMap.t ; 
+                        conflictpath : path;
+                        conflictpathtype : RefTy.t;
+                        disjuncts : Predicate.t list
+                        }
+
+   val hoarePre :  DPred.gammaCap -> RefTy.t ->  path -> Var.t -> RefTy.t -> (DPred.gammaCap * Predicate.t * bool)                      
+   val distinguish : DPred.gammaCap -> DMap.t -> RefTy.t ->  path -> Var.t -> RefTy.t -> (DPred.gammaCap * Predicate.t * bool)
+   
+   val chooseC :  DPred.gammaCap -> path -> RefTy.t -> DMap.t -> PGMap.t -> (DPred.gammaCap * PGMap.t * choiceResult)
+   val deduceR : DPred.gammaCap -> Var.t ->  path -> RefTy.t -> 
+				DMap.t -> PGMap.t -> (DPred.gammaCap * PGMap.t * deduceResult)
+
+   val learnP :  DPred.gammaCap -> DMap.t -> path -> RefTy.t -> Predicate.t list -> DMap.t 
+	
+   val backtrackC : DPred.gammaCap -> DMap.t -> path -> PGMap.t -> RefTy.t  -> (DPred.gammaCap * path * DMap.t * PGMap.t)
+   val cdcleffSynthesizeBind :  DPred.gammaCap ->   DMap.t  -> RefTy.t -> Syn.monExp
+	                     
+
+end = struct
+
 let itercount = ref 0 
 
 type exploredTree = Leaf 
@@ -271,14 +305,14 @@ let rec chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.g
     			| RefTy.Arrow ((varg, argty), retty) -> 
 					Message.show (" Show *************** Arrow Component ************"^(Var.toString vi));
 				
-					let gammaMap = DPred.getGamma gamma in 
-					let sigmaMap = DPred.getSigma gamma in 
-					let deltaPred = DPred.getDelta gamma in 
-					let e_arg = Synthesis.synthesize gammaMap sigmaMap deltaPred argty true in 
+					let gammaMap = DPred.getGamma gammacap in 
+					let sigmaMap = DPred.getSigma gammacap in 
+					let deltaPred = DPred.getDelta gammacap in 
+					let e_arg = (*Synthesis.synthesize gammaMap sigmaMap deltaPred argty true in *) None in 
 					(match e_arg with (*BEGIN1*)
 						| None -> choice xs gammacap dps failingDisjuncts p2gMap
 						| Some e -> 
-						 	let (gammacap, post_imp_phi_ci, allowed) =  hoarePre gamma spec path ci retty in
+						 	let (gammacap, post_imp_phi_ci', allowed) =  hoarePre gammacap spec path vi retty in
 						 	if (allowed) then 
 			    				let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi rti in 
 			    				if (isDistinguished) then 
@@ -646,6 +680,6 @@ let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)
 
 	loop gammaCap p spec dps pathGammaMap
 
-
+end
 
 
