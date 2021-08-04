@@ -1,12 +1,11 @@
 (*defined Var or import from the specLang*)
 open Printf 
 open SpecLang 
-    
+exception IncorrectExp of string     
+
 module RefTy = RefinementType
 
 type var = Var.t 
-
-type path =  monExp list 
 
 
 type caseExp = {constuctor : var;
@@ -16,8 +15,8 @@ type caseExp = {constuctor : var;
 and  monExp = 
         | Evar of var 
         | Elam of monExp * typedMonExp
-        | Efix of var * typedMonExp * typedMonExp
-        | Eapp of typedMonExp * typedMonExp
+        | Efix of var * typedMonExp 
+        | Eapp of monExp * typedMonExp (*Evar v v1*)
         | Ematch of typedMonExp * (caseExp list) 
         | Elet of monExp * typedMonExp * typedMonExp
         | Eret of typedMonExp 
@@ -30,6 +29,35 @@ and  monExp =
 and typedMonExp = {expMon:monExp; ofType:RefTy.t }
 
 
+type path =  monExp list 
+
+
+
+let rec equalMonExp m1 m2 =
+      match (m1, m2) with
+        | (Evar v1, Evar v2) -> Var.equal v1 v2 
+        | (Elam (arg1, body1), Elam (arg2, body2)) ->
+                (equalMonExp arg1 arg2) && (equalTypedMonExp body1 body2) 
+        | (Efix (name1, body1), Efix (name2, body2)) -> 
+                (Var.equal name1 name2) && (equalTypedMonExp body1 body2) 
+        | (Eapp (fun1, arg1), Eapp (fun2, arg2))->
+                (equalMonExp fun1 fun2) && (equalTypedMonExp arg1 arg2) 
+        | (Ematch (matchingArg1, caselist1),Ematch (matchingArg2, caselist2)) -> 
+                (equalTypedMonExp matchingArg1 matchingArg2)  
+                         
+        |  (_,_) -> false         
+
+and equalTypedMonExp tme1 tme2 = 
+    equalMonExp tme1.expMon tme2.expMon
+
+
+
+let equalPath p1 p2 = 
+       try 
+            List.fold_left2 (fun accBool ci cj -> 
+                accBool && equalMonExp ci cj) true p1 p2 
+       with 
+           Invalid_argument e-> false   
 
 
 let rec doExp (ls : monExp list) : monExp= 
@@ -84,7 +112,7 @@ let rec monExp_toString (m:monExp) =
                     List.fold_left (fun accstr casei -> (accstr^" \n | "^(caseExp_toString casei))) " " caselist 
                 in 
                 ("Ematch "^(typedMonExp_toString matchingArg)^" with "^caselist_toString)
-
+        | Eapp (fun1, arg1) -> ("Eapp "^(monExp_toString fun1)^" \n ("^(typedMonExp_toString arg1)^")")         
         | _ -> "Other expression"  
 
 
@@ -97,6 +125,18 @@ and caseExp_toString (t : caseExp) : string =
     let argsToString = List.fold_left (fun accstr argi -> (accstr^" ,"^(Var.toString argi))) " " t.args in 
     ("CASE "^(Var.toString t.constuctor)^" ( "^(argsToString)^" ) -> "^(typedMonExp_toString t.exp))
 
+let componentNameForMonExp mExp = 
+        match mExp with 
+         | Evar v -> (v)
+         | Eapp (v , arg) -> 
+                (match v with 
+                    | Evar v1 -> v1
+                    | _ -> raise (IncorrectExp "a component is either a variable or a fun app"))
+         | _ -> raise (IncorrectExp "a component is either a variable or a fun app")
+       
+        
+
+
 let getExp (t : typedMonExp) =
     let {expMon;_} = t in expMon
 
@@ -104,14 +144,14 @@ let getType (t : typedMonExp) =
    let {ofType;_} = t in ofType
 
 (*placeholder , TODO implement complete later*)
-let buildProgramTerm (path : Var.t list) =  
+let buildProgramTerm (path : path) =  
         match path with
             | [] -> Eskip
-            | x :: _ -> Evar x
+            | x :: _ -> x
 
 
 let pathToString (p:path) = 
-        (List.fold_left (fun accstr ci -> accstr^("--->")^(Var.toString ci)) "PATH " p)^"\n"
+        (List.fold_left (fun accstr ei -> accstr^("--->")^(monExp_toString ei)) "PATH " p)^"\n"
 
 let previousComponent (p:path) = 
     if (List.length p < 2) then None 

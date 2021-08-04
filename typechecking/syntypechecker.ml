@@ -68,13 +68,13 @@ let typecheck (gamma : Gamma.t) (sigma:Sigma.t) (t : Syn.typedMonExp) : (RefTy.t
 
 open VerificationC
 open TyD    
-let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (acc_type: RefTy.t) (ci_type :RefTy.t) = 
+let mon_bind  (acc_delta : Predicate.t) 
+              (acc_gamma: VerificationC.vctybinds) 
+              (acc_type: RefTy.t) 
+              (ci_type :RefTy.t) = 
      match (acc_type, ci_type) with 
       | (RefTy.MArrow (eff1, phi1, (v1,t1), phi1') , RefTy.MArrow (eff2,phi2, (v2, t2), phi2')) -> 
               
-                (* let () = Printf.printf "%s" ("\n Type t1 "^(RefTy.toString t1)) in
-                let () = Printf.printf "%s" ("\n Type t2 "^(RefTy.toString t2)) in
-   *)
                 let fresh_h_int = Var.get_fresh_var "h_int" in 
                 let _Gamma = VC.extend_gamma (fresh_h_int, (RefTy.lift_base Ty_heap)) acc_gamma in 
       
@@ -153,26 +153,29 @@ let mon_bind  (acc_delta : Predicate.t) (acc_gamma: VerificationC.vctybinds) (ac
 
 (*path is a list of variables
 This seems to be a bit broken, we should be able to get a type for a path without a pre-condition
-c1 : c2 .... ck 
+  
 *)
-let typeForPath gamma sigma delta spec path  = 
-	let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
+let typeForPath gamma sigma delta spec (path:Syn.path)  = 
 	
-	let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type = 
+  let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type = 
         match remaining_path with 
 	         [] -> (acc_gamma, acc_delta, acc_type) 
-	         | ci :: cs -> 
-	          	let found_type = Gamma.find gamma ci in 
+	         
+           | ei :: cs -> 
+	          	let ci = Syn.componentNameForMonExp ei in  
+              let found_type = Gamma.find gamma ci in 
               let ci_type = 
                  match found_type with 
                    | RefTy.MArrow (_,_,(_,_),_) -> found_type
                    | RefTy.Arrow ((_,_), retTy) -> retTy 
               in        
-	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma  acc_type ci_type in
+	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma acc_type ci_type in
 	                  accumulatePathType cs acc_gamma acc_delta acc_type
 	        
 
 	  in
+
+let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
 
 	let initial_effect = Effect.Pure in 
 	let retResult = Var.get_fresh_var "v" in 
@@ -195,8 +198,7 @@ let typeForPath gamma sigma delta spec path  =
        										preInit, (retResult, unKnownType), 
        										postInit) in
        				
-
-	 accumulatePathType path gamma delta initial_type   
+ 	 accumulatePathType path gamma delta initial_type   
 
 
 
@@ -209,7 +211,7 @@ let typeForPathSuffix gamma sigma delta suffix prefixType =
 	         | (ci, rti) ::  cs -> 
 	          	let ci_type = rti in 
 	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma  acc_type ci_type in
-	                  accumulatePathType cs acc_gamma acc_delta acc_type
+	                 accumulatePathType cs acc_gamma acc_delta acc_type
 	        
 
 	  in
@@ -217,7 +219,7 @@ let typeForPathSuffix gamma sigma delta suffix prefixType =
    
 	 accumulatePathType suffix gamma delta prefixType   
 
-let typeCheckPath gammaMap sigmaMap deltaPred (path : Var.t list) (spec : RefTy.t) = 
+let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t) = 
 
 
 	

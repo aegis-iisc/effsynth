@@ -130,24 +130,19 @@ end
 
 module PathGammaMap = struct
 
-module ProgramPath =
+	module ProgramPath =
        struct
          type t = Syn.path(*a variable capturing the  name*)
-         let equal (t1,t2)  =  
-         						try 
-         							List.fold_left2  
-         						 	(fun accBool ci cj -> accBool && 
-         						 		Var.equal ci cj) true t1 t2
-         						with 
-         							Invalid_argument e-> false 	
+         let equal (t1,t2)  =  Syn.equalPath t1 t2 
+         						
        end
 
-module Value =
+	module Value =
        struct
          (*Need to change later to scehema*)
          type t = DiffPredicate.gammaCap
          let equal (t1,t2) = DiffPredicate.equalGammaCap t1 t2           
-end
+	end
 
 module Map   = Applicativemap.ApplicativeMap (ProgramPath) (Value) 
 
@@ -175,13 +170,7 @@ module PathChildrenMap = struct
 module Key =
        struct
          type t = Syn.path(*a variable capturing the  name*)
-         let equal (t1,t2)  =  
-         						try 
-         							List.fold_left2  
-         						 	(fun accBool ci cj -> accBool && 
-         						 		Var.equal ci cj) true t1 t2
-         						with 
-         							Invalid_argument e-> false 	
+         let equal (t1,t2)  =  Syn.equalPath t1 t2
        end
 
 module Value =

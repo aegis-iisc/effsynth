@@ -30,7 +30,7 @@ type exploredTree = Leaf
 
 type choiceResult = 
 		| Nothing of DMap.t * Predicate.t list 
-		| Chosen of (DMap.t *  Var.t * path)
+		| Chosen of (DMap.t *  Syn.monExp * path)
 
 type deduceResult = 
 		| Success of path
@@ -118,128 +118,9 @@ let hoarePre gamma spec path ci rti =
 
 
 
-(*a routine to verify that the choice ci, in the current gamma satisfies the distinguishing constraints*)
-let distinguish gamma dps spec path ci rti= 
- 	
-
-	let gammaMap = DPred.getGamma gamma in 
-	let sigmaMap = DPred.getSigma gamma in 
-	let deltaPred = DPred.getDelta gamma in 
-	 	
-	let (gammaMap, deltaPred, path_type) = SynTC.typeForPath gammaMap sigmaMap deltaPred spec path in 
-	
-	(*construct VCs ci_post => D(ci)*)
-	
-	let potential_path = path@[ci] in 
-	let (gammaMap, deltaPred, potential_path_type) = 
-					SynTC.typeForPathSuffix gammaMap sigmaMap deltaPred [(ci, rti)] path_type in 
-
-
-(* 
-	Message.show " DISTINGUISH Potential Path Type";
-	Message.show (" DISTINGUISH Potential Path "^(pathToString potential_path));
-	
- *)
-
-(* 	Message.show " DISTINGUISH DPS";
-	Message.show (" DISTINGUISH DPS"^(DMap.toString dps));
- *)	
-
-	let diffpred_ci = 
-			try
-				DMap.find dps ci 
-			with 
-				Knowledge.NoMappingForVar e -> DPred.empty
-	in 			
-
-	let diffpred_ci_gammaCap = DPred.getGammaCap diffpred_ci in 
-	let diffpred_ci_learntPred = DPred.getLearnt diffpred_ci in 
-
-	
-	Message.show (RefTy.toString potential_path_type);
-
-
-
-	let diffpred_ci_learntPred = DPred.getLearnt diffpred_ci in 
-(* 
-	Message.show "DiffPredicate";
-	Message.show ("DISTINGUISH DiffPredicate "^(Predicate.toString diffpred_ci_learntPred));
- *)
-	let RefTy.MArrow (_,pot_path_pre,(_,t), pot_path_post) = potential_path_type in 
-	let h_var  = Var.get_fresh_var "h" in 
-    let h_type = RefTy.fromTyD (TyD.Ty_heap) in 
-
-	let h'_var  = Var.get_fresh_var "h'" in 
-    let h'_type = RefTy.fromTyD (TyD.Ty_heap) in 
-
-    let x_var = Var.get_fresh_var "x" in 
-
-    let gammaMap  = Gamma.add gammaMap h_var h_type in 
-    let gammaMap = Gamma.add gammaMap h'_var h'_type in 
-    let gammaMap = Gamma.add gammaMap  x_var t in 
-
-
-    let pot_path_post_applied = VC.apply pot_path_post 
-    						[(h_var, TyD.Ty_heap);(x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in 
-    
-          
-
-	(*substitute current heap values for pre*)
-    let d_ci_applied_h' = VC.apply diffpred_ci_learntPred [(h'_var, TyD.Ty_heap)] in 
-   
-
-	let bvs = [(h_var, TyD.Ty_heap); (x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in 	
-    let pot_path_posti_imp_d_ci = Predicate.Forall (bvs, P.If (pot_path_post_applied, d_ci_applied_h')) in   
-
-    let gammaMap4vc2 = gammaMap@(DPred.getGamma diffpred_ci_gammaCap) in 
-    let deltaPred4vc2 = Predicate.Conj(deltaPred, (DPred.getDelta diffpred_ci_gammaCap)) in  
-    let vc2 = VC.VC(gammaMap4vc2, deltaPred4vc2, pot_path_posti_imp_d_ci) in 
-
-(*     Message.show ("\n Predicate testsed "^(Predicate.toString pot_path_posti_imp_d_ci));
- *)
-	let vcs = [vc2] in 
-	
-	let vcsStandard = List.map (fun vc -> VC.standardize vc) vcs in 
-	
-	
-	let discharge_vc vcStandard = 
-		try
-		Message.show ("\n Printing VCs");
-        Message.show ("\n"^(VC.string_for_vc_stt vcStandard));      
-        let result = VCE.discharge vcStandard  in 
-		    match result with 
-		    | VCE.Success -> 
-		                    true
-		    | VCE.Failure -> 
-		                    false
-		    | VCE.Undef -> raise (LearningException "Typechecking Did not terminate")  
-		    
-		 with
-		 	VerificationC.Error e -> raise (LearningException "Checking a distingushing predicate did not terminate")
-
-	in 	 	
-
-	let isDistinguished = List.fold_left (fun failure svci -> failure && discharge_vc svci) true vcsStandard in  
-	
-	 
-	let () =  
-	if (isDistinguished) then 
-		Message.show (" Show ***************D (ci) Successful************"^(Var.toString ci))
-	else 
-	    Message.show ("Show ***************Selection Failed************"^(Var.toString ci))
-	
-	in                   
-	let RefTy.MArrow (_,_, (_,_), potential_path_post) = potential_path_type in 
-	let gammaCapPotential = DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
-	(gammaCapPotential, potential_path_post, isDistinguished)
-
-
-
-
-
-
-
-let rec chooseC gammacap exploredpaths path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gammaCap * Explored.t * PGMap.t * choiceResult)= 
+let rec chooseC gammacap exploredpaths path spec 
+	(dps : DMap.t) 
+	(p2gMap : PGMap.t) :  (DPred.gammaCap * Explored.t * PGMap.t * choiceResult)= 
     let RefTy.MArrow (eff, pre, (v, t), post) = spec in 
     let gamma = DPred.getGamma gammacap in 
     let c_wellRetType = Gamma.enumerateAndFind gamma spec in 
@@ -253,20 +134,20 @@ let rec chooseC gammacap exploredpaths path spec (dps : DMap.t) (p2gMap : PGMap.
     (*choosing a component
     The failing disjunct keeps the list of failing Predicates while checking the Hoare Post => Pre implication*)
     let rec choice potentialChoices gammacap exploredpaths dps 
-    			(failingDisjuncts : Predicate.t list) (p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * choiceResult)= 
+    			(failingDisjuncts : Predicate.t list) 
+    			(p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * choiceResult)= 
     	Message.show "Choice ";
     	
-    	(* let potentialChoices = List.filter (fun (vi, _) -> not (Explored.mem explored vi)) foundTypes in  
-        Message.show "UNExplored Comn ";
-         let () = List.iter (fun (vi,_) -> Message.show (Var.toString vi)) foundTypes in 
- *)
+    	
     	match potentialChoices with 
     		| [] -> 
     		    (gammacap, exploredpaths,  p2gMap,  Nothing (dps, failingDisjuncts)) 
     		| (vi, rti) :: xs -> 
     			
+    			let monExp_vi = Syn.Evar vi in  (*apply vi e_arg*)
+                            
     			(*check the hoare pre-condition rule*)
-    			let potential_path = path@[vi] in 
+    			let potential_path = path@[monExp_vi] in 
     			if (Explored.mem exploredpaths potential_path) then 
     					choice xs gammacap exploredpaths dps failingDisjuncts p2gMap
 	            		
@@ -275,7 +156,7 @@ let rec chooseC gammacap exploredpaths path spec (dps : DMap.t) (p2gMap : PGMap.
 	    			if (allowed) then 
 	    				(
 	    				Message.show (" Show *************** Hoare-Allowed : ********"^(Var.toString vi));
-						(gammacap, exploredpaths, p2gMap, Chosen (dps, vi, path@[vi]))  
+						(gammacap, exploredpaths, p2gMap, Chosen (dps, monExp_vi, potential_path))  
 		                )	
 		             else
 		             	(
@@ -289,7 +170,7 @@ let rec chooseC gammacap exploredpaths path spec (dps : DMap.t) (p2gMap : PGMap.
    
 
 
-and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Var.t) (path:path) (spec: RefTy.t) 
+and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Syn.monExp) (path:path) (spec: RefTy.t) 
 				(dps : DMap.t) (p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * deduceResult) = 
 	Message.show (" EXPLORED :: "^(pathToString path));
 	
@@ -314,7 +195,7 @@ and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Var.t) (path:path) (spec
 			 ) 
 		else 
 			(
-				Message.show ("Show :: Incomplete Path "^(pathToString path)^" Now chosing Next component "^(Var.toString compi));
+				Message.show ("Show :: Incomplete Path "^(pathToString path)^" Now chosing Next component "^(Syn.monExp_toString compi));
 			
 				let (gamma, exploredpaths, p2gMap, nextComponent) = chooseC gamma exploredpaths path spec dps p2gMap in 
 				match nextComponent with 
@@ -397,7 +278,8 @@ let backtrackC gamma dps path p2gMap spec =
 
 (*cdcleffSynthesizeBind : DPred.gammaCap -> DMap.t -> RefTy.t -> Syn.monExp*)
 let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)  
-					(dps : DMap.t) (spec : RefTy.t) : Syn.monExp = 
+						(dps : DMap.t) 
+						(spec : RefTy.t) : Syn.monExp = 
 	Message.show "Show :: in CDCL";
 	
 (* 	Message.show ("Gamma at CDCL"^(Gamma.toString (DPred.getGamma gammaCap)));				
@@ -441,7 +323,7 @@ let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)
 				Message.show (" EXPLORED :: "^(pathToString pi));
 	    
 				Message.show (" ShowPath :: "^pathToString pi);
-	    		Message.show ("Show :: Chosen "^(Var.toString ci));
+	    		Message.show ("Show :: Chosen "^(Syn.monExp_toString ci));
 				Message.show(" Run deduceR");
 				let (gammacap, exploredpaths, p2gMap, deduceres) = deduceR gammacap exploredpaths ci pi spec dps' p2gMap in 
 			    match deduceres with 
