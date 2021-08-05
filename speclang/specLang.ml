@@ -1587,9 +1587,10 @@ struct
   type t = 
       Base of Var.t * TyD.t * Predicate.t 
     | Tuple of (t list) 
-    | Arrow of (Var.t * t) * t
+    | Arrow of (Var.t * t)  * t
     | MArrow of Effect.t * (Predicate.t)  * (Var.t * t)  * (Predicate.t) (*pre x:\tau post*)           
-    | Sigma of (Var.t * t) list  
+    | Sigma of (Var.t * t) list 
+    | Uncurried of ((Var.t * t) list) * t 
     (*get the effect from the Monadic types*)    
     
    let rec isEffectful t = 
@@ -1602,6 +1603,7 @@ struct
         match t with 
         | MArrow (e1, _,_,_) -> e1 
         | Arrow ((arg, argty), body) -> get_effect body
+        | Uncurried (arg_type_list, bodyTy) -> get_effect bodyTy
         | _ -> Effect.Pure 
 
    let rec toString rty = match rty with 
@@ -1616,6 +1618,9 @@ struct
                                   (List.fold_left (fun accstr (vi, rti) -> 
                                       (accstr^"\n "^(Var.toString vi)^" : "^(toString rti)) 
                                     ) " \n " vi_ti_list)
+        | Uncurried (fargs, bodyty) -> 
+            let string4fargs = (List.fold_left (fun acc (vi, rti) -> (acc^", "^(Var.toString vi)^":"^toString rti)) "Uncurried " fargs) in 
+            (string4fargs^" -> "^(toString bodyty))                           
    (*least effect of types*)
    let lub_effects (ty1:t) (ty2:t) : Effect.t = 
         Effect.lub (get_effect ty1) (get_effect ty2)
@@ -1668,7 +1673,8 @@ struct
       | Tuple tl -> Ty_tuple (List.map (fun t ->  toTyD t) tl)   
       | Arrow ((v1,t1),t2) -> TyD.Ty_arrow ((toTyD t1), (toTyD t2))
       | MArrow (eff, p1 ,(vtb, tb), p2) -> toTyD tb   
-      | Sigma (vi_ti_list) -> Ty_tuple (List.map (fun (v, t) ->  toTyD t) vi_ti_list)   
+      | Sigma (vi_ti_list) -> Ty_tuple (List.map (fun (v, t) ->  toTyD t) vi_ti_list) 
+      | _ ->  raise (Error "toTyD on Illegal argument") 
   (*compares Base types*)
   let compare_types (t1:t)  (t2 :t) : bool = 
         match (t1, t2) with 
@@ -1690,6 +1696,10 @@ struct
     |  MArrow (eff, pre, (v, t), post) -> 
         MArrow (eff, pre, (v, mapBaseTy t f), post)
     | Sigma ls ->  Sigma (List.map (fun (v, t) -> (v, (mapBaseTy t f))) ls)
+    | Uncurried (arg_type_list, t2) -> 
+        Uncurried (
+                  (List.map (fun (vi, tyi) -> (vi, mapBaseTy tyi f)) arg_type_list),
+                  mapBaseTy t2 f )
   
   let mapTyD t f = mapBaseTy t (fun (v,t,p) -> 
       (v,f t, P.mapTyD p f)) 
@@ -1738,19 +1748,30 @@ struct
   *)
 
   let uncurry_Arrow (arrowty) =
-    let Arrow ((_, frstargTy), res) = arrowty in  
       
-      let rec get_params ty params resTy  = 
+      let rec accumulateArgs (ty: t) (params : (Var.t * t) list)   = 
         match ty with
-          | Arrow ((arg, argTy) as argBind, remainingTy)  ->
-            let params' = (argBind :: params) in 
-                get_params remainingTy params' resTy 
+           | Arrow ((argi , argTyi) as argBind, remainingTy)  ->
+              let params = (params@[argBind]) in 
+                accumulateArgs remainingTy params  
+           | _ -> Uncurried (params, ty)
+               
 
-          | _ -> (params, ty)
+         
     in 
-    let (parametersTyBind, resTy ) =  get_params arrowty [] res in
-     (List.rev parametersTyBind, resTy)
- 
+    accumulateArgs arrowty []  
+
+
+let rec findComputationType refty = 
+     match refty with 
+        | MArrow (_, pre_k,(_,_),_) -> refty 
+        | Arrow ((_, _),_) -> 
+            let uncurried = uncurry_Arrow refty in 
+            let Uncurried (params, retty) = uncurried in 
+            findComputationType retty
+        | Uncurried (params, retty) -> findComputationType retty
+
+     
 end
 
 module RefTy = RefinementType 

@@ -279,7 +279,7 @@ let backtrackC gamma dps path p2gMap spec =
 (*cdcleffSynthesizeBind : DPred.gammaCap -> DMap.t -> RefTy.t -> Syn.monExp*)
 let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)  
 						(dps : DMap.t) 
-						(spec : RefTy.t) : Syn.monExp = 
+						(spec : RefTy.t) : Syn.monExp option= 
 	Message.show "Show :: in CDCL";
 	
 (* 	Message.show ("Gamma at CDCL"^(Gamma.toString (DPred.getGamma gammaCap)));				
@@ -329,7 +329,7 @@ let cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)
 			    match deduceres with 
 			    	| Success p -> 
 						Message.show (" EXPLORED :: "^(pathToString p));
-	    	    		Syn.buildProgramTerm  p
+	    	    		Some (Syn.buildProgramTerm  p)
 			    	| Conflict {env;dps;conflictpath;conflictpathtype;disjuncts} -> 
 			    			Message.show (" Show :: Conflict Path  Found  ");
 	             			let exploredpaths = Explored.add exploredpaths conflictpath in 

@@ -63,7 +63,7 @@ val esynthesizeEffSigma : VC.vctybinds -> Sigma.t ->  VC.pred list -> RefTy.t ->
 val esynthesizeBindSpecial : Explored.t -> VC.vctybinds -> Sigma.t ->  VC.pred list ->  RefTy.t -> (Syn.typedMonExp option) 
 
  val esynthesizeEff : Explored.t -> VC.vctybinds -> Sigma.t ->  VC.pred list->  RefTy.t -> (Syn.typedMonExp option) 
- val isynthesizeMatch : VC.vctybinds -> Sigma.t -> Predicate.t -> Var.t ->   RefTy.t -> RefTy.t ->  Syn.typedMonExp option 
+ val isynthesizeMatch : VC.vctybinds -> Sigma.t -> Predicate.t -> (Var.t * RefTy.t) -> RefTy.t ->  Syn.typedMonExp option 
  val isynthesizeFun : VC.vctybinds -> Sigma.t -> Predicate.t -> RefTy.t  -> Syn.typedMonExp option
   val esynthesizeFun : Explored.t -> VC.vctybinds -> Sigma.t -> Predicate.t ->  RefTy.t -> (Syn.typedMonExp option)
  val synthesize :  VC.vctybinds -> Sigma.t -> Predicate.t-> RefTy.t -> bool -> Syn.typedMonExp option 
@@ -95,7 +95,7 @@ val litercount : int ref
    val learnP :  DPred.gammaCap -> DMap.t -> path -> RefTy.t -> Predicate.t list -> DMap.t 
     
    val backtrackC : DPred.gammaCap -> DMap.t -> path -> PGMap.t -> RefTy.t  -> (DPred.gammaCap * path * DMap.t * PGMap.t)
-   val cdcleffSynthesizeBind :  DPred.gammaCap ->   DMap.t  -> RefTy.t -> Syn.monExp
+   val cdcleffSynthesizeBind :  DPred.gammaCap ->   DMap.t  -> RefTy.t -> Syn.monExp option
   
 
 end = struct
@@ -148,9 +148,9 @@ let enumPureE explored gamma sigma delta (spec : RefTy.t) : Syn.typedMonExp opti
             match fs with
              | [] -> None 
              | (vi, rti) :: xs -> 
-                Message.show ("Show ::  EnumPure "^(Var.toString vi));        
+               (*  Message.show ("Show ::  EnumPure "^(Var.toString vi));        
                 Message.show ("Show ::  Delta "^(Predicate.toString delta));        
-                
+                *) 
 
                 (*substitute, bound variables in both with the argument variable*)
                 let rti_bound_vi = RefTy.alphaRenameToVar rti vi in 
@@ -642,10 +642,15 @@ let backtrackC gamma dps path p2gMap spec =
                     (*TODO :: This might lead to unsoundness as the two paths will have two different Gamma*)
                     
                     let (gammaMap_km1, deltaPred_km1, type_pkminus1) = SynTC.typeForPath gammaMap_km1 sigmaMap_km1 deltaPred_km1 spec p_kminus1 in 
+                    Message.show ("Show >>>>>>>>>>>>>>>"^(RefTy.toString type_pkminus1));
                     let RefTy.MArrow (_, _, (_,_), post_kminus1 ) = type_pkminus1 in 
-                    let ann_k_type = Gamma.find gammaMap_km1 conflictNodeComponent in
                     
-                    let RefTy.MArrow (_, pre_k,(_,_),_) = ann_k_type in 
+                    let ann_k_type = Gamma.find gammaMap_km1 conflictNodeComponent in
+                    (*the type for the conflict node can be an Arrow*)
+                    
+                    let ann_k_computation_type = RefTy.findComputationType ann_k_type in 
+                                        
+                    let RefTy.MArrow (_, pre_k,(_,_),_) = ann_k_computation_type in 
 
                     let gamma_kminus1 = DPred.T{gamma=gammaMap_km1; sigma = sigmaMap_km1; delta= deltaPred_km1} in 
                     
@@ -707,7 +712,7 @@ let rec esynthesizeApp gamma sigma delta spec  : Syn.typedMonExp option =
                                                                 | VCE.Success ->
                                                                           let funTerm = {expMon = lam; ofType= rtlam} in  
                                                                           let argTerm = {expMon = eargExp; ofType = eargType} in       
-                                                                          Some {expMon = (Syn.Eapp (lam, argTerm)); ofType=substitutedType}   
+                                                                          Some {expMon = (Syn.Eapp (lam, [eargExp])); ofType=substitutedType}   
                                                                 | VCE.Failure -> (*make another choice for the function*)choose (vlam :: explored) ftype
                                                                 | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
                                                     (*Argument must be a variable*)
@@ -906,7 +911,7 @@ and  esynthesizeBind explored gamma sigma delta spec : (Explored.t *(Syn.typedMo
                          in       
 
                         
-                        let boundMonExp = Syn.Ebind ((Syn.Evar x1), e1, e2) in 
+                        let boundMonExp = Syn.Ebind ((Syn.Evar x1), e1.expMon, e2.expMon) in 
                         let boundTypedMonExpp = {Syn.expMon = boundMonExp;  Syn.ofType= spec} in 
                         (explored, Some boundTypedMonExpp) 
 
@@ -1038,7 +1043,7 @@ and esynthesizeBindSpecial explored gamma sigma delta spec : (Syn.typedMonExp op
                 | None -> None 
                 | Some bodyE-> 
                         let x1 = Var.get_fresh_var "x1" in 
-                        let boundMonExp = Syn.Ebind ((Syn.Evar x1), bodyE, returnExp ) in 
+                        let boundMonExp = Syn.Ebind ((Syn.Evar x1), bodyE.expMon, returnExp.expMon ) in 
                         let boundTypedMonExp = {Syn.expMon = boundMonExp;  Syn.ofType= spec} in 
                         Some boundTypedMonExp
             )
@@ -1092,9 +1097,9 @@ and   esynthesizeEff explored gamma sigma delta spec =
                              | None -> None
 
 (* TODO :: First implement a special rule for list, then generalize it to ant algebraic type, say tree*)
-and isynthesizeMatch gamma sigma delta matchingArg matchingArgType spec : Syn.typedMonExp option = 
+and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option = 
     Message.show ("Show :: Synthesize Match "^(RefTy.toString spec));
-   
+    let (matchingArg, matchingArgType) = argToMatch in 
     let RefTy.Base(_, argBase, argBasePhi) = matchingArgType in 
      
     Message.show ("Show :: List "^(TyD.toString argBase));
@@ -1128,28 +1133,33 @@ and isynthesizeMatch gamma sigma delta matchingArg matchingArgType spec : Syn.ty
 
           let gamma_n = gamma in 
           let e_n = synthesize gamma_n sigma delta_n spec learnConst in 
-          Message.show ("Show :: Synthesisized Nil Branch Now Trying Cons");
+          (match e_n with 
+            | Some exp_n -> 
 
-          
+                  Message.show ("Show :: Successfully Synthesisized Nil Branch Now Trying Cons");
+                  let e_c = synthesize gamma_c sigma delta_c spec learnConst in 
+                  (match (e_c) with 
+                   | (Some exp_c)-> 
+                          Message.show ("Show :: Successfully Synthesisized Cons Branch ");
+                  
+                          let caseExps = [exp_n; exp_c] in 
+                          let consArgs = [[];[x_var;xs_var]] in
+                          (*General Case : we will have the constructor name in the Sigma*)
+                          let cons = [Var.fromString "Nil"; Var.fromString "Cons"] in 
+                          let matchingArg = {Syn.expMon = Syn.Evar matchingArg; 
+                                                Syn.ofType = matchingArgType} in  
+                          let matchExp = Syn.merge matchingArg cons consArgs caseExps in
 
-          let e_c = synthesize gamma_c sigma delta_c spec learnConst in 
-          Message.show ("Show :: Synthesisized Cons Branch ");
-
-
-          (match (e_n, e_c) with 
-           | (Some exp_n, Some exp_c)-> 
-                  let caseExps = [exp_n; exp_c] in 
-                  let consArgs = [[];[x_var;xs_var]] in
-                  (*General Case : we will have the constructor name in the Sigma*)
-                  let cons = [Var.fromString "Nil"; Var.fromString "Cons"] in 
-                  let matchingArg = {Syn.expMon = Syn.Evar matchingArg; 
-                                        Syn.ofType = matchingArgType} in  
-                  let matchExp = Syn.merge matchingArg cons consArgs caseExps in
-
-                  Some {Syn.expMon = matchExp;
-                        Syn.ofType = spec} 
-            |(_,_) -> None)      
- 
+                          Some {Syn.expMon = matchExp;
+                                Syn.ofType = spec} 
+                    | None ->
+                            Message.show ("Show :: Failed Synthesisized Cons Branch ");
+                   
+                            None) 
+             | None -> 
+                        Message.show ("Show :: Failed Synthesisized Nil Branch");
+                        None )           
+         
     | _ ->   
         Message.show "Show :: Non List Case";
         synthesize gamma sigma delta spec learnConst 
@@ -1163,18 +1173,27 @@ and isynthesizeMatch gamma sigma delta matchingArg matchingArgType spec : Syn.ty
 calls the top-level macthing and application followed by the standard learning based rule *)
 and isynthesizeFun gamma sigma delta spec : Syn.typedMonExp option= 
   (*TODO unhandled case of isynthesize*)   
-  let RefTy.Arrow ((x, argT), retT) = spec in 
+  let uncurried_spec = RefTy.uncurry_Arrow spec in 
+  let RefTy.Uncurried ( fargs_type_list, retT) = uncurried_spec  in
+  Message.show ("Show "^RefTy.toString uncurried_spec); 
   (*extend gamma*)
   (*first try a match case, if it does not succeed, try the non-matching case*)
-  let gamma_extended = Gamma.add gamma x argT in 
-  let match_expression = isynthesizeMatch gamma_extended sigma delta x argT retT in 
-  match match_expression with 
-    | Some e -> Some e
-    | None ->  
+  let gamma_extended = Gamma.append  gamma fargs_type_list in 
+  (*ASSUMPTION, the argumnet to deconstruct will be at the head*)
+  let argToMatch = List.hd (fargs_type_list) in 
+  (*Given disjunctions in the spec we can directly try match*)
+  Message.show ("Show Trying :: Non Match-case"); 
         (*TODO *make a call to conditional case*)
-        synthesize gamma_extended sigma delta retT learnConst 
+  let simple_exp = synthesize gamma_extended sigma delta retT learnConst in 
   
        
+
+  match simple_exp with 
+    | Some e -> Some e
+    | None ->
+          let match_expression = isynthesizeMatch gamma_extended sigma delta argToMatch retT in 
+          match_expression
+        
 (*enumerates and finds function term variable of functional type*)
 and esynthesizeFun explored gamma sigma delta spec : Syn.typedMonExp option = 
        let foundbyEnum = enumPureE explored gamma sigma delta spec in 
@@ -1209,8 +1228,12 @@ and  synthesize gamma sigma delta spec learning : (Syn.typedMonExp option)=
                      cdcleffSynthesizeBind gammacap dps_empty spec 
                     else  
                      NoLearning.cdcleffSynthesizeBind gammacap dps_empty spec 
-                 in     
-                 Some {Syn.expMon=res;Syn.ofType = spec} 
+                 in  
+                 (match res with 
+                    Some me ->    
+                        Some {Syn.expMon=me;Syn.ofType = spec}
+                    | None -> None     
+                  )  
                 (*main effectful synthesis rules*)
       | _ -> None  
 
@@ -1218,14 +1241,20 @@ and  synthesize gamma sigma delta spec learning : (Syn.typedMonExp option)=
 and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gammaCap * PGMap.t * choiceResult)= 
     let RefTy.MArrow (eff, pre, (v, t), post) = spec in 
     let gamma = DPred.getGamma gammacap in 
-    let c_wellRetType = Gamma.enumerateAndFind gamma spec in 
-   
-    let c_wellRetTypeLambda = Gamma.lambdas4RetType gamma spec in 
-    let c_es = List.filter (fun (vi, ti) -> 
-                        let RefTy.MArrow (effi, _,(_,_), _) = ti in 
-                        Effect.isSubEffect effi eff) c_wellRetType in 
     
-    let c_es = c_es@c_wellRetTypeLambda in 
+    (*This is a simplified version of the return typed guided component synthesis as in SYPET*)
+
+    let c_wellRetType = Gamma.enumerateAndFind gamma spec in 
+    let c_wellRetTypeLambda = Gamma.lambdas4RetType gamma spec in 
+    
+    let c_es = List.filter (fun (vi, ti) -> 
+                                let effi = RefTy.get_effect ti in 
+                                if (effi = Effect.Pure) then false 
+                                else 
+                                    Effect.isSubEffect effi eff) gamma (*c_wellRetType*) in 
+    
+    (* let c_es = c_es@c_wellRetTypeLambda in  *)
+    Message.show (List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es);
 
     (*choosing a component
     The failing disjunct keeps the list of failing Predicates while checking the Hoare Post => Pre implication*)
@@ -1238,38 +1267,71 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
         
         match potentialChoices with 
         | [] -> 
-             Message.show ("Show HERE No more component");
-            
+             
             (gammacap, p2gMap,  Nothing (dps, failingDisjuncts)) 
         | (vi, rti) :: xs ->
                 Message.show ("Show Component "^(Var.toString vi));
              
             match rti with 
-                | RefTy.Arrow ((varg, argty), retty) -> 
+                | RefTy.Arrow ((varg, argty), _) -> 
                     Message.show (" Show *************** Arrow Component ************"^(Var.toString vi));
-                
+                    let uncurried = RefTy.uncurry_Arrow rti in 
+                    let RefTy.Uncurried (args_ty_list, retty) = uncurried in 
+
                     let gammaMap = DPred.getGamma gammacap in 
                     let sigmaMap = DPred.getSigma gammacap in 
                     let deltaPred = DPred.getDelta gammacap in 
                     (*Currently the argument is always a scalar/Base Refinement*)
-                    let e_arg =  synthesize gammaMap sigmaMap deltaPred argty learnConst  in 
-                    (match e_arg with (*BEGIN1*)
-                        | None -> choice xs gammacap dps failingDisjuncts p2gMap
-                        | Some e -> 
+                    Message.show (" Show *************** Synthesizing Args ei : ti for ************"^(Var.toString vi));
+                    
+                    let e_args =  List.map (fun (argi, argtyi) -> esynthesizeScalar gammaMap sigmaMap deltaPred argtyi) args_ty_list  in 
+                    let all_successful = List.filter (fun e_argi -> match e_argi with 
+                                                        | Some ei -> true
+                                                        | None -> false) e_args in 
+                    let all_successful = List.map (fun (Some ei) -> ei) all_successful in 
+                    
+                    (*length of synthesized args match with the formal parameter*)
+                    let e_allsuccessful = (if ((List.length all_successful) = (List.length args_ty_list)) 
+                                            then Some all_successful
+                                            else None) in 
 
-                            let appliedMonExp = Syn.Eapp (Syn.Evar vi, e) in  (*apply vi e_arg*)
+                    (match e_allsuccessful with (*BEGIN1*)
+                        | None -> (*Atleast one required argument cannot be synthesized thus cannot make the call*)
+                                choice xs gammacap dps failingDisjuncts p2gMap
+                        | Some es -> 
+                            let monExps_es = List.map (fun ei -> ei.expMon) es in 
+                            
+                            let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
+                            
+                            Message.show (" Show *************** Calling Hoare-Pre ************"^(Var.toString vi));
+                    
                             let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path appliedMonExp retty in
+                            
                             if (allowed) then 
+                                let () = Message.show (" Show *************** Hoare-Allowed************"^(Var.toString vi)) in 
+                                
+                                Message.show (" Show *************** Calling Distinguish ************"^(Var.toString vi));
+                    
                                 let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi retty in 
                                 
                                 if (isDistinguished) then 
-                                    let new_path = path@[appliedMonExp] in 
+                                    let boundVar = Var.get_fresh_var "bound" in 
+                                    Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
+                                    let bound = Syn.Evar (boundVar) in 
+                                    let RefTy.MArrow (_,_,(vret, tret),_) = retty  in 
+
+                                    let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar tret in     
+                                    let doExpForApp = Syn.Edo (bound, appliedMonExp) in 
+                                    
+                                    let new_path = path@[doExpForApp] in 
                                     let p2gMap = PGMap.add p2gMap (new_path) gamma_with_ci in 
+                                    
                                     (*chosen a ci s.t. path--> ci is allowed and distinguished*)
-                                    (gamma_with_ci, p2gMap, Chosen (dps, appliedMonExp, new_path))  
+                                    (gamma_with_ci, p2gMap, Chosen (dps, doExpForApp, new_path))  
                                 else
                                     (*~phi_ci'*)
                                    let not_phi_ci' =  Predicate.Not phi_ci' in 
+                                   Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi));
                                    (*D(ci)*)
                                    let dp_ci = 
                                             try 
@@ -1287,6 +1349,7 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
                                     
                             else (*allowed = false*)
                                 let failing_predicate = post_imp_phi_ci' in 
+                                Message.show (" Show *************** Hoare-Not-Allowed : Now Adding Disjuncts ************");
                                 (*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
                                 let dps= 
                                     if (List.length path > 0) then 
@@ -1321,6 +1384,8 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
                 
                 (*check the hoare pre-condition rule*)
                         let monExpForComp = Syn.Evar vi in     
+                        
+
                         let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path monExpForComp rti in 
                         if (allowed) then 
                             (
@@ -1331,11 +1396,18 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
                                 Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
                             (*  Message.show (" Show *************** PGMap Before ************"^(PGMap.toString p2gMap));  
                              *) 
-                                let new_path =  path@[monExpForComp] in 
+                                let boundVar = Var.get_fresh_var "bound" in 
+                                let bound = Syn.Evar (boundVar) in 
+                                let doExpForComp = Syn.Edo (bound, monExpForComp) in 
+                                let RefTy.MArrow (_,_,(vrti, trti),_) = rti  in 
+
+                                let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar trti in     
+                                    
+                                let new_path =  path@[doExpForComp] in 
                                 let p2gMap = PGMap.add p2gMap new_path gamma_with_ci in 
                             (*  Message.show (" Show *************** PGMap After ************"^(PGMap.toString p2gMap));  
                              *) (*chosen a ci s.t. path--> ci is allowed and distinguished*)
-                                (gamma_with_ci, p2gMap, Chosen (dps, monExpForComp, new_path))  
+                                (gamma_with_ci, p2gMap, Chosen (dps, doExpForComp, new_path))  
                             )
                             else
                                 (Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi)); 
@@ -1453,7 +1525,7 @@ and deduceR (gamma:DPred.gammaCap)
 (*cdcleffSynthesizeBind : DPred.gammaCap -> DMap.t -> RefTy.t -> Syn.monExp*)
  and cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)  
                            (dps : DMap.t) 
-                           (spec : RefTy.t) : Syn.monExp = 
+                           (spec : RefTy.t) : Syn.monExp option= 
     Message.show "Show :: in CDCL";
     
 (*  Message.show ("Gamma at CDCL"^(Gamma.toString (DPred.getGamma gammaCap)));              
@@ -1493,7 +1565,7 @@ and deduceR (gamma:DPred.gammaCap)
                     
                     loop gammacap backpath spec dps p2gMap 
                 else            
-                    raise (LearningException "No program and No possible backtracking")
+                    None
             | Chosen (dps', ei, pi) ->  
                 
                 Message.show (" EXPLORED :: "^(pathToString pi));
@@ -1505,7 +1577,7 @@ and deduceR (gamma:DPred.gammaCap)
                     | Success p ->
                             Message.show (" EXPLORED :: "^(pathToString p));
              
-                            Syn.buildProgramTerm  p
+                            Some (Syn.buildProgramTerm  p)
                     | Conflict {env;dps;conflictpath;conflictpathtype;disjuncts} -> 
                             Message.show (" Show :: Conflict Path  Found  :: Calling learnP Now");
                             (* Message.show ("**************Show :: Printing The Learnt DPS Before LP ********"^((DMap.toString dps)));

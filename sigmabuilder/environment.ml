@@ -31,6 +31,8 @@ let find t var =
 
 let add = fun t -> fun var rt -> TyMap.add t var rt
 let remove = TyMap.remove
+let append t binds = 
+        t@binds
 
 let toString t = 
     List.fold_left (fun accstr (vi, rti) -> (accstr^"\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) " " t 
@@ -48,7 +50,8 @@ let lambdas4RetType t (rt:TypingEnvValue.t)  : ((TypingEnvKey.t*TypingEnvValue.t
             [] -> filtered
             | (vi, rti) :: xs-> 
                     match rti with 
-                        | RefinementType.Arrow ((arg, argty), retty) -> 
+                        | RefinementType.Arrow ((arg, argty),_) -> 
+                            let RefinementType.Uncurried (_, retty)= RefinementType.uncurry_Arrow rti in 
                             if (RefinementType.compare_types rt retty) then  
                                 let filtered = filtered@[(vi, rti)] in 
                                 loop xs  filtered

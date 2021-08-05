@@ -167,7 +167,10 @@ let typeForPath gamma sigma delta spec (path:Syn.path)  =
               let ci_type = 
                  match found_type with 
                    | RefTy.MArrow (_,_,(_,_),_) -> found_type
-                   | RefTy.Arrow ((_,_), retTy) -> retTy 
+                   | RefTy.Arrow ((_,_), _) -> 
+                        let uncurried = RefTy.uncurry_Arrow found_type in 
+                        let RefTy.Uncurried (_, retTy) = uncurried in 
+                        retTy 
               in        
 	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma acc_type ci_type in
 	                  accumulatePathType cs acc_gamma acc_delta acc_type
@@ -231,12 +234,19 @@ let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t)
 							delta = deltaPred} in 
 			 
 
-	let RefTy.MArrow (eff, _,_,_) = spec in 
-	let RefTy.MArrow (effi, _,_,_) = path_type in 
+	let RefTy.MArrow (eff, _,(vspecp, tspec),_) = spec in 
+	let RefTy.MArrow (effi, _,(vpath, tpath),_) = path_type in 
 	 
-    if (not (Effect.isSubEffect effi eff))  
+  let basePath = RefTy.toTyD tpath in 
+  let baseSpec = RefTy.toTyD tspec in 
+  
+                 
+    if ((not (Effect.isSubEffect effi eff)) 
+          || (not (TyD.sametype  basePath baseSpec)))  
             then (false, gammacap, path_type)   
+    
     else    
+
           (*   let () = Printf.printf "%s" ("Found Path Type "^(RefTy.toString path_type)) in 
             let () = Printf.printf "%s" ("Compared Against Spec "^(RefTy.toString spec)) in 
 	       *)  

@@ -3,18 +3,31 @@ res : int;
 
 
 
-foo' : (ls : { v : list | true}) -> 
-	   (l : {v : int | true}) -> 	
+
+foo' : (ls : { v : list | len (v) == 0}) -> 
 	
 	State  {\(h : heap). not (sel (h, res) > 20)} 
 	v : { v : int |  true} 
 	{\(h : heap), (v : int), (h' : heap). sel (h', res) == v /\ [v=10]};
 
 
-baz : State  {\(h : heap). sel (h, res) == 0} 
+
+foo : (ls : { v : list | len (v) > 0}) -> 
+	
+	State  {\(h : heap). not (sel (h, res) > 20)} 
+	v : { v : char |  true} 
+	{\(h : heap), (v : char), (h' : heap). sel (h', res) == sel (h, res) + 3};
+
+
+
+baz : 
+		(l1 : { v : list | true}) -> 
+	    (l2 : {v : char | true}) -> 	
+
+		State  {\(h : heap). sel (h, res) == 3} 
 		v : { v : int | true} 
 		{\(h : heap), (v : int), (h' : heap). 
-		sel (h', res) == sel (h, res) + 3};
+		sel (h', res) == sel (h, res) + 7};
 
 
 

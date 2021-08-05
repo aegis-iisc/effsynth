@@ -216,6 +216,9 @@ let lookup_type (v : Var.t) (_gamma : vctybind list) =
 let extend_gamma (v1, t1) (g: vctybinds) : vctybinds = 
   List.append g [(v1, t1)]
 
+let append_gamma binds (g: vctybinds) : vctybinds = 
+  List.append g binds 
+
 
 let extend_gamma_from_vc (vc : t) (ing:vctybinds) : vctybinds = 
    let localg = gammaVC vc in 
@@ -501,7 +504,8 @@ let rec fromTypeCheck (_gamma) _delta (subTy, supTy) =
         VC (_gamma, P.Conj(delta_pred,p1), p2) 
 
         | (RefTy.MArrow (_,_,_,_), RefTy.MArrow (_,_,_,_)) ->     
-         trans_subtyping env supTy subTy 
+            
+            trans_subtyping env supTy subTy 
         | (_,_) -> 
         raise (Error "Unhandled Case Arrow or Tuple fromTypeCheck")
 
