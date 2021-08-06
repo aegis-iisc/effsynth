@@ -147,6 +147,43 @@ let mon_bind  (acc_delta : Predicate.t)
                 (_Gamma, acc_delta, new_acc_ty)
                         
                 
+      | (RefTy.MArrow (eff1, phi1, (v1,t1), phi1') , RefTy.Base (vbase, tbase, phibase)) -> 
+            let _Gamma = acc_gamma in 
+       
+
+
+            let bv_h = Var.get_fresh_var "h" in 
+            let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in 
+            let bv_x = Var.get_fresh_var "x" in 
+            
+            let ret_ty_subs = RefTy.applySubsts [(bv_x, vbase)] ci_type in 
+            
+            let _Gamma = VC.extend_gamma (bv_x, ret_ty_subs) _Gamma in 
+            let bv_h' = Var.get_fresh_var "h'" in 
+            let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in 
+            
+            let res_pre = VC.apply phi1 [(bv_h, Ty_heap)] in 
+            
+            let res_phibase = P.reduce (bv_x, vbase) phibase in 
+            
+            let res_post  = VC.apply phi1' [(bv_h ,Ty_heap);(v1, RefTy.toTyD t1); (bv_h', Ty_heap)]  in 
+            
+            let res_post = P.Conj (res_post, res_phibase) in
+
+            let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], res_pre)  in 
+                
+            let local_var_binds = [(bv_h, Ty_heap);(bv_x, tbase);(bv_h', Ty_heap) ] in 
+                
+            let bind_post (*create post-condition*) = 
+                 P.Forall (local_var_binds, res_post)  in 
+
+              let lubM = eff1  in                 
+              let new_acc_ty = RefTy.MArrow (lubM, bind_pre , (bv_x, ci_type), bind_post) in
+        
+            (_Gamma, acc_delta, new_acc_ty)
+                
+    
+
       | (_, _) -> raise (Error ("binding non copmputations "^(RefTy.toString acc_type)^(" >>= ")^(RefTy.toString ci_type)^" \n"))     
 
 
@@ -163,7 +200,12 @@ let typeForPath gamma sigma delta spec (path:Syn.path)  =
 	         
            | ei :: cs -> 
 	          	let ci = Syn.componentNameForMonExp ei in  
-              let found_type = Gamma.find gamma ci in 
+              let found_type = 
+                 try  
+                    Gamma.find gamma ci 
+                  with 
+                    Environment.NoMappingForVar msg -> Sigma.find sigma ci
+              in           
               let ci_type = 
                  match found_type with 
                    | RefTy.MArrow (_,_,(_,_),_) -> found_type
@@ -225,7 +267,7 @@ let typeForPathSuffix gamma sigma delta suffix prefixType =
 let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t) = 
 
 
-	
+
 	let (gammaMap, deltaPred, path_type) = 
 			typeForPath gammaMap sigmaMap deltaPred spec path in 
 	
@@ -239,11 +281,11 @@ let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t)
 	 
   let basePath = RefTy.toTyD tpath in 
   let baseSpec = RefTy.toTyD tspec in 
-  
+ 
                  
-    if ((not (Effect.isSubEffect effi eff)) 
-          || (not (TyD.sametype  basePath baseSpec)))  
-            then (false, gammacap, path_type)   
+    if ((not (Effect.isSubEffect effi eff))
+      || not (TyD.sametype  basePath baseSpec))  
+            then (false , gammacap, path_type)   
     
     else    
 
@@ -258,8 +300,10 @@ let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t)
 	        let result = VCE.discharge vcStandard  in 
 	        match result with 
 	        | VCE.Success -> 
-	                      (true, gammacap, path_type)
-	        | VCE.Failure -> 
-	                      (false, gammacap, path_type) 
+                          (true, gammacap, path_type)
+                        
+	        | VCE.Failure ->
+
+	                   (false, gammacap, path_type) 
 	        | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
 	        

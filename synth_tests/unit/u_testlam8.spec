@@ -6,8 +6,8 @@ res : int;
 
 
 bar : State  {\(h : heap). sel (h, res) == 5} 
-		v : { v : int | true} 
-		{\(h : heap), (v : int), (h' : heap). 
+		v : { v : char | true} 
+		{\(h : heap), (v : char), (h' : heap). 
 		sel (h', res) == sel (h, res) + 2};
 
 

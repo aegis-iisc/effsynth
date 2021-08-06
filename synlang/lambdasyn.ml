@@ -19,7 +19,7 @@ and  monExp =
         | Eapp of monExp * (monExp list) (*Eapp foo [x1, x2, x3,...xn] *)
         | Ematch of typedMonExp * (caseExp list) 
         | Elet of monExp * typedMonExp * typedMonExp
-        | Eret of typedMonExp 
+        | Eret of monExp 
         | Ebind of monExp * monExp * monExp
         | Ecapp of var * ( monExp list ) 
         | Ehole (*a hole in place of an expression*)
@@ -115,7 +115,7 @@ and typedNormalExp = {nme:normalMonExp;rt:RefTy.t}
 let rec monExp_toString (m:monExp) = 
     match m with 
         | Evar v -> (v)
-        | Eret ret ->  ("return "^(typedMonExp_toString ret))
+        | Eret ret ->  ("return "^(monExp_toString ret))
         | Ebind (mne, mne1, mne2) -> ((monExp_toString mne1)^" \n \t >>= \lambda"^
                                     (monExp_toString mne)^" . \n \t "^
                                     (monExp_toString mne2 ))  
@@ -156,6 +156,7 @@ let rec componentNameForMonExp mExp =
                 (match v with 
                     | Evar v1 -> v1
                     | _ -> raise (IncorrectExp "a component is either a variable or a fun app"))
+         | Ecapp (v, args) -> v
          | Edo (bound, exp) -> componentNameForMonExp exp
          | _ -> raise (IncorrectExp "a component is either a variable or a fun app")
        
@@ -173,8 +174,14 @@ let rec buildProgramTerm (path : path) =
         match path with
             | [] -> Eskip
             | x :: xs ->
-                let Edo (boundx, expx) = x in 
-                Ebind (boundx, expx, buildProgramTerm xs) 
+                match x with 
+                | Edo (boundx, expx) ->  
+                    Ebind (boundx, expx, buildProgramTerm xs)
+                | Eapp (name, args) -> 
+                     let boundVar = Var.get_fresh_var "bound" in 
+                     let boundx = Evar (boundVar) in 
+                                
+                     Ebind (boundx, x, buildProgramTerm xs)    
 
 
 let pathToString (p:path) = 

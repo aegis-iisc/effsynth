@@ -186,7 +186,7 @@ and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Syn.monExp) (path:path) 
 		
 
 	(* 	let (gammaMap, deltaPred, path_type) = SynTC.typeForPath gammaMap sigmaMap deltaPred spec path in 
-	 *)	let (verified, gamma, path_type) = SynTC.typeCheckPath gammaMap sigmaMap deltaPred path spec in 
+	 *)	let (verified,gamma, path_type) = SynTC.typeCheckPath gammaMap sigmaMap deltaPred path spec in 
 		
 		if (verified) then 
 			 (

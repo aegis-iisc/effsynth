@@ -17,10 +17,16 @@ let () =
     let () = Printf.printf "%s" string_ast in 
     let (gamma, sigma, goal) = SEL.elaborateEnvs ast in 
     let delta = P.True in 
-(*     let () = Printf.printf "%s" " INITIAL GAMMA \n " in 
+    let () = Printf.printf "%s" " INITIAL GAMMA \n " in 
     let () = List.iter (fun (vi, rti) -> Printf.printf "%s" 
                       ("\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) gamma in 
- *)
+
+
+    let () = Printf.printf "%s" " INITIAL SIGMA \n " in 
+    let () = List.iter (fun (vi, rti) -> Printf.printf "%s" 
+                      ("\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) sigma in 
+
+
     let synthterm = Synth.Bidirectional.synthesize gamma sigma  delta goal learningON in   
     	    (*run the initial environment builder*)    
     match synthterm with 

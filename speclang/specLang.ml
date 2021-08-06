@@ -271,8 +271,9 @@ type t =
         | ((Ty_arrow  (t11 , t12) ), 
                 Ty_arrow (t21, t22)) -> (sametype t11 t21) && (sametype t12 t22)
         | ( Ty_tuple (tl1), Ty_tuple (tl2) ) -> List.fold_left2 (fun acc t1i t2i -> acc && (sametype t1i t2i)) true tl1 tl2    
-        | (Ty_unknown, _) -> true
-        | (_, Ty_unknown) -> true 
+        | (Ty_unknown, Ty_unknown) -> true
+        | (_, Ty_unknown) -> false
+        | (Ty_unknown, _) -> false
         | (Ty_alg at1, Ty_alg at2) -> Algebraic.sametype at1 at2
         | (_, _) -> false  
 
