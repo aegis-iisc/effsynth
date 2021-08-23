@@ -183,6 +183,11 @@ let rec buildProgramTerm (path : path) =
                                 
                      Ebind (boundx, x, buildProgramTerm xs)    
 
+                 | Evar v ->
+                        let boundVar = Var.get_fresh_var "bound" in 
+                        let boundx = Evar (boundVar) in 
+                      
+                        Ebind (boundx, x, buildProgramTerm xs )    
 
 let pathToString (p:path) = 
         (List.fold_left (fun accstr ei -> accstr^(" ---> ")^(monExp_toString ei)) "PATH " p)^"\n"

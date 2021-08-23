@@ -32,6 +32,13 @@ baz : State  {\(h : heap). sel (h, res) == 7}
 		sel (h', res) == sel (h, res) + 3};
 
 
+c3' : (ls : { v : list | len (v) > 0}) -> 
+		State  {\(h : heap). not (sel (h, res) > 8)} 
+		v : { v : int | true} 
+		{\(h : heap), (v : int), (h' : heap). 
+		sel (h', res) == sel (h, res) + 3};
+
+
 
 goal : (ls : {v : list | true}) -> 
 	State  
