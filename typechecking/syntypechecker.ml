@@ -71,7 +71,8 @@ open TyD
 let mon_bind  (acc_delta : Predicate.t) 
               (acc_gamma: VerificationC.vctybinds) 
               (acc_type: RefTy.t) 
-              (ci_type :RefTy.t) = 
+              (ci_type :RefTy.t)
+              (bvi : Var.t) = 
      match (acc_type, ci_type) with 
       | (RefTy.MArrow (eff1, phi1, (v1,t1), phi1') , RefTy.MArrow (eff2,phi2, (v2, t2), phi2')) -> 
               
@@ -126,16 +127,17 @@ let mon_bind  (acc_delta : Predicate.t)
                 (*Add h' to the Gamma*)
 
                 let local_var_binds = [(bv_h, Ty_heap);(bv_v, RefTy.toTyD t2);(bv_h', Ty_heap) ] in 
-                
+                let post_conjuntc1 = ( VC.apply phi1' [(bv_h, Ty_heap);(bv_x, RefTy.toTyD t1);(fresh_h_int,Ty_heap)]) in 
+                let post_conjuntc2 = (VC.apply phi2' [(fresh_h_int ,Ty_heap);(bv_v, RefTy.toTyD t2); (bv_h', Ty_heap)]) in 
+                let post_conjuntc3 = Predicate.reduce (bvi, bv_v) post_conjuntc2 in 
+
                 let bind_post (*create post-condition*) = 
-                 P.Forall (local_var_binds, P.Conj (( VC.apply phi1' [(bv_h, Ty_heap);(bv_x, RefTy.toTyD t1);(fresh_h_int,Ty_heap)]),
-                                                (VC.apply phi2' [(fresh_h_int ,Ty_heap);(bv_v, RefTy.toTyD t2); (bv_h', Ty_heap)])))
+                 P.Forall (local_var_binds, P.Conj 
+                      (P.Conj (post_conjuntc1, post_conjuntc2), post_conjuntc3))
                                in 
 
  
-             (*    let () = Printf.printf "%s" ("\n POST \n "^(Predicate.toString bind_post)) in  
-              *)                          
-               
+                          
                 (*least uppper bound*)
                 let lubM = Effect.lub eff1 eff2  in                 
                 let new_acc_ty = RefTy.MArrow (lubM, bind_pre , (bv_v,t2), bind_post) in
@@ -199,7 +201,11 @@ let typeForPath gamma sigma delta spec (path:Syn.path)  =
 	         [] -> (acc_gamma, acc_delta, acc_type) 
 	         
            | ei :: cs -> 
-	          	let ci = Syn.componentNameForMonExp ei in  
+	          	(*A path is a list of do expressions of the form do x1 <- e1; do x2 <- e2;...*)
+              let Syn.Edo (bvarMonExp, _) = ei in 
+              let Syn.Evar bvar = bvarMonExp in 
+
+              let ci = Syn.componentNameForMonExp ei in  
               let found_type = 
                  try  
                     Gamma.find gamma ci 
@@ -214,7 +220,8 @@ let typeForPath gamma sigma delta spec (path:Syn.path)  =
                         let RefTy.Uncurried (_, retTy) = uncurried in 
                         retTy 
               in        
-	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma acc_type ci_type in
+	          	let (acc_gamma, acc_delta, acc_type) = 
+              mon_bind acc_delta acc_gamma acc_type ci_type bvar in
 	                  accumulatePathType cs acc_gamma acc_delta acc_type
 	        
 

@@ -30,7 +30,7 @@ State  {\(h : heap). not (sel (h, res) > 20)}
 foo' : (ls : { v : list | len (v) == 0}) -> 
 	
 	State  {\(h : heap). not (sel (h, res) > 20)} 
-	v : { v : int |  [v=20]} 
+	v : { v : int |  [v=10]} 
 	{\(h : heap), (v : int), (h' : heap). sel (h', res) == v /\ [v=10]};
 
 

@@ -302,8 +302,8 @@ vartyseq : vt=varty {[vt]}
 varty : i = ID COLON rt=refty 
 		{((Var.fromString i), rt)};
 
-tyd : 	t=ID {TyD.fromString t}
-	| LBRACE t=ID RBRACE {TyD.makeTList (TyD.fromString t)}	
+tyd : t=ID {TyD.fromString t}
+    | LBRACE t=ID RBRACE {TyD.makeTList (TyD.fromString t)}	
 	| REF t=tyd {TyD.makeTRef t };
 
 
@@ -334,6 +334,7 @@ pred :  pa=patom {pa}
      |  pa=patom DISJ pr=pred {Predicate.Disj (pa,pr)}
      |  LAMBDA binds=tybindseq DOT pr=pred {Predicate.Forall (binds, pr) }
      |  EXISTS binds=tybindseq DOT pr=pred {Predicate.Exists (binds, pr)};
+     
 patom : TRUE {Predicate.truee()}
       | NOT pa=patom {Predicate.Not pa}
       | LPAREN pr=pred RPAREN {pr}

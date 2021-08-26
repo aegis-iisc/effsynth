@@ -214,6 +214,7 @@ type t =
         | Ty_int 
         | Ty_bool
         | Ty_string
+        | Ty_float
         | Ty_char         
         | Ty_heap
         | Ty_arrow of t * t
@@ -248,6 +249,7 @@ type t =
         | Ty_int 
         | Ty_bool
         | Ty_string
+        | Ty_float
         | Ty_char         
         | Ty_heap
         | Ty_arrow of t * t
@@ -267,7 +269,7 @@ type t =
         | (Ty_char, Ty_char) -> true        
         | (Ty_heap, Ty_heap)  -> true
         | (Ty_string, Ty_string) -> true
-
+        | (Ty_float, Ty_float) -> true
         | ((Ty_arrow  (t11 , t12) ), 
                 Ty_arrow (t21, t22)) -> (sametype t11 t21) && (sametype t12 t22)
         | ( Ty_tuple (tl1), Ty_tuple (tl2) ) -> List.fold_left2 (fun acc t1i t2i -> acc && (sametype t1i t2i)) true tl1 tl2    
@@ -287,6 +289,7 @@ type t =
         | "heap" -> Ty_heap
         | "unit" -> Ty_unit
         | "string" -> Ty_string
+        | "float" -> Ty_float
         | _ -> Ty_alpha (Tyvar.fromString s)
 
  let rec toString t = 
@@ -301,6 +304,7 @@ type t =
         | Ty_char -> "Ty_char"        
         | Ty_heap  -> "Ty_heap"
         | Ty_string -> "Ty_string"
+        | Ty_float -> "Ty_float"
         | Ty_arrow  (_ , _)-> "Function type"
         | Ty_alg at -> Algebraic.toString at
 
@@ -704,13 +708,15 @@ struct
                             args : instexpr list;
                             rel : RelId.t       }
 
+  type bindings = (Ident.t * expr) list 
+
    (*define heap expr*)
    
 
 
   (*to define a predicate sel h inp = ls we need elem as expression as well*)      
   
-   type expr = 
+   and expr = 
             | V of elem    
             | T of elem list 
             | X of expr * expr 
@@ -720,6 +726,8 @@ struct
             | SUBS of expr * expr
             | R of instexpr * Ident.t
             | MultiR of instexpr * (Ident.t list) 
+  (*           | Let of bindings * expr 
+   *)
   type term = Expr of expr
             |Star of instexpr
 
@@ -792,10 +800,11 @@ struct
         (ieToString ie) ^ "(" ^ (Ident.name arg) ^ ")"
     | MultiR (ie, argl) -> 
         (ieToString ie) ^ "(" ^ (List.fold_left (fun _acc arg -> (_acc^", "^(Ident.name arg))) (" ") argl )^" )"    
-  
-  let exprToString = exprToString
-
-
+  (*   | Let (bs, body) -> 
+          "Let "^(bindingsToString bs)^" in "^( exprToString body) 
+  and bindingsToString bs = 
+    "BINDINGS" 
+   *)
   let termToString = fun trm -> match trm with 
       Expr e -> exprToString e
     | Star ie -> (ieToString ie) ^ "*"
@@ -1158,7 +1167,8 @@ type t = True
          |  Disj of t * t
          |  Dot of t * t
          | Forall of TyDBinds.t * t 
-
+         (* | Let of t * t we model let a = rexpr1 in let b = rexpr2... in let k = reexprk in    
+ *)
 let list_disjunction (ls: t list)  : t =  
         List.fold_left (fun acct disj -> (Disj (acct, disj))) (False)  ls 
 
@@ -1241,6 +1251,17 @@ let rec getBVs t =
         match t with 
         | Forall (binds, t) -> binds
         | _ -> [] 
+
+let getRetVar t = 
+      match t with 
+        | Forall (_, _) ->
+              let bvs = getBVs t in 
+              if (List.length bvs = 3) then 
+                  let (rvar,_) = List.nth bvs 1 in 
+                  rvar
+              else
+                raise (SpecLangEx "Illegal Predicate :: Bvs must be forall h v h'")      
+        | _ -> raise (SpecLangEx "RetVar Called on Illegal Predicate")
 
         
 let rec toString t = match t with
@@ -1762,6 +1783,20 @@ struct
     in 
     accumulateArgs arrowty []  
 
+ let sanitizeMArrow marrow = 
+     match marrow with 
+        | MArrow (eff,pre,(vret, tret),post) -> 
+              let bvsPost = Predicate.getBVs post in 
+              if (List.length bvsPost = 3) then 
+                (*the bvForRetType will the second element*)
+                  let (retBV, retBVTy) = List.nth bvsPost 1 in 
+                  let tretSubs = alphaRenameToVar tret retBV in 
+                  MArrow (eff,pre,(retBV, tretSubs),post)
+              else 
+                raise (SpecLangEx "Sanitization Assumption Failed")
+                     
+
+        | _ -> raise (SpecLangEx "Sanitizing Other than MArrow")
 
 let rec findComputationType refty = 
      match refty with 

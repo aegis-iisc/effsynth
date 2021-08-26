@@ -32,8 +32,6 @@ let z3_log = Z3_encode.logz3
 module Printf = struct 
   let printf d s = Printf.printf d ""
   let originalPrint = Printf.printf 
-
-
 end  
 
 
@@ -209,81 +207,100 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
          * automatically from the definition later.*)
       let addSelUpdate (tyMap, constMap, relMap) =
           let open TyD in       
+          
+          (*some useful tyd encoding as sorts*)
+
+          let  (tyMap, constMap, relMap, sort_tree) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "tree") in 
+          let  (tyMap, constMap, relMap, sort_char_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_char)) in 
+          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
+          let  (tyMap, constMap, relMap, sort_tree_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "tree")) in 
+          let  (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in 
+          let  (tyMap, constMap, relMap, sort_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
+          let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pair") in 
+          let  (tyMap, constMap, relMap, sort_revpair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "revpair") in 
+          let  (tyMap, constMap, relMap, sort_triple) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "triple") in 
+           let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
+          let (tyMap, constMap, relMap, sort_int_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_int)) in
+          let (tyMap, constMap, relMap, sort_ref_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (Ty_int))) in
+                    
+          let (tyMap, constMap, relMap, sort_bool_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_bool)) in
+           let (tyMap, constMap, relMap, sort_intplist_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "intpair"))) in
+           let (tyMap, constMap, relMap, sort_intplist) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "intpair")) in
+
+        
+
+
            (*node (tree) relation*)      
           let nodeid = RI.fromString "node" in 
-          let  (tyMap, constMap, relMap, tree) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "tree") in 
-          let  (tyMap, constMap, relMap, sort_char_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_char)) in 
-           
-          let node = mkStrucRel (RI.toString nodeid, [tree ;sort_char_list]) in 
+          let node = mkStrucRel (RI.toString nodeid, [sort_tree ;sort_char_list]) in 
           let relMap = RelMap.add relMap (RI.toString nodeid) node in 
 
           let indentid = RI.fromString "indent" in 
-          let  (tyMap, constMap, relMap, tree) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "tree") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
-           
-          let indent = mkStrucRel (RI.toString indentid, [tree ;sort_int]) in 
+          let indent = mkStrucRel (RI.toString indentid, [sort_tree ;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString indentid) indent in 
 
           let childrenid = RI.fromString "children" in 
-          let  (tyMap, constMap, relMap, tree) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "tree") in 
-          let  (tyMap, constMap, relMap, sort_tree_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "tree")) in 
-           
-          let children = mkStrucRel (RI.toString indentid, [tree ;sort_tree_list]) in 
+          let children = mkStrucRel (RI.toString indentid, [sort_tree ;sort_tree_list]) in 
           let relMap = RelMap.add relMap (RI.toString childrenid) children in 
 
 
           let otlid = RI.fromString "offsideTreeList" in 
-
-
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
-          let  (tyMap, constMap, relMap, sort_tree_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "tree")) in 
-          let  (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in 
-           
           let otl = mkMStrucRel (RI.toString indentid, [sort_int ;sort_tree_list;sort_bool]) in 
           let relMap = RelMap.add relMap (RI.toString otlid) otl in 
 
 
 
           let otid = RI.fromString "offsideTree" in 
-
-
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
-          let  (tyMap, constMap, relMap, sort_tree) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "tree") in 
-          let  (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in 
-           
           let ot = mkMStrucRel (RI.toString indentid, [sort_int ;sort_tree;sort_bool]) in 
           let relMap = RelMap.add relMap (RI.toString otid) ot in 
 
+          (*mem relation*)
+          let memid = RI.fromString "mem" in 
+          let mem = mkMStrucRel (RI.toString memid, [sort_int_list;sort_int;sort_bool]) in 
+          let relMap = RelMap.add relMap (RI.toString memid) mem in 
 
+          
+          let sortedid = RI.fromString "sorted" in 
+          let sorted = mkStrucRel (RI.toString sortedid, [sort_int_list;sort_bool]) in 
+          let relMap = RelMap.add relMap (RI.toString sortedid) sorted in 
+          
           
           
           (*elems relation*)      
           let elemsid = RI.fromString "elems" in 
-          let  (tyMap, constMap, relMap, sort_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let elems = mkStrucRel (RI.toString elemsid, [sort_int_list;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString elemsid) elems in 
 
            (*len relation*)      
           let lenid = RI.fromString "len" in 
-          let  (tyMap, constMap, relMap, sort_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let len = mkStrucRel (RI.toString lenid, [sort_int_list;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString lenid) len in 
 
+          let sizeid = RI.fromString "size" in 
+           
+          let size = mkStrucRel (RI.toString sizeid, [sort_int_list;sort_int]) in 
+          let relMap = RelMap.add relMap (RI.toString sizeid) size in 
+
+           let minid = RI.fromString "min" in 
+           
+          let min = mkStrucRel (RI.toString sizeid, [sort_int_list;sort_int]) in 
+          let relMap = RelMap.add relMap (RI.toString minid) min in 
+ 
+
+           let maxid = RI.fromString "max" in 
+           
+          let max = mkStrucRel (RI.toString sizeid, [sort_int_list;sort_int]) in 
+          let relMap = RelMap.add relMap (RI.toString maxid) max in 
+
           (*fst relation*)      
           let fstid = RI.fromString "fst" in 
-          let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pair") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let fst = mkStrucRel (RI.toString fstid, [sort_pair;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString fstid) fst in 
          (*snd relation*)      
           let sndid = RI.fromString "snd" in 
-          let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pair") in 
-          let  (tyMap, constMap, relMap, sort_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
            
           let snd = mkStrucRel (RI.toString sndid, [sort_pair;sort_int_list]) in 
           let relMap = RelMap.add relMap (RI.toString sndid) snd in 
@@ -291,16 +308,11 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
 
          (*(int list* int) fst relation*)      
           let revfstid = RI.fromString "revfst" in 
-          let  (tyMap, constMap, relMap, sort_revpair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "revpair") in 
-          let  (tyMap, constMap, relMap, sort_intlist) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
            
-          let revfst = mkStrucRel (RI.toString revfstid, [sort_revpair;sort_intlist]) in 
+          let revfst = mkStrucRel (RI.toString revfstid, [sort_revpair;sort_int_list]) in 
           let relMap = RelMap.add relMap (RI.toString revfstid) revfst in 
          (*snd relation*)      
           let revsndid = RI.fromString "revsnd" in 
-          let  (tyMap, constMap, relMap, sort_revpair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "revpair") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) Ty_int in 
-           
           let revsnd = mkStrucRel (RI.toString revsndid, [sort_revpair;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString revsndid) revsnd in 
        
@@ -308,31 +320,23 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           (*(int * int )
            * fst relation*)      
           let fstid = RI.fromString "fstint" in 
-          let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "intpair") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
-           
           let fst = mkStrucRel (RI.toString fstid, [sort_pair;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString fstid) fst in 
+         
          (*snd relation*)      
           let sndid = RI.fromString "sndint" in 
-          let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "intpair") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let snd = mkStrucRel (RI.toString sndid, [sort_pair;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString sndid) snd in 
         
            (*pr1 relation*)      
           let pr1id = RI.fromString "pr1" in 
-          let  (tyMap, constMap, relMap, sort_triple) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "triple") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let pr1 = mkStrucRel (RI.toString pr1id, [sort_triple;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString pr1id) pr1 in 
           
             (*pr2 relation*)      
           let pr2id = RI.fromString "pr2" in 
-          let  (tyMap, constMap, relMap, sort_triple) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "triple") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let pr2 = mkStrucRel (RI.toString pr2id, [sort_triple;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString pr2id) pr2 in 
@@ -340,8 +344,6 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
            
           (*pr3 relation*)      
           let pr3id = RI.fromString "pr3" in 
-          let  (tyMap, constMap, relMap, sort_triple) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "triple") in 
-          let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
            
           let pr3 = mkStrucRel (RI.toString pr3id, [sort_triple;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString pr3id) pr3 in 
@@ -349,8 +351,6 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           
           (*wellformed relation*)      
           let wfid = RI.fromString "wellformed" in 
-          let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "pair")) in 
-          let  (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in 
            
           let wellformed = mkStrucRel (RI.toString wfid, [sort_pair;sort_bool]) in 
           let relMap = RelMap.add relMap (RI.toString wfid) wellformed in 
@@ -361,11 +361,8 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           (*create sel : Ty_heap :ref 't :-> 't *)
           let selid = RI.fromString "sel" in 
           let ty_var = Tyvar.fromString "int" in 
-          let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
-          let () = Printf.printf "%s" (" \n Sort for Heap >>>> "^sortToString sort_heap) in   
          
           (*No polymorphic support currently*)
-          let (tyMap, constMap, relMap, sort_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_alpha ty_var)) in
           let (tyMap, constMap, relMap, sort_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_alpha ty_var)) in
           let (tyMap, constMap, relMap, sort_val) = encodeTyD (tyMap, constMap, relMap) (Ty_alpha ty_var) in 
 
@@ -378,14 +375,9 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
          (*create update*)
          
           (*create int_sel : heap :-> ref int :-> int*)
-          let int_selid = RI.fromString "isel" in 
-          let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
-         
           (*No polymorphic support currently*)
-          let (tyMap, constMap, relMap, sort_int_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_int)) in
-          let (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in
-
-
+          
+          let int_selid = RI.fromString "isel" in 
           let sorts = [sort_heap;sort_int_ref;sort_int] in 
           let int_sr_sel = mkMStrucRel (RI.toString selid, sorts) in 
 
@@ -394,16 +386,9 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
         
 
             (*create mem_sel : heap :-> ref int list:-> int*)
-              let sel_mem_id = RI.fromString "mem_sel" in 
-          let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
-          let (tyMap, constMap, relMap, sort_ref_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (Ty_int))) in
-          let (tyMap, constMap, relMap, sort_tail) = encodeTyD (tyMap, constMap, relMap) (Ty_list Ty_int) in 
-          
-
-          let sorts = [sort_heap;sort_ref_int_list;sort_tail] in 
+          let sel_mem_id = RI.fromString "mem_sel" in 
+          let sorts = [sort_heap;sort_ref_int_list;sort_int_list] in 
           let sr_mem_sel = mkMStrucRel (RI.toString sel_mem_id, sorts) in 
-
-
           let relMap = RelMap.add relMap (RI.toString sel_mem_id) sr_mem_sel in 
 
 
@@ -411,46 +396,21 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
         
           (*create bool_sel : heap :-> ref int :-> int*)
           let bool_selid = RI.fromString "bsel" in 
-          let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
-         
-          (*No polymorphic support currently*)
-          let (tyMap, constMap, relMap, sort_bool_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_bool)) in
-          let (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in
-
-
           let sorts = [sort_heap;sort_bool_ref;sort_bool] in 
           let bool_sr_sel = mkMStrucRel (RI.toString bool_selid, sorts) in 
-
-
           let relMap = RelMap.add relMap (RI.toString bool_selid) bool_sr_sel in 
            
           (*create int_list_sel : heap :-> ref int list :->int list*)
          let intlist_selid = RI.fromString "ilssel" in 
-         let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
-        
-         (*No polymorphic support currently*)
-          let (tyMap, constMap, relMap, sort_intlist_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (Ty_int))) in
-         let (tyMap, constMap, relMap, sort_intlist) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in
-
-
-         let sorts = [sort_heap;sort_intlist_ref;sort_intlist] in 
+         let sorts = [sort_heap;sort_ref_int_list;sort_int_list] in 
          let intlist_sr_sel = mkMStrucRel (RI.toString intlist_selid, sorts) in 
 
 
          let relMap = RelMap.add relMap (RI.toString intlist_selid) intlist_sr_sel in 
         
-          let intplist_selid = RI.fromString "plssel" in 
-         let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
-        
-         (*No polymorphic support currently*)
-          let (tyMap, constMap, relMap, sort_intplist_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "intpair"))) in
-         let (tyMap, constMap, relMap, sort_intplist) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "intpair")) in
-
-
+         let intplist_selid = RI.fromString "plssel" in 
          let sorts = [sort_heap;sort_intplist_ref;sort_intplist] in 
          let intplist_sr_sel = mkMStrucRel (RI.toString intplist_selid, sorts) in 
-
-
          let relMap = RelMap.add relMap (RI.toString intplist_selid) intplist_sr_sel in 
         
 
@@ -1071,23 +1031,17 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
         in
       (*encoding for rn > rn*)  
       let encodeNumericGrtAssertion (tyMap, constMap, relMap) (e1, e2) = 
-           let () = Printf.printf "%s" (" \n ******encodeNumericGrtAssertion *****") in 
-               
-          let encoding_lhs =  encodeNumericExpr (tyMap, constMap, relMap) e1 in 
-            let () = Printf.printf "%s" (" \n ******encodeNumericGrtAssertion LHS done *****") in 
-        
+        let () = Printf.printf "%s" (" \n ******encodeNumericGrtAssertion *****") in 
+        let encoding_lhs =  encodeNumericExpr (tyMap, constMap, relMap) e1 in 
+        let () = Printf.printf "%s" (" \n ******encodeNumericGrtAssertion LHS done *****") in 
         let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion RHS  *****") in 
-      
-          let encoding_rhs = encodeNumericExpr (tyMap, constMap, relMap) e2 in 
+        let encoding_rhs = encodeNumericExpr (tyMap, constMap, relMap) e2 in 
         let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion RHS done *****") in 
-        
-        
         let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion creating EQ  *****") in 
-               
         let gt_assertion = mk_Integer_gt (encoding_lhs,  encoding_rhs) in 
         let () = Printf.printf "%s" (" \n ******encodeNumericEqAssertion creating EQ  DONE*****") in 
-        
-          gt_assertion
+      
+        gt_assertion
 
       in
 
@@ -1119,9 +1073,7 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           let  open RP in 
         
         match  rp with 
-          (*TODO Remove this tag as now we have NumericEq and Eq*) 
-          (*Ashsih , A hack, encode a Rlen here itself*)
-        | NEq (e1, e2) -> 
+         | NEq (e1, e2) -> 
               (match (e1, e2) with 
                  (_, ADD (_,_)) 
                 | (ADD (_,_), _)  
@@ -1256,7 +1208,7 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
                    let () = Printf.printf "%s" ("\n RELATIONAL EXPRESSION CASE "^(RelLang.exprToString ( e1) )^" = "^(RelLang.exprToString (e2) )) in 
                       mkSetEqAssertion (f e1, f e2)
             )      
-        | Grt ( e1, e2) -> 
+        |Grt ( e1, e2) -> 
               (match (e1, e2) with 
               | (*simplest case*) (T el1, T el2)  -> 
                         encodeNumericGrtAssertion (tyMap, constMap, relMap) (e1, e2) 

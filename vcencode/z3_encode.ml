@@ -242,9 +242,9 @@ let bool_sort = Bool (mk_bool_sort ())
 let mkConst (name,sort) =
   let z3_sort = sortToZ3Sort sort in 
   let const = Expr.mk_const (!ctx) (mkSym name) (z3_sort) in 
-  let _ = Printf.printf "%s" ("(declare-const "^(Expr.to_string (const))^" "^(Sort.to_string (z3_sort))^")") in 
+ (*  let _ = Printf.printf "%s" ("(declare-const "^(Expr.to_string (const))^" "^(Sort.to_string (z3_sort))^")") in 
   let _ = Printf.printf "%s" "\n"
-  in
+   in*)
   AST (const, sort)
 (*create a string literal*)
 let mkStr s = 

@@ -268,18 +268,142 @@ let rec enumerateEffAndFind explored gamma sigma delta (spec : RefTy.t)  : (Expl
 
 
 
+let createSubts (args : Syn.monExp list) (formals : (Var.t * RefTy.t) list) : (Var.t * Var.t) list =
+     if (not (List.length args = List.length formals)) then 
+        raise (SynthesisException "The formals and actual arguments size Mismacth") 
+     else
+        let formalVars = List.map (fun (vi, ti) -> vi) formals in 
+        let actualVars = List.map (fun (mei) -> 
+                                        match mei with 
+                                            | Syn.Evar vi -> vi 
+                                            | _ -> raise (SynthesisException "The Normal Form requires applications c
+                                                    of the form F (xi, x2,...xn)")
+                                        ) args in 
+       List.combine (actualVars) (formalVars)                                    
 
-(*The standard hoare-pecondition check*)
+
+
+(*The standard hoare-pecondition check
+ei is the expression to be added,
+and rti is the type for the ei
+    *)
 let hoarePre gamma spec path ei rti = 
     
     let () =Message.show ("Potential Component/Function  "^(Syn.monExp_toString ei)) in 
     let gammaMap = DPred.getGamma gamma in 
     let sigmaMap = DPred.getSigma gamma in 
     let deltaPred = DPred.getDelta gamma in 
-            
+    (*TODO :: THE Hoare Rule for effectful function application is not well implemented*)        
     match ei with 
-      | Eapp _ 
+      | Eapp (ci, args) -> 
+            let () =Message.show ("Show :: HoarePre Eapp case  "^(Syn.monExp_toString ei)) in 
+  
+            let uncurriedCompType = 
+                match rti with 
+                    | RefTy.Arrow ((_,_), _) -> 
+                        RefTy.uncurry_Arrow rti
+                    | RefTy.Uncurried(_,_) -> rti
+                    | _ -> raise (SynthesisException "Illegal Type for Eapp") 
+             in 
+            let RefTy.Uncurried(formals, retty) =  uncurriedCompType in 
+           
+            (*Pre[ei/formali] Pre v:t Post[ei/foramli]*)             
+
+            let RefTy.MArrow (_, ci_pre,  (vi,_), ci_post) = retty in 
+            (*Pre[ei/formali]*)
+            let subs = createSubts args formals in 
+            let preWithActuals = Predicate.applySubsts subs ci_pre in 
+
+            (*Post[ei/foramli]*)
+            let postWithActuals = Predicate.applySubsts subs ci_post in 
+
+            let vcStandard = 
+                if (List.length path > 0) then 
+                    
+                    let (gammaMap, deltaPred, prefixPathType) =
+                                SynTC.typeForPath gammaMap sigmaMap deltaPred spec path in
+                         
+                 
+                    let RefTy.MArrow (_,path_pre,(_,t), path_post) = prefixPathType in 
+                        
+
+                    let h_var  = Var.get_fresh_var "h" in 
+                    let h_type = RefTy.fromTyD (TyD.Ty_heap) in 
+
+                    let h'_var  = Var.get_fresh_var "h'" in 
+                    let h'_type = RefTy.fromTyD (TyD.Ty_heap) in 
+
+                    let x_var = Var.get_fresh_var "x" in 
+
+                    let gammaMap = Gamma.add gammaMap h_var h_type in 
+                    let gammaMap = Gamma.add gammaMap h'_var h'_type in 
+                    let gammaMap = Gamma.add gammaMap x_var t in 
+
+                    let post_path_applied = VC.apply path_post 
+                            [(h_var, TyD.Ty_heap);(x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in 
+                    (*substitute current heap values for pre*)
+                    let ci_pre_applied = VC.apply preWithActuals [(h'_var, TyD.Ty_heap)] in 
+                   
+
+                    let bvs = [(h_var, TyD.Ty_heap); (x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in  
+                    let post_path_imp_pre_ci = Predicate.Forall (bvs, P.If (post_path_applied, ci_pre_applied)) in   
+                           
+                    let vc1 = VC.VC(gammaMap, deltaPred, post_path_imp_pre_ci) in 
+                    let vcStandard =  VC.standardize vc1 in 
+                    vcStandard
+                else
+                    let RefTy.MArrow(_,goal_pre,(_,_), goal_post) = spec in 
+                    let h_var  = Var.get_fresh_var "h" in 
+                    let h_type = RefTy.fromTyD (TyD.Ty_heap) in 
+
+                    let gammaMap = Gamma.add gammaMap h_var h_type in 
+                    
+                    (*gaolpre => rti_pre*)
+
+                    let goal_pre_applied = VC.apply goal_pre [(h_var, TyD.Ty_heap)] in 
+
+                    let ci_pre_applied = VC.apply preWithActuals [(h_var, TyD.Ty_heap)] in 
+                                    
+                    let bvs = [(h_var, TyD.Ty_heap)] in                
+                    let goal_pre_imp_ci_pre = Predicate.Forall (bvs, P.If (goal_pre_applied, ci_pre_applied)) in 
+                    let vc1 = VC.VC(gammaMap, deltaPred, goal_pre_imp_ci_pre) in 
+                    let vcStandard =  VC.standardize vc1 in 
+                    vcStandard
+
+                in                     
+                let discharge_vc vcStandard = 
+                try
+                Message.show ("\n Printing VCs");
+                Message.show ("\n"^(VC.string_for_vc_stt vcStandard));      
+                let result = VCE.discharge vcStandard  in 
+                    match result with 
+                    | VCE.Success -> 
+                                    true
+                    | VCE.Failure -> 
+                                    false
+                    | VCE.Undef -> raise (LearningException "Typechecking Did not terminate")  
+                    
+                 with
+                    VerificationC.Error e -> raise (LearningException "Checking a distingushing predicate did not terminate")
+
+            in      
+
+            let allowed = discharge_vc vcStandard in  
+            let gammaCap = DPred.T {gamma=gammaMap;sigma=sigmaMap;delta=deltaPred} in 
+            
+            (*return the gamma, the formula \phi_post => pre_ci, and result if the compoenent is allowed*)                   
+            (*(gammaCap, post_path_imp_pre_ci, allowed)*)
+            (*return the gamma, the formula pre_ci, and result if the compoenent is allowed*)                   
+            (gammaCap, ci_pre, allowed)
+
+                
+
+
+
+
       | Evar _ -> 
+            let () =Message.show ("Show :: HoarePre Evar case  "^(Syn.monExp_toString ei)) in 
+  
             let RefTy.MArrow (_, ci_pre,  (_,_), c_post) = rti in  
                 
             let vcStandard= 
@@ -368,7 +492,7 @@ let hoarePre gamma spec path ei rti =
 
 
 (*a routine to verify that the choice ci, in the current gamma satisfies the distinguishing constraints*)
-let distinguish gamma dps spec path ci rti= 
+let distinguish gamma dps spec path rti= 
     
 
     let gammaMap = DPred.getGamma gamma in 
@@ -995,6 +1119,7 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
                     Message.show (" Show *************** Synthesizing Args ei : ti for ************"^(Var.toString vi));
                     
                     let e_args =  List.map (fun (argi, argtyi) -> esynthesizeScalar gammaMap sigmaMap deltaPred argtyi) args_ty_list  in 
+                    
                     let all_successful = List.filter (fun e_argi -> match e_argi with 
                                                         | Some ei -> true
                                                         | None -> false) e_args in 
@@ -1014,26 +1139,45 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
                             let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
                             
                             Message.show (" Show *************** Calling Hoare-Pre ************"^(Var.toString vi));
-                    
-                            let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path appliedMonExp retty in
+                            (*TODO :: ADD the rule for function application in getting the hoarePre*)
+                            let (gammacap, post_imp_phi_ci', allowed) = hoarePre gammacap spec path appliedMonExp rti in
                             
                             if (allowed) then 
                                 let () = Message.show (" Show *************** Hoare-Allowed************"^(Var.toString vi)) in 
-                                
                                 Message.show (" Show *************** Calling Distinguish ************"^(Var.toString vi));
-                    
-                                let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path vi retty in 
+                                let boundVar = Var.get_fresh_var "bound" in 
+                                let bound = Syn.Evar (boundVar) in 
+                                let doExpForApp = Syn.Edo (bound, appliedMonExp) in 
+                                            
+
+                                let (gamma_with_ci, phi_ci', isDistinguished) = distinguish gammacap dps spec path doExpForApp rti in 
                                 
                                 if (isDistinguished) then 
+                                    (* IMPLEMENT TODO :: NEED to add the rule for binding a variable to the return type of call
+                                       x_bound <- F (xis) Pre v Post, we must add Post[x_bound/v] in the Gamma*)
+
                                     let boundVar = Var.get_fresh_var "bound" in 
                                     Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
                                     let bound = Syn.Evar (boundVar) in 
+                                    let sanitizedRetTy = RefTy.sanitizeMArrow retty in 
+                                    Message.show ("Show Sanitized:: "^(RefTy.toString sanitizedRetTy));
+                                    
                                     let RefTy.MArrow (_,_,(vret, tret),_) = retty  in 
-
+                                    let RefTy.Base (var4Ret, _,_) = tret in  
                                     let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar tret in     
                                     let doExpForApp = Syn.Edo (bound, appliedMonExp) in 
                                     
                                     let new_path = path@[doExpForApp] in 
+                                    
+                                    (* let retVar = Predicate.getRetVar phi_ci' in 
+                                    Message.show ("Show PredicateRet:: "^(Var.toString retVar));
+                                
+                                    
+                                    let boundingSem = Predicate.reduce (boundVar, retVar) phi_ci' in 
+                                    
+                                    Message.show ("Show_PostWITH_BOUND:: "^(Predicate.toString boundingSem));
+                                 *)
+
                                     let p2gMap = PGMap.add p2gMap (new_path) gamma_with_ci in 
                                     
                                     (*chosen a ci s.t. path--> ci is allowed and distinguished*)
@@ -1109,11 +1253,17 @@ and chooseC gammacap path spec (dps : DMap.t) (p2gMap : PGMap.t) :  (DPred.gamma
                                 let boundVar = Var.get_fresh_var "bound" in 
                                 let bound = Syn.Evar (boundVar) in 
                                 let doExpForComp = Syn.Edo (bound, monExpForComp) in 
-                                let RefTy.MArrow (_,_,(vrti, trti),_) = rti  in 
+                                
 
+                                let RefTy.MArrow (_,_,(vrti, trti),_) = rti  in
                                 let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar trti in     
                                     
                                 let new_path =  path@[doExpForComp] in 
+                                (* let retVar = Predicate.getRetVar phi_ci' in 
+                                let bindingSem = Predicate.reduce (boundVar, retVar) phi_ci' in 
+                                Message.show ("Show_PostWITH_BOUND:: "^(Predicate.toString boundingSem));
+                                *)
+                                    
                                 let p2gMap = PGMap.add p2gMap new_path gamma_with_ci in 
                             (*  Message.show (" Show *************** PGMap After ************"^(PGMap.toString p2gMap));  
                              *) (*chosen a ci s.t. path--> ci is allowed and distinguished*)

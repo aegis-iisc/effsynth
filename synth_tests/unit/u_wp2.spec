@@ -67,6 +67,4 @@ goal : (ls : {v : list | true}) ->
 		};
 
 
-
-There are two solutions to this: 
-	
+		
