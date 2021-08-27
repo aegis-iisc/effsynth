@@ -178,8 +178,8 @@ let typeCheckAst (AST (ast,sort),sort') =
         true
  
   | (T (name1,_), T (name2, _)) ->  
-                (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
-                              ^" vs "^(sortToString sort')));
+                (* (Printf.printf "%s" ("Sort Checking named , named "^(sortToString sort)
+                              ^" vs "^(sortToString sort'))); *)
           name1 = name2
   | (U name1, U name2) -> 
          name1 = name2 
@@ -322,11 +322,6 @@ let mkStrucRel (name,sorts) =
     
   let  Set {ty;pred} = mkSet (name,sorts) in 
   let rel = fun ast -> 
-   (* let () = List.iter (fun s ->Printf.printf "%s" (Layout.toString (sort_layout s)) ) sorts in 
-     let () = Printf.printf "%s" ("domainTY for "^name) in 
-    let () = Printf.printf "%s" (Layout.toString (sort_layout domainTy)) in 
-   let () = Printf.printf "%s" (Layout.toString (ast_layout ast)) in 
-   *)
     let _ = assert (typeCheckAst (ast,domainTy)) in 
               (*
                * Constructing (n-1)-arity set from an n-arity

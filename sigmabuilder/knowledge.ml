@@ -217,3 +217,42 @@ List.fold_left (fun accstr (pi, childreni) -> (accstr^"\n "^(Syn.pathToString pi
 
 
 end 
+
+
+
+module PathTypeMap = struct
+
+module ProgramPath =
+       struct
+         type t = Syn.path(*a variable capturing the  name*)
+         let equal (t1,t2)  =  Syn.equalPath t1 t2 
+         						
+       end
+
+	module PathTypeValue =
+       struct
+         (*Need to change later to scehema*)
+         type t = RefinementType.t
+         let equal (t1,t2) = RefinementType.compare_types t1 t2           
+end
+
+module TyMap   = Applicativemap.ApplicativeMap (ProgramPath) (PathTypeValue) 
+
+type t = TyMap.t
+let empty = TyMap.empty
+let mem = TyMap.mem
+let find t var = 
+    try (TyMap.find t var) 
+  with 
+  | (TyMap.KeyNotFound k) -> raise (NoMappingForVar (Syn.pathToString k))
+
+let add = fun t -> fun var rt -> TyMap.add t var rt
+let remove = TyMap.remove
+
+let toString t = 
+    List.fold_left (fun accstr (vi, rti) -> (accstr^"\n "^(Syn.pathToString vi)^" : "^(RefTy.toString rti))) " " t 
+
+
+
+
+end 

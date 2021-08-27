@@ -7,6 +7,7 @@ module Components = Environment.Components
 module Explored = Environment.ExploredTerms 
 module DPred = Knowledge.DiffPredicate
 module DMap = Knowledge.DistinguisherMap
+module PTypeMap = Knowledge.PathTypeMap
 
 
 module VCE = Vcencode 
@@ -122,16 +123,16 @@ let mon_bind  (acc_delta : Predicate.t)
                 
                 let (bv_v)= Var.get_fresh_var "v" in 
                 let _Gamma = VC.extend_gamma (bv_v,  t2) _Gamma in 
-                
-                 
+                 let _Gamma = VC.extend_gamma (bvi, t2) _Gamma in 
+                  
                 (*Add h' to the Gamma*)
 
                 let local_var_binds = [(bv_h, Ty_heap);(bv_v, RefTy.toTyD t2);(bv_h', Ty_heap) ] in 
                 let post_conjuntc1 = ( VC.apply phi1' [(bv_h, Ty_heap);(bv_x, RefTy.toTyD t1);(fresh_h_int,Ty_heap)]) in 
                 let post_conjuntc2 = (VC.apply phi2' [(fresh_h_int ,Ty_heap);(bv_v, RefTy.toTyD t2); (bv_h', Ty_heap)]) in 
                 let post_conjuntc3 = Predicate.reduce (bvi, bv_v) post_conjuntc2 in 
-
-                let bind_post (*create post-condition*) = 
+                
+               let bind_post (*create post-condition*) = 
                  P.Forall (local_var_binds, P.Conj 
                       (P.Conj (post_conjuntc1, post_conjuntc2), post_conjuntc3))
                                in 
@@ -142,10 +143,25 @@ let mon_bind  (acc_delta : Predicate.t)
                 let lubM = Effect.lub eff1 eff2  in                 
                 let new_acc_ty = RefTy.MArrow (lubM, bind_pre , (bv_v,t2), bind_post) in
                 
-                (*
-                let () = Printf.printf "%s"  (" \n \n \n >>>>>>>>>>><<<<<<<<<<<<<<<<< Gamma AFTER BIND "^(string_gamma _Gamma)) in  
-                let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> VCS AFTER BIND "^(string_for_vcs acc_vc')) in  
+                
+                let () = Printf.printf "%s"  (" \n \n \n >>>>>>>>>>><<<<<<<<<<<<<<<<< Gamma BEFORE REMOVAL "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
+                (* let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> VCS AFTER BIND "^(string_for_vcs acc_vc')) in  
                 let () = Printf.printf "%s"  (" \n  >>>>>>>>>>><<<<<<<<<<<<<<<<< Accumulated Type "^(RefTy.toString  new_acc_ty)) in  *)
+                
+              (*clean up the gamma*)
+                  let bv_phi1 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1) in 
+                let bv_phi1' = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1') in
+                let bv_phi2 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi2) in
+                let bv_phi2' = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi2') in
+
+              
+                let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi1 in 
+                let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi1' in 
+                let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi2 in 
+                let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi2' in 
+
+                let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> GAMMA AFTER REMOVAL  "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
+                
                 (_Gamma, acc_delta, new_acc_ty)
                         
                 
@@ -182,6 +198,16 @@ let mon_bind  (acc_delta : Predicate.t)
               let lubM = eff1  in                 
               let new_acc_ty = RefTy.MArrow (lubM, bind_pre , (bv_x, ci_type), bind_post) in
         
+                (*clean up the gamma*)
+                let bv_phi1 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1) in 
+                let bv_phi1' = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1') in
+                
+              
+                let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi1 in 
+                let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi1' in 
+                
+
+
             (_Gamma, acc_delta, new_acc_ty)
                 
     
@@ -194,8 +220,9 @@ let mon_bind  (acc_delta : Predicate.t)
 This seems to be a bit broken, we should be able to get a type for a path without a pre-condition
   
 *)
-let typeForPath gamma sigma delta spec (path:Syn.path)  = 
-	
+let typeForPath ptypeMap gamma sigma delta spec  (path:Syn.path)   = 
+
+
   let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type = 
         match remaining_path with 
 	         [] -> (acc_gamma, acc_delta, acc_type) 
@@ -227,58 +254,45 @@ let typeForPath gamma sigma delta spec (path:Syn.path)  =
 
 	  in
 
-let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
 
-	let initial_effect = Effect.Pure in 
-	let retResult = Var.get_fresh_var "v" in 
-    let unKnownType = RefTy.Base (retResult, TyD.Ty_unknown , Predicate.True) in 
-    let bv_h = Var.get_fresh_var "h" in 
-    let gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) gamma in 
-    let bv_x = Var.get_fresh_var "x" in 
-    let  gamma  = VC.extend_gamma (retResult,  unKnownType) gamma in 
-    let bv_h' = Var.get_fresh_var "h'" in 
-    let gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) gamma in 
+    try 
+       (gamma, delta, ptypeMap, (PTypeMap.find ptypeMap path)) 
+    with 
+      Knowledge.NoMappingForVar e ->     
+          let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
+          let initial_effect = Effect.Pure in 
+          let retResult = Var.get_fresh_var "v" in 
+          let unKnownType = RefTy.Base (retResult, TyD.Ty_unknown , Predicate.True) in 
+          let bv_h = Var.get_fresh_var "h" in 
+          let gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) gamma in 
+          let bv_x = Var.get_fresh_var "x" in 
+          let  gamma  = VC.extend_gamma (retResult,  unKnownType) gamma in 
+          let bv_h' = Var.get_fresh_var "h'" in 
+          let gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) gamma in 
 
-    let pre_h = VC.apply pre [(bv_h, Ty_heap)] in 
-    let pre_h' = VC.substi pre (bv_h', Ty_heap) 1 in 
-    let pre_h_v_h' = VC.apply pre_h' [(bv_h', Ty_heap)] in 
-    
-    
-    let preInit = P.Forall ([(bv_h, Ty_heap)], pre_h) in 
-    let postInit = P.Forall ([(bv_h, Ty_heap);(retResult, Ty_unknown);(bv_h', Ty_heap)], pre_h_v_h') in 
-    let initial_type = RefTy.MArrow (initial_effect, 
-       										preInit, (retResult, unKnownType), 
-       										postInit) in
-       				
- 	 accumulatePathType path gamma delta initial_type   
+          let pre_h = VC.apply pre [(bv_h, Ty_heap)] in 
+          let pre_h' = VC.substi pre (bv_h', Ty_heap) 1 in 
+          let pre_h_v_h' = VC.apply pre_h' [(bv_h', Ty_heap)] in 
 
 
-
-let typeForPathSuffix gamma sigma delta suffix prefixType =
-
-	let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type = 
-         	
-         	match remaining_path with 
-	         [] -> (acc_gamma, acc_delta, acc_type) 
-	         | (ci, rti) ::  cs -> 
-	          	let ci_type = rti in 
-	          	let (acc_gamma, acc_delta, acc_type) = mon_bind acc_delta acc_gamma  acc_type ci_type in
-	                 accumulatePathType cs acc_gamma acc_delta acc_type
-	        
-
-	  in
-
-   
-	 accumulatePathType suffix gamma delta prefixType   
-
-let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t) = 
+          let preInit = P.Forall ([(bv_h, Ty_heap)], pre_h) in 
+          let postInit = P.Forall ([(bv_h, Ty_heap);(retResult, Ty_unknown);(bv_h', Ty_heap)], pre_h_v_h') in 
+          let initial_type = RefTy.MArrow (initial_effect, 
+             										preInit, (retResult, unKnownType), 
+             										postInit) in
+             				
+           let (gammaMap, deltPred, path_type) = 
+              accumulatePathType path gamma delta initial_type   
+           in 
+           let ptypeMap = PTypeMap.add ptypeMap path path_type in 
+           (gammaMap, deltPred, ptypeMap, path_type)
 
 
-
-	let (gammaMap, deltaPred, path_type) = 
-			typeForPath gammaMap sigmaMap deltaPred spec path in 
+let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t) = 
+  	let (gammaMap, deltaPred, ptypeMap, path_type) = 
+			   typeForPath ptypeMap gammaMap sigmaMap deltaPred spec path in 
 	
-	let gammacap = DPred.T{gamma=gammaMap;
+	  let gammacap = DPred.T{gamma=gammaMap;
 							sigma = sigmaMap;
 							delta = deltaPred} in 
 			 
@@ -292,7 +306,7 @@ let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t)
                  
     if ((not (Effect.isSubEffect effi eff))
       || not (TyD.sametype  basePath baseSpec))  
-            then (false , gammacap, path_type)   
+            then (false , ptypeMap, gammacap, path_type)   
     
     else    
 
@@ -307,10 +321,10 @@ let typeCheckPath gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t)
 	        let result = VCE.discharge vcStandard  in 
 	        match result with 
 	        | VCE.Success -> 
-                          (true, gammacap, path_type)
+                          (true, ptypeMap, gammacap, path_type)
                         
 	        | VCE.Failure ->
 
-	                   (false, gammacap, path_type) 
+	                   (false,ptypeMap, gammacap, path_type) 
 	        | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
 	        

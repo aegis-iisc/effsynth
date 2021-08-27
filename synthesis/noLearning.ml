@@ -55,6 +55,9 @@ let hoarePre gamma spec path ci rti =
 	(*??TODO : we need a function generating strongest postcondition for a path*)
 
 	(*either first component or *)
+
+	
+	
 	let (gammaMap, deltaPred, path_type) = SynTC.typeForPath gammaMap sigmaMap deltaPred spec path in 
 	
 	(* Message.show (">>>>>>>>>>>PATH TYPE "^RefTy.toString path_type);
@@ -170,8 +173,14 @@ let rec chooseC gammacap exploredpaths path spec
    
 
 
-and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Syn.monExp) (path:path) (spec: RefTy.t) 
-				(dps : DMap.t) (p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * deduceResult) = 
+
+and deduceR (gamma:DPred.gammaCap) 
+					  exploredpaths 
+						(compi:Syn.monExp) 
+						(path:path) 
+						(spec: RefTy.t) 
+						(dps : DMap.t) 
+						(p2gMap : PGMap.t) : (DPred.gammaCap * Explored.t * PGMap.t * deduceResult) = 
 	Message.show (" EXPLORED :: "^(pathToString path));
 	
 	
@@ -183,10 +192,10 @@ and deduceR (gamma:DPred.gammaCap) exploredpaths (compi:Syn.monExp) (path:path) 
         let gammaMap = DPred.getGamma gamma in 
 		let sigmaMap = DPred.getSigma gamma in 
 		let deltaPred = DPred.getDelta gamma in 
-		
+	
 
 	(* 	let (gammaMap, deltaPred, path_type) = SynTC.typeForPath gammaMap sigmaMap deltaPred spec path in 
-	 *)	let (verified,gamma, path_type) = SynTC.typeCheckPath gammaMap sigmaMap deltaPred path spec in 
+	 *)	let (verified,gamma, path_type) = SynTC.typeCheckPath  gammaMap sigmaMap deltaPred path spec  in 
 		
 		if (verified) then 
 			 (

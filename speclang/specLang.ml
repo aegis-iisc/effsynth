@@ -1278,7 +1278,7 @@ let rec toString t = match t with
                         let _predicate = (_exists_^(bindstr)^"{ "^(_t_string)^" }") in 
                         _predicate
 
-      | Not t -> ("Not "^(toString t))
+      | Not t -> ("Negation "^(toString t))
       | Conj (e1,e2) -> ("\n Conj <c "^(toString e1 )^"\n \t , "^(toString e2)^" >c ")
                       
       | Disj (e1,e2) ->  ("\n Disj <d  "^(toString e1 )^"\n \t,   "^(toString e2)^ ">d ")

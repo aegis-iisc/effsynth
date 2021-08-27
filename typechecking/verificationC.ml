@@ -58,7 +58,7 @@ let rec vcpredToString vcp =
              |  Conj vcpl ->List.fold_left (fun acc vcpi -> (acc^" AND \n \t "^(vcpredToString vcpi))) "Conj " vcpl 
              |  Disj vcpl -> List.fold_left (fun acc vcpi -> (acc^" OR \n \t  "^(vcpredToString vcpi))) "Disj " vcpl 
 
-             |  Not vcp -> vcpredToString vcp
+             |  Not vcp -> ("Not "^vcpredToString vcp)
 
 
 
@@ -147,74 +147,15 @@ let falsee () : vc_pred = Simple False
  * a predicate in the verification condition, 
  * returns a vc with a tybinds of the qualified variables
  * e.g. forall  x:a, y:b . phi x y => [(x:a);(y:b)], phi x y*)
-let rec havocPred (pred) : (vtybinds*vc_pred) =
-  match pred with
-    P.Exists (tyDB,p) -> 
-      let mybinds =  tyDB in 
-      let (binds,coerced) = havocPred p
-      in (List.concat [mybinds;binds], coerced)
-   | P.Forall (tyDB,p) -> 
-      let mybinds =  tyDB in 
-      let (binds, coerced) = havocPred p
-       in (List.concat [mybinds;binds], coerced)
-
-   | P.True -> ([],coercePTtoT pred)
-   | P.False -> ([], coercePTtoT pred)
-   | P.Base p -> ([], coercePTtoT pred)
-   | P.Rel p -> ([], coercePTtoT pred) 
-   | P.Not p -> let (binds, coerced) = havocPred p in 
-                 (binds, negate coerced)
-   | P.If (p1,p2) -> let (bindp1, coercedp1) = havocPred p1 in 
-                   let (bindp2, coercedp2) = havocPred p2 in 
-                    (List.concat[bindp1;bindp2],    
-                        If (coercedp1, coercedp2))
-   | P.Iff (p1,p2) -> let (bindp1, coercedp1) = havocPred p1 in 
-                   let (bindp2, coercedp2) = havocPred p2 in 
-                    (List.concat[bindp1;bindp2],    
-                        Iff (coercedp1, coercedp2))
-
-   | P.Conj (p1,p2) -> 
-                   let (bindp1, coercedp1) = havocPred p1 in 
-                   let (bindp2, coercedp2) = havocPred p2 in 
-                    (List.concat[bindp1;bindp2],    
-                        conj (coercedp1, coercedp2))
-
-   | P.Disj (p1,p2) -> 
-          let (bindp1, coercedp1) = havocPred p1 in 
-                   let (bindp2, coercedp2) = havocPred p2 in 
-                    (List.concat[bindp1;bindp2],    
-                        disj (coercedp1, coercedp2))
-   | P.Dot (p1,p2) -> 
-          let (bindp1, coercedp1) = havocPred p1 in 
-                   let (bindp2, coercedp2) = havocPred p2 in 
-                    (List.concat[bindp1;bindp2],    
-                         conj (coercedp1, coercedp2))
-
-   | _ -> 
-        ([], coercePTtoT pred) (* May need havoc here.*)
-
-
-(*A very simplified version which lowers each RefTy to its base type
- * TODO - This might need to be extended to add the predicates of the types to the environment*)
-let rec havocGamma ( _glist) =
-  let open RefTy in 
-   List.map (fun (v , refty) -> (v, RefTy.toTyD refty)) _glist         
-
-let prepend_preds (preds : predicates) (p : P.t) = 
-        List.concat [preds;[p]]
-
-
-let lookup_type (v : Var.t) (_gamma : vctybind list) = 
-    try 
-        let _v_ty = List.assoc v _gamma in 
-        _v_ty
-
-    with 
-     | Not_found -> raise (Error ("Type for var Not found in \Gamma "^v))
-
 
 let extend_gamma (v1, t1) (g: vctybinds) : vctybinds = 
   List.append g [(v1, t1)]
+
+
+let remove_from_gamma (vi) (g: vctybinds) : vctybinds = 
+    List.remove_assoc vi g 
+
+
 
 let append_gamma binds (g: vctybinds) : vctybinds = 
   List.append g binds 
@@ -295,9 +236,7 @@ let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list)
             assert (i <= len_varbindall);
             
             let ith_bind_old = List.nth varbindall (i-1) in 
-            let () = Printf.printf "%s" ("********"^(Predicate.toString _phi)) in 
             let _phi' = subst [(bind_new,ith_bind_old)] _phi in
-            let () = Printf.printf "%s" ("********"^(Predicate.toString _phi')) in  
             let varbindall' = replaceelem varbindall (i-1) bind_new in 
             Predicate.Forall (varbindall', _phi' )
 
@@ -330,8 +269,8 @@ let apply (_phi:pred) (binds : vtydbind list ) =
                 (*partial substitution*)
                   let (partial_varbind, cnt)=   List.fold_left (fun (accls, len) a -> if (len < (List.length binds)) then ((a :: accls), (len+1)) else (accls, (len + 1))) 
                                                                         ([], 0) varbindall in
-                  let () = Printf.printf "%s" ("\n Phi_original  "^Predicate.toString _phi) in 
-                  let () = Printf.printf "%s" ("\n arguments "^(string_tybinds binds)) in 
+                (*   let () = Printf.printf "%s" ("\n Phi_original  "^Predicate.toString _phi) in 
+                 *)  let () = Printf.printf "%s" ("\n arguments "^(string_tybinds binds)) in 
                   let () = Printf.printf "%s" ("\n "^(string_of_int (List.length binds))^" != "^(string_of_int (List.length varbindall))) in 
                   let () = Printf.printf "%s" ("\n Length of filtered "^(string_of_int (List.length partial_varbind))) in 
                  let subst_zip = List.combine binds partial_varbind in 
@@ -340,8 +279,8 @@ let apply (_phi:pred) (binds : vtydbind list ) =
 
            else
                   let () = Printf.printf "%s" "\n APPLY EQUALL ARGUMENTE CASE " in  
-                  let () = Printf.printf "%s" ("\n Phi_original  "^Predicate.toString _phi) in 
-                  let () = Printf.printf "%s" ("\n arguments "^(string_tybinds binds)) in 
+                (*   let () = Printf.printf "%s" ("\n Phi_original  "^Predicate.toString _phi) in 
+                 *)  let () = Printf.printf "%s" ("\n arguments "^(string_tybinds binds)) in 
                   let () = Printf.printf "%s" ("\n "^(string_of_int (List.length binds))^" = "^(string_of_int (List.length varbindall))) in 
                  
               let subst_zip = List.combine binds varbindall in 
@@ -351,6 +290,76 @@ let apply (_phi:pred) (binds : vtydbind list ) =
       | _ -> (*Nothing to substitute*) 
                 _phi
    
+
+
+let rec havocPred (pred) : (vtybinds*vc_pred) =
+  match pred with
+    P.Exists (tyDB,p) -> 
+      let mybinds =  tyDB in 
+      let newBinds = List.map (fun (vi, ti) -> (Var.get_fresh_var (Var.toString vi), ti)) mybinds in 
+      let p = apply p newBinds in 
+      let (binds,coerced) = havocPred p
+        in (List.concat [newBinds;binds], coerced) 
+      (* in (List.concat [mybinds;binds], coerced) *)
+   | P.Forall (tyDB,p) -> 
+      let mybinds =  tyDB in 
+      let (binds, coerced) = havocPred p
+       in (List.concat [mybinds;binds], coerced)
+
+   | P.True -> ([],coercePTtoT pred)
+   | P.False -> ([], coercePTtoT pred)
+   | P.Base p -> ([], coercePTtoT pred)
+   | P.Rel p -> ([], coercePTtoT pred) 
+   | P.Not p -> let (binds, coerced) = havocPred p in 
+                 (binds, negate coerced)
+   | P.If (p1,p2) -> let (bindp1, coercedp1) = havocPred p1 in 
+                   let (bindp2, coercedp2) = havocPred p2 in 
+                    (List.concat[bindp1;bindp2],    
+                        If (coercedp1, coercedp2))
+   | P.Iff (p1,p2) -> let (bindp1, coercedp1) = havocPred p1 in 
+                   let (bindp2, coercedp2) = havocPred p2 in 
+                    (List.concat[bindp1;bindp2],    
+                        Iff (coercedp1, coercedp2))
+
+   | P.Conj (p1,p2) -> 
+                   let (bindp1, coercedp1) = havocPred p1 in 
+                   let (bindp2, coercedp2) = havocPred p2 in 
+                    (List.concat[bindp1;bindp2],    
+                        conj (coercedp1, coercedp2))
+
+   | P.Disj (p1,p2) -> 
+          let (bindp1, coercedp1) = havocPred p1 in 
+                   let (bindp2, coercedp2) = havocPred p2 in 
+                    (List.concat[bindp1;bindp2],    
+                        disj (coercedp1, coercedp2))
+   | P.Dot (p1,p2) -> 
+          let (bindp1, coercedp1) = havocPred p1 in 
+                   let (bindp2, coercedp2) = havocPred p2 in 
+                    (List.concat[bindp1;bindp2],    
+                         conj (coercedp1, coercedp2))
+
+   | _ -> 
+        ([], coercePTtoT pred) (* May need havoc here.*)
+
+
+(*A very simplified version which lowers each RefTy to its base type
+ * TODO - This might need to be extended to add the predicates of the types to the environment*)
+let rec havocGamma ( _glist) =
+  let open RefTy in 
+   List.map (fun (v , refty) -> (v, RefTy.toTyD refty)) _glist         
+
+let prepend_preds (preds : predicates) (p : P.t) = 
+        List.concat [preds;[p]]
+
+
+let lookup_type (v : Var.t) (_gamma : vctybind list) = 
+    try 
+        let _v_ty = List.assoc v _gamma in 
+        _v_ty
+
+    with 
+     | Not_found -> raise (Error ("Type for var Not found in \Gamma "^v))
+
 
 
 
@@ -417,8 +426,8 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
                 
 
                 if ( TyD.sametype (RefTy.toTyD t1) t_err) then 
-                     let () = Printf.printf "%s" ("\n Case : Exceptional : Original Inferred post "^P.toString p1') in 
-                     match eff2 with 
+                  (*    let () = Printf.printf "%s" ("\n Case : Exceptional : Original Inferred post "^P.toString p1') in 
+                   *)   match eff2 with 
                         | Effect.StExc -> 
                              let p2'_err = (match p2' with 
                                 | P.Disj (_, p_err) -> p_err
@@ -450,8 +459,8 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
                 
                 (*instantiate the bv of p1' and p2' with a set of variables. and then generate imp*)
                  else   
-                        let () = Printf.printf "%s" ("\n Case Non-Exceptional: Original Inferred post "^P.toString p1') in 
-
+                       (*  let () = Printf.printf "%s" ("\n Case Non-Exceptional: Original Inferred post "^P.toString p1') in 
+ *)
                         (*update the initial heap for *)
                         let p1'_temp = apply p1' [(temp_h, TyD.Ty_heap);(temp_v, RefTy.toTyD t1);(temp_h', TyD.Ty_heap)] in 
 
