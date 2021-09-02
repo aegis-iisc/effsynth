@@ -6,10 +6,12 @@ exception CompilerExc of string
 let () = 
 
   let num_args = (Array.length Sys.argv) - 1 in 
-  if num_args = 2 then  
+  if num_args = 3 then  
     let spec_file = Sys.argv.(1) in 
     let learningON = bool_of_string (Sys.argv.(2)) in 
+    let bidirectional = bool_of_string (Sys.argv.(3)) in 
     let _ = Printf.printf "%s" ("\n Show LEARNING :: "^(Sys.argv.(2))) in 
+    let _ = Printf.printf "%s" ("\n Show Bidirectional :: "^(Sys.argv.(3))) in 
     let _ = Printf.printf "%s" ("\n specfile :: "^spec_file) in 
     let ast = SEL.parseLSpecFile spec_file in 
     (* let () = Printf.printf "%s" ("\n List of components available") in  *)
@@ -27,7 +29,7 @@ let () =
                       ("\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) sigma in 
 
 
-    let synthterm = Synth.Bidirectional.synthesize gamma sigma  delta goal learningON in   
+    let synthterm = Synth.Bidirectional.synthesize gamma sigma  delta goal learningON bidirectional in   
     	    (*run the initial environment builder*)    
     match synthterm with 
         | None -> Printf.printf "%s" "Synthesis returned witout result"

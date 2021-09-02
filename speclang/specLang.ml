@@ -1471,6 +1471,16 @@ let rec toString t = match t with
         applySubsts [(nw, ol)] t 
 
 
+  
+    let rec weakenWP wp = 
+        match wp with 
+            | Conj (t1, t2) -> If (t1, t2)
+            | Forall (bindings, wp_conj) -> Forall (bindings, weakenWP wp_conj)
+            | Exists (bindings, wp_conj) -> Exists (bindings, weakenWP wp_conj)
+            | _ -> raise (SpecLangEx "Unhandled WP")
+     
+       
+
  
 end
 

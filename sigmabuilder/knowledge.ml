@@ -37,6 +37,12 @@ module DiffPredicate = struct
 		let gamma = Gamma.add gamma varbound rtibound in 
 		T {gamma=gamma;sigma =sigma;delta=delta}
 
+    let updateGamma t g' = 
+    	let T {gamma;sigma ;delta} = t in 
+				
+		let gamma =  g' in 
+		T {gamma=gamma;sigma =sigma;delta=delta}
+	
 
 	let getGammaCap dpred = 
 		let DP {gammacap;_} = dpred in 

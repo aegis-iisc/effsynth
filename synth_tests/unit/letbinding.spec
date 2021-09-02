@@ -2,7 +2,7 @@ tbl : ref [int];
 
 
 average_len : State  {\(h : heap).
-				 let Tbl = ilssel (h, tbl) in 
+				 let (Tbl ilssel (h, tbl)) in 
 				 size (Tbl) > 0
 				 } 
 				v : { v : int | true} 

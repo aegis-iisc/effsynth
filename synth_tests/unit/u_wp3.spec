@@ -41,10 +41,16 @@ bar' : (ls : { v : list | true}) ->
 
 
 
+foo_float : (arg1 : {v : int | true}) -> (arg2 : {v : char | true}) -> 
+	State  {\(h : heap). not (sel (h, res) > 3)} 
+	v : { v : float |  true} 
+	{\(h : heap), (v : float), (h' : heap). 
+	sel (h', res) == sel (h, res) + 1};
+
 
 foo' : (ls : { v : list | true}) -> 
 	
-	State  {\(h : heap). (sel (h, res) > 3)} 
+	State  {\(h : heap). (sel (h, res) > 3) /\ not (sel (h, res) == 10)} 
 	v : { v : int |  [v=10]} 
 	{\(h : heap), (v : int), (h' : heap). sel (h', res) == v /\ [v=10]};
 
@@ -52,7 +58,8 @@ foo' : (ls : { v : list | true}) ->
 
 
 
-baz' : (arg1 : { v : int | true}) ->  
+baz' : (arg1 : { v : int | true}) -> (arg2 : {v : float | true})
+	->  
 
 	State  {\(h : heap). not (sel (h, res) > 5) /\ (sel (h, res) > 3)} 
 		v : { v : char | true} 

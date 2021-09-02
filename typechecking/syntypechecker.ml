@@ -327,4 +327,37 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
 
 	                   (false,ptypeMap, gammacap, path_type) 
 	        | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
-	        
+	 
+let verifyWP gammacap pre wp : bool =
+
+    let gammaMap = DPred.getGamma gammacap in 
+    let sigmaMap = DPred.getSigma gammacap in 
+    let deltaPred = DPred.getDelta gammacap in 
+
+
+    let bv_h = Var.get_fresh_var "h" in 
+    let gammaMap = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) gammaMap in 
+           
+    let pre_applied = VC.apply pre [(bv_h, TyD.Ty_heap)] in 
+    let wp_applied = VC.apply wp [(bv_h, TyD.Ty_heap)] in 
+
+    let pre_imp_wp = P.Forall ([(bv_h, Ty_heap)],
+                   P.If (pre_applied, wp_applied)) in 
+
+    let vc = VC.VC(gammaMap, deltaPred, pre_imp_wp) in 
+
+    let vcStandard = VC.standardize vc in 
+    let () = Printf.printf "%s" (VC.string_for_vc_stt vcStandard) in  
+          let result = VCE.discharge vcStandard  in 
+          (*May need to return*)
+          match result with 
+          | VCE.Success -> 
+                          (true)
+                        
+          | VCE.Failure ->
+
+                     (false) 
+          | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
+    
+          
+   

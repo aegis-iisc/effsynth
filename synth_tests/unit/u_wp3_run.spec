@@ -1,3 +1,18 @@
+
+Forward Problem:
+{res = 0}
+x1 : ??int 
+x4 : ??char
+
+(res <= 4 /\ res > 2) /\ res <= 10 => 
+	forall res' = res + 1 => res' <= 5 /\ res' > 3
+
+x3  <- foo_float x1 x4 ; 
+{res <= 5 /\ res > 3 forall res' = 10 => res' = 10} 
+x2 <- baz' x1 x3
+{res = 10} Pair _
+
+-------------------------------------------------------
 Case1 foo : 
 	wp (foo ls, _) =  BREAK 
 
@@ -35,25 +50,36 @@ Forward
 
 (*The forward learning based algorithm kicks in at this point giving*)
 
-[ls : list], {res = 0} 	
+Case foo_float : 
+	  res <= 10 /\ \forall res'  = res + 1 => 
+	  					res' <= 5 /\ res' > 3
 
-x1 <- bar' ls 
-_ <- bar' ls
-_ bar' ls
+Find a P0, such that 
+	P0 /\ res <=10 => forall res' = res + 1 => res' <= 5 /\ res' > 3
 
+P0 = (res <= 4 /\ res > 2) /\ res <= 10 => 
+	forall res' = res + 1 => res' <= 5 /\ res' > 3
 
-{res' = 3}
-x2 <- baz ls x1 {res = 10} Pair _
+------
 
+{res = 0}
+x1 : ??int 
+x4 : ??char
 
+(res <= 4 /\ res > 2) /\ res <= 10 => 
+	forall res' = res + 1 => res' <= 5 /\ res' > 3
 
-
-
+x3  <- foo_float x1 x4 ; 
+{res <= 5 /\ res > 3 forall res' = 10 => res' = 10} 
+x2 <- baz' x1 x3
+{res = 10} Pair _
 
 ---------------------------------------------------------------------------
-[ls : list], {res = 0} x1 : int ; 
+[ls : list], {res = 0} 
+x1 : ??int ; 
+x3 : ??float; 
 {res <= 5 /\ res > 3 forall res' = 10 => res' = 10} 
-x2 <- baz' x1 
+x2 <- baz' x1 x3
 {res = 10} Pair _
 
 --------------------------------------------------------------------------
@@ -102,3 +128,4 @@ goal : (ls : {v : list | true}) ->
 			sel (h', res) == 10 
 		};
 
+***************************************

@@ -1,3 +1,22 @@
+\s  : string
+if (mem s) then 
+	s1 <- fresh_str ();
+	_ <- add s1;
+	s2 <- fresh_str ();
+	_ <- add s2;
+	return average_len ()
+else 
+	_ <- add s;
+	s1 <- fresh_str ();
+	_ <- add s1 
+	return average_len()	
+
+
+
+
+
+
+
 start-forward : GOTO L1
 ---------------------------------------------------------------
 [s : string /\ not mem (tbl0, s) /\ tbl0 : table] ,  {true} H1 
@@ -85,7 +104,7 @@ start-forward : GOTO L1
 									(not mem (tbl, s) /\ len (tbl') == len (tbl) + len (s) + 3) \/ 
 									(mem (tbl, s) /\ len (tbl') == len (tbl) + 6)}
 
-
+************************************************************************
 Label L1 : 
 [s : string /\ not mem (tbl0, s) /\ tbl0 : table] ,  {true} H1 
 	 

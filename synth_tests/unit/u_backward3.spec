@@ -44,7 +44,7 @@ bar' : (ls : { v : list | true}) ->
 
 foo' : (ls : { v : list | true}) -> 
 	
-	State  {\(h : heap). (sel (h, res) > 3)} 
+	State  {\(h : heap). (sel (h, res) > 3) /\ not (sel (h, res) == 10)} 
 	v : { v : int |  [v=10]} 
 	{\(h : heap), (v : int), (h' : heap). sel (h', res) == v /\ [v=10]};
 
@@ -52,7 +52,7 @@ foo' : (ls : { v : list | true}) ->
 
 
 
-baz' : (arg1 : { v : int | true}) ->  
+baz' : (arg1 : { v : int | true}) ->
 
 	State  {\(h : heap). not (sel (h, res) > 5) /\ (sel (h, res) > 3)} 
 		v : { v : char | true} 

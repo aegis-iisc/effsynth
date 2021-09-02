@@ -56,7 +56,7 @@ module Bidirectional : sig
  val isynthesizeMatch : VC.vctybinds -> Sigma.t -> Predicate.t -> (Var.t * RefTy.t) -> RefTy.t ->  Syn.typedMonExp option 
  val isynthesizeFun : VC.vctybinds -> Sigma.t -> Predicate.t -> RefTy.t  -> Syn.typedMonExp option
  val esynthesizeFun : Explored.t -> VC.vctybinds -> Sigma.t -> Predicate.t ->  RefTy.t -> (Syn.typedMonExp option)
- val synthesize :  VC.vctybinds -> Sigma.t -> Predicate.t-> RefTy.t -> bool -> Syn.typedMonExp option 
+ val synthesize :  VC.vctybinds -> Sigma.t -> Predicate.t-> RefTy.t -> bool -> bool -> Syn.typedMonExp option 
 
 
 val litercount : int ref   
@@ -89,6 +89,9 @@ val litercount : int ref
    val backtrackC : DPred.gammaCap -> PTypeMap.t -> DMap.t -> path -> PGMap.t -> RefTy.t  -> (DPred.gammaCap * path * DMap.t * PGMap.t * PTypeMap.t)
    val cdcleffSynthesizeBind :  DPred.gammaCap ->   DMap.t  -> RefTy.t -> Syn.monExp option
   
+   val createWP : VC.vctybinds ->  RefTy.t -> Predicate.t ->  
+            ((Var.t * TyD.t)* (Var.t * TyD.t)) list -> (VC.vctybinds * Predicate.t)
+     
 
 end = struct
 
@@ -98,7 +101,7 @@ let subprobplem = ref []
 
 let learnConst = true 
 let noLearnConst = false
-
+let bidirectional = true
 type ('a, 'b) result = 
             Success of 'a 
             | Fail of 'b
@@ -600,6 +603,102 @@ let distinguish gamma ptypeMap dps spec path ci rti=
 
 
 
+let createWP (gammaMap: VC.vctybinds) 
+            (ciSpec : RefTy.t) (qPost : Predicate.t) 
+            (subst : ((Var.t * TyD.t)* (Var.t * TyD.t)) list) : (VC.vctybinds * Predicate.t) = 
+        let RefTy.Uncurried (formals, retty) = RefTy.uncurry_Arrow ciSpec in 
+        let RefTy.MArrow (eff, pre, (vret, tret), post) = retty in 
+
+        Message.show ("Show  :: Pre Initial "^(Predicate.toString pre)) ;
+        Message.show ("Show  :: Post Initial "^(Predicate.toString pre)) ;
+        
+        
+        let h = Var.get_fresh_var "h" in 
+        let h' = Var.get_fresh_var "h'" in 
+        let v = Var.get_fresh_var "v" in 
+
+        let gammaMap = VC.extend_gamma (h, (RefTy.lift_base Ty_heap)) gammaMap in 
+        let gammaMap = VC.extend_gamma (h', (RefTy.lift_base Ty_heap)) gammaMap in 
+        let gammaMap = VC.extend_gamma (v, (tret)) gammaMap in 
+    
+        let pre_applied = VC.apply pre [(h, TyD.Ty_heap)] in
+        let post_applied = VC.apply post [(h, TyD.Ty_heap); (v, RefTy.toTyD (tret));
+                                                            (h', TyD.Ty_heap)] in 
+
+        Message.show ("Show  :: Pre_applied "^(Predicate.toString pre_applied));
+        Message.show ("Show  :: Post_applied "^(Predicate.toString post_applied));
+                                                    
+        (*wp = \forall Q h. Pre h /\ \forall v', h. Post h v h' => Q v h'*)
+        let qPost_applied = VC.apply qPost [(h, TyD.Ty_heap); (v, RefTy.toTyD (tret));
+                                                            (h', TyD.Ty_heap)] in 
+
+        let pre_applied = VC.subst subst pre_applied in 
+        let post_applied = VC.subst subst post_applied in 
+
+        Message.show ("Show  :: Pre_actual2Foraml "^(Predicate.toString pre_applied));
+        Message.show ("Show  :: Post_actual2Foraml "^(Predicate.toString post_applied));
+                                                    
+        let bvs_inner = [(v, RefTy.toTyD (tret));(h', TyD.Ty_heap)] in 
+        let innerPred = Predicate.Forall (bvs_inner, Predicate.If (post_applied, qPost_applied)) in 
+        let outerPred = Predicate.Forall ([(h, TyD.Ty_heap)], 
+                                            Predicate.Conj(pre_applied, innerPred)) in 
+        
+         
+        Message.show ("Show  :: Weakest Precondition "^(Predicate.toString outerPred)) ;
+
+        (gammaMap, outerPred)
+
+
+
+
+type wpresult = Continue | Flip | Break
+
+let wpPreCheck gamma sigma delta wp : wpresult =
+    
+    Message.show ("\n Printing WP "^(Predicate.toString wp));
+             
+    let wp_weaker = Predicate.weakenWP wp in 
+    Message.show ("\n Printing WP_WEAKER "^(Predicate.toString wp_weaker));
+    
+    let wpVC = VC.VC(gamma, delta, wp_weaker) in 
+
+
+    let wpStandard = VC.standardize wpVC  in 
+    
+
+    
+    let discharge_vc vcStandard = 
+        try
+        Message.show ("\n Printing VCs");
+        Message.show ("\n"^(VC.string_for_vc_stt vcStandard));      
+        let result = VCE.discharge vcStandard  in 
+            match result with 
+            | VCE.Success -> 
+                            true
+            | VCE.Failure -> 
+                            false
+            | VCE.Undef -> raise (LearningException "Typechecking Did not terminate")  
+            
+         with
+            VerificationC.Error e -> raise (LearningException "Checking a distingushing predicate did not terminate")
+
+    in      
+
+      Message.show ("\n Printing VCs");
+      Message.show ("\n"^(VC.string_for_vc_stt wpStandard));      
+      
+    
+    let wpCheck = discharge_vc wpStandard in 
+    
+    if (wpCheck) then 
+        
+        Continue 
+    else 
+        (*TODO :: expand on FLIP and BREAK CASES*)
+       Break   
+    
+
+
 
 
 
@@ -939,12 +1038,12 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
           
 
           let gamma_n = gamma in 
-          let e_n = synthesize gamma_n sigma delta_n spec learnConst in 
+          let e_n = synthesize gamma_n sigma delta_n spec learnConst bidirectional in 
           (match e_n with 
             | Some exp_n -> 
 
                   Message.show ("Show :: Successfully Synthesisized Nil Branch Now Trying Cons");
-                  let e_c = synthesize gamma_c sigma delta_c spec learnConst in 
+                  let e_c = synthesize gamma_c sigma delta_c spec learnConst bidirectional in 
                   (match (e_c) with 
                    | (Some exp_c)-> 
                           Message.show ("Show :: Successfully Synthesisized Cons Branch ");
@@ -969,7 +1068,7 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
          
     | _ ->   
         Message.show "Show :: Non List Case";
-        synthesize gamma sigma delta spec learnConst 
+        synthesize gamma sigma delta spec learnConst bidirectional
   
   
 
@@ -991,7 +1090,7 @@ and isynthesizeFun gamma sigma delta spec : Syn.typedMonExp option=
   (*Given disjunctions in the spec we can directly try match*)
   Message.show ("Show Trying :: Non-Match case"); 
         (*TODO *make a call to conditional case*)
-  let simple_exp = synthesize gamma_extended sigma delta retT learnConst in 
+  let simple_exp = synthesize gamma_extended sigma delta retT learnConst bidirectional in 
   
        
 
@@ -1018,7 +1117,7 @@ and esynthesizeFun explored gamma sigma delta spec : Syn.typedMonExp option =
 
 (*In some cases the input spec can be more than the RefinementType*)
 (*synthesize : TypingEnv.t -> Constructors.t -> RefinementType.t -> Syn.typedMonExp option *)
-and  synthesize gamma sigma delta spec learning : (Syn.typedMonExp option)=  
+and  synthesize gamma sigma delta spec learning  bidirectional: (Syn.typedMonExp option)=  
    match spec with 
       | RefTy.Base (v, t, pred) -> 
             Message.show "Show ***********Calling Scalar synthesize***************";
@@ -1026,19 +1125,36 @@ and  synthesize gamma sigma delta spec learning : (Syn.typedMonExp option)=
       | RefTy.Arrow (rta, rtb) -> 
             Message.show "Show ***********Calling S-FUNC synthesize***************";
             isynthesizeFun gamma sigma delta spec  (*applies Tfix and Tabs one after the other*)
-      | RefTy.MArrow (eff, pre, t, post) -> (* let res = esynthesizeEff Explored.empty gamma sigma VC.empty_delta spec in 
+      | RefTy.MArrow (eff, pre, (v,t), post) -> (* let res = esynthesizeEff Explored.empty gamma sigma VC.empty_delta spec in 
                  let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in 
                  let () = Message.show (List.fold_left (fun str vi -> (str^"\n \t --"^(Var.toString vi))) "SUB " !subprobplem) in 
                   *)
-              Message.show "Show ***********Calling CDCL synthesize***************";
+              
              (*testing cdcl approach*)
              let gammacap = DPred.T {gamma = gamma; sigma=sigma;delta= delta} in 
-             let dps_empty = DMap.empty in 
+             let dps = DMap.empty in 
              let res = 
                 if (learning) then 
-                 cdcleffSynthesizeBind gammacap dps_empty spec 
-                else  
-                 cdcleffSynthesizeBind gammacap dps_empty spec 
+                    if (bidirectional) then
+                 (*initial path H1 : pair*)
+                        let uncurriedSpec = RefTy.uncurry_Arrow spec in 
+                        let RefTy.Uncurried (formals, bodyType) = uncurriedSpec in 
+                        let RefTy.MArrow (eff, pre, (v, t), post) = bodyType in 
+                        
+                        let initialP = [(Syn.Ehole t)] in
+                        Message.show "Show ***********Calling weakestPreSynththesis***************";
+                       
+                        let (wp, backpath, gammacap) =  weakestPreSynththesis  gammacap dps initialP spec pre post  in 
+                       
+                       Message.show "Show ***********Calling CDCL ***************";
+                        
+                        let forward_spec = RefTy.MArrow (eff, pre, (v,t), wp) in 
+                        cdcleffSynthesizeBind gammacap dps forward_spec
+                    else
+                        cdcleffSynthesizeBind gammacap dps spec 
+                else 
+
+                 cdcleffSynthesizeBind gammacap dps spec 
                  (* NoLearning.cdcleffSynthesizeBind gammacap dps_empty spec  *)
              in  
              (match res with 
@@ -1390,8 +1506,7 @@ and deduceR (gamma:DPred.gammaCap)
                 match fillerTest with 
                     | Some (ptypeMap, completeGamma, completePath) -> (completeGamma, p2gMap, ptypeMap, Success completePath)
                     | None -> 
-                        Message.show ("Show :: HERE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-                     
+                       
                         Message.show ("Show :: Incomplete Path "^(pathToString path)^" Now chosing Next component "^(Syn.monExp_toString compi));
                        
                         let (gamma, p2gMap, ptypeMap, nextComponent) = chooseC gamma path spec dps p2gMap ptypeMap in 
@@ -1506,7 +1621,269 @@ and deduceR (gamma:DPred.gammaCap)
 
     loop gammaCap p spec dps pathGammaMap ptypeMap
 
+
+
+
+
+
+
+
+
+
+
+and  weakestPreSynththesis  (gammacap : DPred.gammaCap) 
+                            (dps : DMap.t) 
+                            (path: Syn.path) 
+                            (spec : RefTy.t)
+                            (pre : Predicate.t)  
+                            (post : Predicate.t) : (Predicate.t * Syn.path * DPred.gammaCap) =
+    
+    let gammaMap = DPred.getGamma gammacap in 
+    let sigmaMap = DPred.getSigma gammacap in 
+    let deltaPred = DPred.getDelta gammacap in 
+
+
+    
+    (*add the formals in the gamma if not already present*)
+    (* 
+        let gammaMap = List.fold_left (fun _g (vi, ti) -> 
+                                           if (not (Gamma.mem _g vi)) then 
+                                                Gamma.add _g vi ti 
+                                           else 
+                                                _g      
+                                        ) gammaMap formals  in 
+
+        
+        let gammacap = DPred.updateGamma gammacap gammaMap in 
+        
+     *)    
+ (*takes an incomplete path and returns a new incomplete path*)
+    Message.show "Show ***********Calling bottomUpChoose***************";
+        
+    let (gammacap, wp_ci, backpath, result) = bottomUpChoose gammaMap sigmaMap deltaPred path spec pre post in
+    (*depending on the result from the backward synthesis either call forward, continue *)
+    match result with 
+        (*TODO :: At the moment we treat Break and Flip in a similar manner, returning to the forward Call*)
+        | Break   
+            (*directly return, the caller in synthesis makes a call to forward synthesis*)
+            
+        | Flip (*make a call to forward analysis with a structure of the program captured as *)
+            -> (wp_ci, backpath, gammacap) 
+        | Continue ->
+                (*a path cretaed by updating the last hole in the path, continue the backward search*)
+               
+                let updatedPath = backpath in 
+                (*create a new spec*)
+                let v_unknown = Var.get_fresh_var "v" in 
+                let t_unknown = RefTy.fromTyD (TyD.Ty_unknown) in 
+                (*TODO :: currently the algorithm takes spec, change it to taking pre and post alone*)
+                let new_spec = RefTy.MArrow (RefTy.get_effect (spec), 
+                                            pre, 
+                                            (v_unknown, t_unknown), 
+                                            wp_ci) in 
+                let isComp = Syn.isComplete updatedPath in 
+                (* let () = Message.show ("$$$$$$$") in 
+                raise (SynthesisException "FORCE");
+                 *)
+                (*if no more holes*)
+                if (Syn.isComplete updatedPath) then 
+
+                    let verified = SynTC.verifyWP gammacap pre wp_ci in 
+                    
+                    if (verified)
+                        then 
+                        let () = Message.show "Show *********** Verify :: Success***************" in 
+                        let successProgram = (Syn.buildProgramTerm  updatedPath) in 
+                        (wp_ci, updatedPath, gammacap)
+                    else 
+                        (*recursively solve the subproblem*)
+                        let () = Message.show "Show ***********Verify :: Failure***************" in 
+                
+                        weakestPreSynththesis gammacap dps updatedPath new_spec pre wp_ci
+                else (*try filling some more holes*)
+                    weakestPreSynththesis gammacap dps updatedPath new_spec pre wp_ci  
+                   
+(*this is the place where we use the Weakest Pre-condition solution to chose the next *)
+and bottomUpChoose gammaMap sigmaMap deltaPred (path : Syn.path) (spec:RefTy.t) (pre:Predicate.t) post = 
+    (*TODO Implement the breaking into subproblems using disjunction ruke*)
+    let lastHole = Syn.getLastHole path in 
+    
+    let eff = RefTy.get_effect spec in 
+    match lastHole with 
+        | None -> 
+                let () = Message.show ("Show *********** No More Holes***************") in 
+                (*TODO :: Think wether we should try a component without a hole or not
+                create an example*)
+                (DPred.T{gamma=gammaMap;sigma=sigmaMap;delta=deltaPred}, post, path, Break)
+        | Some lastHole -> 
+            
+            Message.show ("Show *********** Found a Hole***************"^(Syn.monExp_toString lastHole));
+            
+            let Syn.Ehole t = lastHole in 
+            
+            (*This is a simplified version of the return typed guided component synthesis as in SYPET*)
+            let c_wellRetType = Gamma.enumerateAndFind gammaMap t in 
+            let c_wellRetTypeLambda = Gamma.lambdas4RetType gammaMap spec in 
+            
+            let c_es = List.filter (fun (vi, ti) -> 
+                                        let effi = RefTy.get_effect ti in 
+                                        if (effi = Effect.Pure) then false 
+                                        else 
+                                            Effect.isSubEffect effi eff) gammaMap (*c_wellRetType*) in 
+            
+
+
+            let rec wp_choose gammaMap sigmaMap deltaPred 
+                    potentialChoices 
+                    (path : Syn.path)
+                    (pre:Predicate.t) 
+                    (post:Predicate.t) : (DPred.gammaCap * Predicate.t * Syn.path * wpresult) = 
+                
+                let gammacap = DPred.T{gamma=gammaMap;sigma=sigmaMap;delta=deltaPred} in 
+                match potentialChoices with 
+                    [] -> (gammacap, post, path, Break)
+                    | (vi, rti) :: xs -> 
+                        match rti with
+                         | RefTy.Arrow ((_, _), _)  
+                         | RefTy.MArrow (_,_,(_,_),_) -> 
+                            Message.show (" Show *************** WP : Arrow Component ************"^(Var.toString vi));
+                            let uncurried = RefTy.uncurry_Arrow rti in 
+                            let RefTy.Uncurried (args_ty_list, retty) = uncurried in 
+                            let RefTy.MArrow (_,_,(_,retbt),_) = retty in 
+                            if (not (RefTy.compare_types t retbt)) then 
+                                (*skip this components*)
+                                let () = Message.show (" Show *************** WP : Non-Match Return Type") in 
+                                let () = Message.show (" Show *************** WP : Required Type "^(RefTy.toString t)) in
+                                let () = Message.show (" Show *************** WP : Ci Type "^(RefTy.toString retbt)) in
+                                
+                                wp_choose gammaMap sigmaMap deltaPred xs path pre post
+                            else    
+                                let () = Message.show (" Show *************** WP : Matching Return Type") in 
+                                
+
+                             (*Currently the argument is always a scalar/Base Refinement*)
+                                let () = Message.show (" Show *************** WP : Synthesizing Args ei : ti for ************"^(Var.toString vi)) in 
+                                
+                                (*TODO create a unit test for this*)
+                                (*create holes and (actual*Tyd)/(foraml*Tyd) subst for the arguments*)
+                                let (newbindings, subst, holes) = List.fold_left 
+                                                    (fun (bindingsAcc, substAcc, holesAcc) (argi, ti) -> 
+                                                    (*synthesize the ith argument from the environment*)
+                                                    let actualArgi = esynthesizeScalar gammaMap sigmaMap deltaPred ti in
+                                                    let base_ti = RefTy.toTyD ti in 
+                                                    let boundVari = Var.get_fresh_var argi in 
+                                                    match actualArgi with 
+                                                        | None ->  
+                                                                  ( bindingsAcc@[boundVari, ti],
+                                                                    substAcc@[((boundVari, base_ti), 
+                                                                                    (argi, base_ti))], 
+                                                                        holesAcc@[(Syn.Edo (Syn.Evar (boundVari), 
+                                                                                            Syn.Ehole ti))
+                                                                                ])  
+                                                        | Some ei -> 
+                                                                  let ei_monExp = ei.expMon in 
+                                                                  let Syn.Evar xi = ei_monExp in 
+                                                                  ( bindingsAcc,
+                                                                    substAcc@[(
+                                                                            (boundVari, base_ti), 
+                                                                            (argi, base_ti)
+                                                                            )], 
+                                                                        holesAcc@[ei_monExp])
+
+
+                                                              ) ([],[],[]) args_ty_list 
+
+                                in 
+
+                                
+                              
+                                (*create the wp*) 
+                                (*either a Pure function or an effectful arrow component*)    
+                                match retty with 
+                                    | RefTy.Base (vret, tret, pred) -> 
+                                        raise (SynthesisException "Unhandled WP CHOOSE");
+                                        (*Simpler Case, can always be called*)
+                                    | RefTy.MArrow (effret, preRet, (vret, tret), postRet) ->
+                                        let () = Message.show (" Show *************** WP : Generating WP for Effectful Ci ") in 
+                                
+                                        (*Case which checks the dual of the forward condition*)
+                                        (*\Gamma |- wp (vi, post*)    
+                                        let (gammaMap, wp_vi_post) = 
+                                                (*WP :: given Post, preRet, postRet, actualArgi*)
+                                                createWP gammaMap retty post subst  in 
+
+                                        let extended_gammaMap = (*EXTEND GAMMA WITH new bindings*)
+                                                    List.fold_left (fun _g (vi, ti) -> 
+                                                         VC.extend_gamma (vi, ti) _g) gammaMap newbindings in 
+                                        let gammacap = DPred.updateGamma gammacap extended_gammaMap in 
+                                                   
+                                        let (wpCheck) = 
+                                             wpPreCheck extended_gammaMap sigmaMap deltaPred wp_vi_post  in
+                                           
+
+                                        match wpCheck with 
+                                            | Break -> 
+                                                    Message.show (" Show *************** WP : Break  Ci "^(Var.toString vi));
+                                                    
+                                                    wp_choose gammaMap sigmaMap deltaPred xs path pre post
+                                            | Continue -> 
+                                                    Message.show (" Show *************** WP : Continue  Ci "^(Var.toString vi));
+                                                   
+                                                    (* raise (SynthesisException "BREAK Continue");
+                                                     *)
+                                                     let appliedMonExp = Syn.Eapp (Syn.Evar vi, holes) in 
+                                                     (*The current component is successfully chosen*)
+                                                    
+                                                    let p_kminus1 = 
+                                                        match (Syn.previousPath path) with 
+                                                        | None -> [] 
+                                                        | Some p -> p  
+                                                    in 
+                                                    
+
+                                                    let p_kminus1_with_holes = 
+                                                        p_kminus1@holes in 
+                                                    
+                                                    let updatedPath = p_kminus1_with_holes@[appliedMonExp] in 
+
+                                                    (*see if we have a successful path without holes and satisfying the Pre*)
+                                                    
+                                                    (gammacap, wp_vi_post, updatedPath, Continue)
+                                            | Flip -> 
+                                                                        
+                                                    let appliedMonExp = Syn.Eapp (Syn.Evar vi, holes) in 
+            
+
+                                                    (*The current component is successfully chosen*)
+                                                    let p_kminus1 = 
+                                                        match (Syn.previousPath path) with 
+                                                        | None -> [] 
+                                                        | Some p -> p  
+                                                    in 
+                                                    
+
+                                                    let p_kminus1_with_holes = 
+                                                    
+                                                        p_kminus1@holes in 
+                                                    
+                                                    let updatedPath = p_kminus1_with_holes@[appliedMonExp] in 
+
+                                                    (*see if we have a successful path without holes and satisfying the Pre*)
+                                                    
+                                                    (gammacap, wp_vi_post, updatedPath, Flip)
+             in 
+                                                           
+
+             wp_choose gammaMap sigmaMap deltaPred c_es path (pre:Predicate.t) post
+
+
+             
+
+
+
+
+
+
+
+
 end
-
-
-

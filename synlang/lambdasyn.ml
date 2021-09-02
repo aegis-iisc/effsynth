@@ -22,7 +22,7 @@ and  monExp =
         | Eret of monExp 
         | Ebind of monExp * monExp * monExp
         | Ecapp of var * ( monExp list ) 
-        | Ehole (*a hole in place of an expression*)
+        | Ehole of RefTy.t(*a hole in place of an expression*)
         | Edo of monExp * monExp (*do x <- E*)
         | Eskip   
 
@@ -221,3 +221,34 @@ let merge matchingArg constructors consArgsList caseBodyList =
        
        let mergedExp = Ematch(matchingArg, megerdCaseExpList) in 
        mergedExp
+
+
+
+(*Termination bug*)
+ let getLastHole path = 
+    let revPath = List.rev path in 
+    let rec recurse p = 
+     match p with 
+        [] -> None      
+        | x :: xs -> 
+            (match x with 
+                | (Edo (x,e)) ->
+                    (match e with 
+                        | Ehole _ -> Some x
+                        | _ ->  recurse xs)
+                | (Ehole _) -> Some x
+                | _ -> 
+                    
+                    recurse xs  )
+
+   in 
+   recurse revPath         
+
+
+let rec isComplete path = 
+                
+    let hls = getLastHole path in 
+    
+    match hls with 
+        | None -> true
+        | Some _ -> false 
