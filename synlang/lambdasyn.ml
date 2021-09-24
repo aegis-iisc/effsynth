@@ -62,6 +62,8 @@ let rec equalMonExp m1 m2 =
                          
         | (Edo (bound1, exp1), Edo (bound2, exp2)) -> 
                 (equalMonExp bound1 bound2 && equalMonExp exp1 exp2)
+        | (Ehole t1, Ehole t2) ->
+                 (RefTy.compare_types t1 t2)    
         |  (_,_) -> false         
 
 and equalTypedMonExp tme1 tme2 = 
@@ -137,6 +139,7 @@ let rec monExp_toString (m:monExp) =
         | Edo (bound, exp) -> 
                 ("do "^(monExp_toString bound)^" <- "^(monExp_toString exp)) 
         | Eskip -> "Eskip"
+        | Ehole t -> ("[?? : "^(RefTy.toString t^"]"))
         | _ -> "Other expression"  
 
 
@@ -224,31 +227,31 @@ let merge matchingArg constructors consArgsList caseBodyList =
 
 
 
-(*Termination bug*)
+ (*finds the last hole in the program and returns a prefix, the hole and 
+ the suffix of the path*)      
  let getLastHole path = 
     let revPath = List.rev path in 
-    let rec recurse p = 
+    let rec recurse p suffix= 
      match p with 
-        [] -> None      
+        [] -> (None, [], suffix)      
         | x :: xs -> 
             (match x with 
-                | (Edo (x,e)) ->
+                | (Edo (x1,e)) ->
                     (match e with 
-                        | Ehole _ -> Some x
-                        | _ ->  recurse xs)
-                | (Ehole _) -> Some x
-                | _ -> 
-                    
-                    recurse xs  )
+                        | Ehole _ ->
+                                (Some x, xs, suffix)
+                        | _ ->  recurse xs (suffix@[x]))
+                | (Ehole _) -> (Some x, xs, suffix)
+                | _ ->  recurse xs (suffix@[x]))
 
    in 
-   recurse revPath         
+   let (hole, rev_prefix, rev_sufix) = recurse revPath [] in 
+   (hole, List.rev (rev_prefix), List.rev (rev_sufix))
+
 
 
 let rec isComplete path = 
-                
-    let hls = getLastHole path in 
-    
+    let (hls,_,_) = getLastHole path in 
     match hls with 
         | None -> true
         | Some _ -> false 

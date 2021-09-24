@@ -13,6 +13,7 @@ module PTypeMap = Knowledge.PathTypeMap
 module VCE = Vcencode 
 module P = Predicate  
 module RP = Predicate.RelPredicate
+module BP = Predicate.BasePredicate
 exception SynthesisException of string 
 exception Unhandled
 open Syn
@@ -76,7 +77,14 @@ let mon_bind  (acc_delta : Predicate.t)
               (bvi : Var.t) = 
      match (acc_type, ci_type) with 
       | (RefTy.MArrow (eff1, phi1, (v1,t1), phi1') , RefTy.MArrow (eff2,phi2, (v2, t2), phi2')) -> 
-              
+                let () = 
+                  Printf.printf "%s" ("\n Accum Type "^(RefTy.toString acc_type)) in
+
+                let () = 
+                  Printf.printf "%s" ("\n Compi Type "^(RefTy.toString ci_type)) in
+                
+               
+
                 let fresh_h_int = Var.get_fresh_var "h_int" in 
                 let _Gamma = VC.extend_gamma (fresh_h_int, (RefTy.lift_base Ty_heap)) acc_gamma in 
       
@@ -113,9 +121,11 @@ let mon_bind  (acc_delta : Predicate.t)
 
                 in
 
-                let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], P.Conj (f1_pre, f2_pre))  in 
-                (* let () = Printf.printf "%s" ("\n PRE \n "^(Predicate.toString bind_pre)) in  
-              *)
+               (*  let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], P.Conj (f1_pre, f2_pre))  in 
+                *)  
+                 let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], (f1_pre))  in 
+                let () = Printf.printf "%s" ("\n PRE \n "^(Predicate.toString bind_pre)) in  
+              
                 (* let () = Printf.printf "%s" "\n Generating The Path Induction post " in 
                  *)
                 (*creating post*)
@@ -127,14 +137,23 @@ let mon_bind  (acc_delta : Predicate.t)
                   
                 (*Add h' to the Gamma*)
 
+                let () = 
+                Printf.printf "%s" ("\n POST NON APPLIED "^(P.toString phi2')) in 
+               
                 let local_var_binds = [(bv_h, Ty_heap);(bv_v, RefTy.toTyD t2);(bv_h', Ty_heap) ] in 
                 let post_conjuntc1 = ( VC.apply phi1' [(bv_h, Ty_heap);(bv_x, RefTy.toTyD t1);(fresh_h_int,Ty_heap)]) in 
+                (*binding of the variable and the return variable*)
                 let post_conjuntc2 = (VC.apply phi2' [(fresh_h_int ,Ty_heap);(bv_v, RefTy.toTyD t2); (bv_h', Ty_heap)]) in 
-                let post_conjuntc3 = Predicate.reduce (bvi, bv_v) post_conjuntc2 in 
+                let bind_ret = P.Base (BP.Eq (BP.Var bvi, BP.Var bv_v)) in 
                 
+                let () = 
+                Printf.printf "%s" ("\n POST APPLIED "^(P.toString post_conjuntc2)) in 
+                
+               (*  let post_conjuntc3 = Predicate.reduce (bvi, bv_v) post_conjuntc2 in 
+                *) 
                let bind_post (*create post-condition*) = 
                  P.Forall (local_var_binds, P.Conj 
-                      (P.Conj (post_conjuntc1, post_conjuntc2), post_conjuntc3))
+                      (P.Conj (post_conjuntc1, post_conjuntc2), bind_ret))
                                in 
 
  
@@ -144,9 +163,11 @@ let mon_bind  (acc_delta : Predicate.t)
                 let new_acc_ty = RefTy.MArrow (lubM, bind_pre , (bv_v,t2), bind_post) in
                 
                 
-                let () = Printf.printf "%s"  (" \n \n \n >>>>>>>>>>><<<<<<<<<<<<<<<<< Gamma BEFORE REMOVAL "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
-                (* let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> VCS AFTER BIND "^(string_for_vcs acc_vc')) in  
-                let () = Printf.printf "%s"  (" \n  >>>>>>>>>>><<<<<<<<<<<<<<<<< Accumulated Type "^(RefTy.toString  new_acc_ty)) in  *)
+                (* let () = Printf.printf "%s"  (" \n \n \n >>>>>>>>>>><<<<<<<<<<<<<<<<< Gamma BEFORE REMOVAL "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
+                let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> VCS AFTER BIND "^(string_for_vcs acc_vc')) in  
+                 *)
+                 let () = 
+                 Printf.printf "%s"  (" \n  >>>>>>>>>>><<<<<<<<<<<<<<<<< accumulatePathType "^(RefTy.toString  new_acc_ty)) in  
                 
               (*clean up the gamma*)
                   let bv_phi1 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1) in 
@@ -256,9 +277,16 @@ let typeForPath ptypeMap gamma sigma delta spec  (path:Syn.path)   =
 
 
     try 
-       (gamma, delta, ptypeMap, (PTypeMap.find ptypeMap path)) 
+       let foundpType = PTypeMap.find ptypeMap path in 
+       let () = Printf.printf "%s" ("Found A type for the path in the PMap") in
+       let () = Printf.printf "%s" (RefTy.toString foundpType) in
+       (gamma, delta, ptypeMap, foundpType) 
+       
     with 
       Knowledge.NoMappingForVar e ->     
+          (*given a pre, create an init path type of length 0
+          Pure pre v : Top {\forall h v h', [h = h'} 
+         *)
           let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
           let initial_effect = Effect.Pure in 
           let retResult = Var.get_fresh_var "v" in 
@@ -272,11 +300,12 @@ let typeForPath ptypeMap gamma sigma delta spec  (path:Syn.path)   =
 
           let pre_h = VC.apply pre [(bv_h, Ty_heap)] in 
           let pre_h' = VC.substi pre (bv_h', Ty_heap) 1 in 
-          let pre_h_v_h' = VC.apply pre_h' [(bv_h', Ty_heap)] in 
-
-
+          (* let pre_h_v_h' = VC.apply pre_h' [(bv_h', Ty_heap)] in 
+           *)
+          let post = P.Base (BP.Eq (BP.Var bv_h, BP.Var bv_h')) in 
+ 
           let preInit = P.Forall ([(bv_h, Ty_heap)], pre_h) in 
-          let postInit = P.Forall ([(bv_h, Ty_heap);(retResult, Ty_unknown);(bv_h', Ty_heap)], pre_h_v_h') in 
+          let postInit = P.Forall ([(bv_h, Ty_heap);(retResult, Ty_unknown);(bv_h', Ty_heap)], post) in 
           let initial_type = RefTy.MArrow (initial_effect, 
              										preInit, (retResult, unKnownType), 
              										postInit) in
@@ -305,7 +334,7 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
  
                  
     if ((not (Effect.isSubEffect effi eff))
-      || not (TyD.sametype  basePath baseSpec))  
+      || (not (TyD.sametype  basePath baseSpec) && not (TyD.Ty_unknown == baseSpec)))  
             then (false , ptypeMap, gammacap, path_type)   
     
     else    
@@ -334,30 +363,35 @@ let verifyWP gammacap pre wp : bool =
     let sigmaMap = DPred.getSigma gammacap in 
     let deltaPred = DPred.getDelta gammacap in 
 
+    let bvs = Predicate.getBVs wp in 
+    if (List.length bvs = 3) then  (*If the initial post then return false, else 
+        trivial synthesis *)
+      (false)
+    else 
 
-    let bv_h = Var.get_fresh_var "h" in 
-    let gammaMap = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) gammaMap in 
-           
-    let pre_applied = VC.apply pre [(bv_h, TyD.Ty_heap)] in 
-    let wp_applied = VC.apply wp [(bv_h, TyD.Ty_heap)] in 
+      let bv_h = Var.get_fresh_var "h" in 
+      let gammaMap = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) gammaMap in 
+             
+      let pre_applied = VC.apply pre [(bv_h, TyD.Ty_heap)] in 
+      let wp_applied = VC.apply wp [(bv_h, TyD.Ty_heap)] in 
 
-    let pre_imp_wp = P.Forall ([(bv_h, Ty_heap)],
-                   P.If (pre_applied, wp_applied)) in 
+      let pre_imp_wp = P.Forall ([(bv_h, Ty_heap)],
+                     P.If (pre_applied, wp_applied)) in 
 
-    let vc = VC.VC(gammaMap, deltaPred, pre_imp_wp) in 
+      let vc = VC.VC(gammaMap, deltaPred, pre_imp_wp) in 
 
-    let vcStandard = VC.standardize vc in 
-    let () = Printf.printf "%s" (VC.string_for_vc_stt vcStandard) in  
-          let result = VCE.discharge vcStandard  in 
-          (*May need to return*)
-          match result with 
-          | VCE.Success -> 
-                          (true)
-                        
-          | VCE.Failure ->
+      let vcStandard = VC.standardize vc in 
+      let () = Printf.printf "%s" (VC.string_for_vc_stt vcStandard) in  
+            let result = VCE.discharge vcStandard  in 
+            (*May need to return*)
+            match result with 
+            | VCE.Success -> 
+                            (true)
+                          
+            | VCE.Failure ->
 
-                     (false) 
-          | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
-    
-          
+                       (false) 
+            | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
+      
+            
    

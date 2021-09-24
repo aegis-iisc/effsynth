@@ -10,8 +10,13 @@ let () =
     let spec_file = Sys.argv.(1) in 
     let learningON = bool_of_string (Sys.argv.(2)) in 
     let bidirectional = bool_of_string (Sys.argv.(3)) in 
+ (*    let maxPathlength = int_of_string (Sys.argv.(4)) in 
+
+  *)
+    let maxPathlength = 10 in 
     let _ = Printf.printf "%s" ("\n Show LEARNING :: "^(Sys.argv.(2))) in 
     let _ = Printf.printf "%s" ("\n Show Bidirectional :: "^(Sys.argv.(3))) in 
+    
     let _ = Printf.printf "%s" ("\n specfile :: "^spec_file) in 
     let ast = SEL.parseLSpecFile spec_file in 
     (* let () = Printf.printf "%s" ("\n List of components available") in  *)
@@ -29,7 +34,7 @@ let () =
                       ("\n "^(Var.toString vi)^" : "^(RefTy.toString rti))) sigma in 
 
 
-    let synthterm = Synth.Bidirectional.synthesize gamma sigma  delta goal learningON bidirectional in   
+    let synthterm = Synth.Bidirectional.synthesize gamma sigma  delta goal learningON bidirectional maxPathlength in   
     	    (*run the initial environment builder*)    
     match synthterm with 
         | None -> Printf.printf "%s" "Synthesis returned witout result"

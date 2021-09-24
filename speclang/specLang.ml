@@ -274,7 +274,7 @@ type t =
                 Ty_arrow (t21, t22)) -> (sametype t11 t21) && (sametype t12 t22)
         | ( Ty_tuple (tl1), Ty_tuple (tl2) ) -> List.fold_left2 (fun acc t1i t2i -> acc && (sametype t1i t2i)) true tl1 tl2    
         | (Ty_unknown, Ty_unknown) -> true
-        | (_, Ty_unknown) -> false
+        | (_, Ty_unknown) ->  false
         | (Ty_unknown, _) -> false
         | (Ty_alg at1, Ty_alg at2) -> Algebraic.sametype at1 at2
         | (_, _) -> false  
@@ -1166,7 +1166,7 @@ type t = True
          |  Iff of t * t
          |  Disj of t * t
          |  Dot of t * t
-         | Forall of TyDBinds.t * t 
+         |  Forall of TyDBinds.t * t 
          (* | Let of t * t we model let a = rexpr1 in let b = rexpr2... in let k = reexprk in    
  *)
 let list_disjunction (ls: t list)  : t =  
@@ -1279,11 +1279,11 @@ let rec toString t = match t with
                         _predicate
 
       | Not t -> ("Negation "^(toString t))
-      | Conj (e1,e2) -> ("\n Conj <c "^(toString e1 )^"\n \t , "^(toString e2)^" >c ")
+      | Conj (e1,e2) -> ("\n \t Conj <c "^(toString e1 )^"\n \t , "^(toString e2)^" >c ")
                       
       | Disj (e1,e2) ->  ("\n Disj <d  "^(toString e1 )^"\n \t,   "^(toString e2)^ ">d ")
       
-      | If (e1,e2) -> ("\n Impl < "^(toString e1 )^"\n \t "^(toString e2)^" >"  )
+      | If (e1,e2) -> ("\n \t Impl < "^(toString e1 )^"\n \t "^(toString e2)^" >"  )
 
       | Iff (e1,e2) ->  ("DoubleImpl \n "^(toString e1 )^"\n  "^(toString e2))
 
@@ -1305,7 +1305,7 @@ let rec toString t = match t with
   let conj (t1, t2) = Conj (t1, t2)
   let conjR (t, r) = Conj (t, Rel r)
   let conJP (t,p) = Conj (t, Base p)
-
+  (*applySubs [h1, h] (\forall h v h' p) -> \forall h v h' [h1/h] p' *)
   let rec applySubst ((nw, ol) as subst) t = 
         match t with 
       True -> True
@@ -1327,12 +1327,15 @@ let rec toString t = match t with
     | Iff (t1,t2) ->
         Iff (applySubst subst t1, applySubst subst t2)
     | Dot (t1,t2) -> Dot (applySubst subst t1, applySubst subst t2)
-    | Forall (tyDB,t) -> 
-        if (TyDBinds.mem tyDB ol)
+    | Forall (tyDB,tint) -> 
+       (*  let () = Printf.printf "%s" ("\n $$$$$$$
+                  Applying subsitution to "^(toString t)) in 
+        *) if (TyDBinds.mem tyDB ol)
         then let expstr = ("Attempted substitution "^(Ident.name nw)^"  on existentially quantified variable "^(Ident.name ol)) in 
             raise (RelPredicateException expstr) 
-        else Forall (tyDB,applySubst subst t)
+        else Forall (tyDB,applySubst subst tint)
    
+ (*reduce  [h1, h] (\forall h v h' p) -> [h1/h]p *)
  let rec reduce ((nw, ol) as subst) t = 
     match t with 
       True -> True

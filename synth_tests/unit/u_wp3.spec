@@ -1,4 +1,4 @@
-res : int;
+res : ref int;
 
 type pair = Pair of int * char;
 

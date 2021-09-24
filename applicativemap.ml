@@ -36,8 +36,12 @@ let find map k  =
         snd (found)
   		with  
   		| Not_found -> raise (KeyNotFound k)
-let add map k v = (k,v) :: map 
+
 let remove map k = List.remove_assoc k map
+
+let add map k v = 
+    let map = remove map k in 
+    (k,v) :: map 
 
 let map f t = List.map f t
 

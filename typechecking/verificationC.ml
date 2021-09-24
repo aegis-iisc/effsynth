@@ -149,6 +149,7 @@ let falsee () : vc_pred = Simple False
  * e.g. forall  x:a, y:b . phi x y => [(x:a);(y:b)], phi x y*)
 
 let extend_gamma (v1, t1) (g: vctybinds) : vctybinds = 
+  let g = List.remove_assoc v1 g in 
   List.append g [(v1, t1)]
 
 
@@ -158,6 +159,7 @@ let remove_from_gamma (vi) (g: vctybinds) : vctybinds =
 
 
 let append_gamma binds (g: vctybinds) : vctybinds = 
+  let g = List.fold_left (fun _g (vi, ti) -> List.remove_assoc vi _g) g binds in 
   List.append g binds 
 
 
@@ -206,21 +208,22 @@ let string_pc (pcv : pc) =
 
 (*alias for Predicate.reduce *)
 let subs_pred  = Predicate.reduce
-
+(* actual subtitution function 
+  subst ([(vn, t1), (vo, t1)]) P -> [vn/vo]P*)
 let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list) 
         (_phi : Predicate.t) = 
+   
    match subs_bindings with 
      [] -> _phi 
-    | x :: xs -> (*exact definition of [v/x]phi*)
+     | x :: xs -> (*exact definition of [v/x]phi*)
           let (var_new, t2), (var_old, t1 )  = x in 
-          (*compare types*)
-          let check_types = 
-             if (not (TyD.sametype t1 t2)) then 
-                  raise (Error ("substitution type mismatch t1:  "^(TyD.toString t1)^" t2: "^(TyD.toString t2)))
-             else(*TODO for now TyD.sametype t1 t2 in *) true in 
-                let reduced_phi = Predicate.reduce (var_new, var_old) (_phi) in 
-                subst (xs) reduced_phi 
-                  
+          if (not (TyD.sametype t1 t2) && not (t2 = TyD.Ty_unknown || t1 = TyD.Ty_unknown)) 
+            then 
+              raise (Error ("substitution type mismatch t1:  "^(TyD.toString t1)^" t2: "^(TyD.toString t2)))
+          else(*TODO for now TyD.sametype t1 t2 in *)   
+            let subs_phi_i = Predicate.applySubst (var_new, var_old) (_phi) in 
+            subst (xs) subs_phi_i 
+              
  let rec replaceelem ls i elem =
   match ls with
   | [] -> ls
@@ -228,21 +231,29 @@ let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list)
               elem::t
             else
               h::(replaceelem t (i-1) elem)                 
- (*substitutes as position i*)
+ (*substitutes as position i
+  substi (\forall x , y. P) (nw_x) 1 -> forall nw_x, y. 
+                                      [nw_x/x] P  
+  *)
  let substi (_phi:pred) (bind_new : vtydbind) (i : int) : (Predicate.t) = 
+    let () = Printf.printf "%s" "\n IN Substi" in 
     match _phi with 
         | Forall (varbindall, phi_forall) -> 
             let len_varbindall = List.length varbindall in 
             assert (i <= len_varbindall);
             
             let ith_bind_old = List.nth varbindall (i-1) in 
-            let _phi' = subst [(bind_new,ith_bind_old)] _phi in
+            let phi_forall' = 
+                subst [(bind_new,ith_bind_old)] phi_forall in
             let varbindall' = replaceelem varbindall (i-1) bind_new in 
-            Predicate.Forall (varbindall', _phi' )
+            Predicate.Forall (varbindall', phi_forall' )
 
         | _ -> raise (Error "Illegal Substitution: non-quantified Formula")    
 
-(*substitution of variables to predicates *)
+(* 
+ Predicate function application 
+ apply \forall x, y. P (x, y) [(x1, x);(y1, y)] -> [x1/x, y1/y] P 
+*)
 let apply (_phi:pred) (binds : vtydbind list ) = 
    (*let () = Printf.printf "%s" ("\n In Apply  \n") in  *)
      match _phi with 
@@ -257,7 +268,7 @@ let apply (_phi:pred) (binds : vtydbind list ) =
                  raise (Error ("Illegal Substitution Provided argumenst "^(string_of_int (List.length binds))^" != Actual arguments"^(string_of_int (List.length varbindall))))
            else
                 let subst_zip = List.combine binds varbindall in 
-              (subst subst_zip _phi)
+              (subst subst_zip phi_forall)
 
                 
       | Exists (varbindall, phi_forall)->
@@ -292,19 +303,21 @@ let apply (_phi:pred) (binds : vtydbind list ) =
    
 
 
-let rec havocPred (pred) : (vtybinds*vc_pred) =
+let rec havocPred (pred : P.t) : (vtybinds*vc_pred) =
   match pred with
     P.Exists (tyDB,p) -> 
-      let mybinds =  tyDB in 
-      let newBinds = List.map (fun (vi, ti) -> (Var.get_fresh_var (Var.toString vi), ti)) mybinds in 
+      let newBinds = List.map (fun (vi, ti) -> (Var.get_fresh_var (Var.toString vi), ti)) tyDB in 
       let p = apply p newBinds in 
       let (binds,coerced) = havocPred p
         in (List.concat [newBinds;binds], coerced) 
       (* in (List.concat [mybinds;binds], coerced) *)
    | P.Forall (tyDB,p) -> 
-      let mybinds =  tyDB in 
-      let (binds, coerced) = havocPred p
-       in (List.concat [mybinds;binds], coerced)
+      let newBinds = List.map (fun (vi, ti) -> (Var.get_fresh_var (Var.toString vi), ti)) tyDB in 
+      (*create a zipped list of new and old bindings*)
+      let substitutions = List.combine newBinds tyDB in 
+      let p = subst substitutions p in 
+      let (binds, coerced) = havocPred p 
+       in (List.concat [newBinds;binds], coerced)
 
    | P.True -> ([],coercePTtoT pred)
    | P.False -> ([], coercePTtoT pred)
@@ -376,24 +389,30 @@ T (List.concat [(havocGamma _g);_gfrom_ante;_gfrom_cons], standard_ante, standar
 
 (*Computation subtyping= This is where we also elaborate from Predicates to VC.VC*)
 let trans_subtyping ({gamma;preds} as env : pc) (annotated : RefTy.t) (inferred:RefTy.t) : t = 
-(* 
-let () = Printf.printf "%s" (">>>>>>>>Annot Type<<<<<<<<<< "^(RefTy.toString annotated)) in 
+ 
+ let () = Printf.printf "%s" (">>>>>>>>Annot Type<<<<<<<<<< "^(RefTy.toString annotated)) in 
 let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toString inferred)) in 
- *)match (inferred , annotated) with
+  match (inferred , annotated) with
         (Base (v1, bt1, p1), Base (v2, bt2, p2))  -> raise (Error "Unimplemented subtyping") 
        | (Arrow ( t1, t1'), Arrow (t2, t2'))  ->  raise (Error "Unimplemented subtyping") 
        | (MArrow (eff1, p1 , (v1, t1) , p1'), MArrow (eff2, p2, (v2, t2), p2')) -> 
                 (*let phi_annot_imp_pre = P.If (p2 , p1) in*)
                 
                 (*Case if the annotated type is Ty_unknown*)     
+                
                 let baseT1 = RefTy.toTyD t1 in 
                 let baseT2 = RefTy.toTyD t2 in 
-                assert (TyD.sametype  baseT1 baseT2);    
-
+                assert ((TyD.sametype  baseT1 baseT2) 
+                    || (baseT2 = TyD.Ty_unknown));    
+                
+                (*Case if the annotated type is Ty_unknown we assume t2=t1*)     
+                
                 let t2 = match baseT2 with 
                     | TyD.Ty_unknown -> t1 
                     | _ -> t2  
                 in 
+
+
                 let temp_h = Var.get_fresh_var "_temp_h" in 
                 let temp_v = Var.get_fresh_var "_temp_v" in 
                 let temp_h' = Var.get_fresh_var "_temp_h'" in 
@@ -459,16 +478,23 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
                 
                 (*instantiate the bv of p1' and p2' with a set of variables. and then generate imp*)
                  else   
-                       (*  let () = Printf.printf "%s" ("\n Case Non-Exceptional: Original Inferred post "^P.toString p1') in 
- *)
-                        (*update the initial heap for *)
-                        let p1'_temp = apply p1' [(temp_h, TyD.Ty_heap);(temp_v, RefTy.toTyD t1);(temp_h', TyD.Ty_heap)] in 
+                        let () = Printf.printf "%s" ("\n Case Non-Exceptional: Original Inferred post "^P.toString p1') in 
+                        let t1_tyd = RefTy.toTyD t1 in 
+                        let t2_tyd = RefTy.toTyD t2 in 
+                        
+                        let p1'_temp = apply p1' [(temp_h, TyD.Ty_heap);(temp_v, t1_tyd);(temp_h', TyD.Ty_heap)] in 
 
-                       (*  let () = Printf.printf "%s" ("\n Applied Inferred post "^P.toString p1'_temp) in 
-                        *) 
-                        (*update the initial heap for *)
+                       (*@NOTE : Handling the case of Weakest-Pre acting as post*)
+                       let bvs_p2' = P.getBVs p2' in 
 
-                        let p2'_temp = apply p2' [(temp_h, TyD.Ty_heap);(temp_v, RefTy.toTyD t2);(temp_h', TyD.Ty_heap)] in 
+                        let p2'_temp = 
+                            if (List.length bvs_p2' = 3) then 
+                                apply p2' [(temp_h, TyD.Ty_heap);(temp_v, t2_tyd);(temp_h', TyD.Ty_heap)] 
+                            else if (List.length bvs_p2' = 1) then 
+                                apply p2' [(temp_h', TyD.Ty_heap)]
+                            else 
+                                raise (Error "Post-condition is either of the form forall h v h'. Q | forall h' Q")     
+                        in 
 
                        (*  let () = Printf.printf "%s" ("\n Applied Annotated post "^P.toString p2'_temp) in 
                         *)(*add the pre to the ante*)
@@ -481,11 +507,19 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
  *)
                        let ante = env.preds in  
                        let ante_conj = P.Conj( ante_conj, pred_conjunction ante) in
+                       
                        (*Gamma |- delta => Pre /\ post*)
+                       
+                       (* 
+
                        let vc_for_path = VC (gamma, 
                                              ante_conj, 
                                         P.Conj (phi_annot_imp_pre, 
-                                                (P.If (p1_temp, phi_post_imp_anno)))) in   
+                                                (P.If (p1_temp, phi_post_imp_anno)))) in    *)
+                        
+                        let vc_for_path = VC (gamma, 
+                                             P.Conj (ante_conj, p1_temp), 
+                                             phi_post_imp_anno) in                             
                        (* let vc_pre = VC (gamma, 
                                              ante_conj, 
                                                 phi_annot_imp_pre) in 
@@ -513,7 +547,6 @@ let rec fromTypeCheck (_gamma) _delta (subTy, supTy) =
         VC (_gamma, P.Conj(delta_pred,p1), p2) 
 
         | (RefTy.MArrow (_,_,_,_), RefTy.MArrow (_,_,_,_)) ->     
-            
             trans_subtyping env supTy subTy 
         | (_,_) -> 
         raise (Error "Unhandled Case Arrow or Tuple fromTypeCheck")

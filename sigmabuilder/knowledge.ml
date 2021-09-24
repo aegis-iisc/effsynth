@@ -66,8 +66,12 @@ module DiffPredicate = struct
 	let appendGammaCap gcap1 gcap2 = 
 		let T {gamma= gamma1;sigma=sigma1;delta=delta1}  = gcap1 in 
 		let T {gamma= gamma2;sigma=sigma2;delta=delta2}  = gcap2 in 
-		T {gamma=gamma1@gamma2 ; 
-			sigma = sigma1@sigma2 ; 
+		let nonOverlappingG2 = 
+			List.filter (fun (vi, ti) -> not (List.mem_assoc vi gamma1)) gamma2 in 
+		let nonOverlappingS2 =
+			List.filter (fun (vi, ti) -> not (List.mem_assoc vi sigma1)) sigma2 in 
+		T {gamma=gamma1@nonOverlappingG2 ; 
+			sigma = sigma1@nonOverlappingS2 ; 
 			delta= P.Conj (delta1, delta2)} 
 
 
@@ -226,6 +230,60 @@ end
 
 
 
+module WPPathChildrenMap = struct
+
+module Key =
+       struct
+         type t = Syn.path(*a variable capturing the  name*)
+         let equal (t1,t2)  =  Syn.equalPath t1 t2
+       end
+
+module Value =
+       struct
+         (*a list of visited components*)
+         type t = Var.t list
+         let equal (t1, t2)  =  
+   	 	  try 
+        	List.fold_left2  
+        	(fun accBool ci cj -> accBool && 
+            	Var.equal ci cj) true t1 t2
+    	  with 
+        	Invalid_argument e-> false  
+
+         let toString t = 
+         	List.fold_left 
+         	(fun accStr ci -> (accStr^" : "^(Var.toString ci))) "[ " t
+        	
+             
+end
+
+module Map   = Applicativemap.ApplicativeMap (Key) (Value) 
+
+type t = Map.t
+let empty = Map.empty
+let mem =  Map.mem
+let find t var = 
+    try (Map.find t var) 
+  with 
+  | (Map.KeyNotFound k) -> raise (NoMappingForVar (Syn.pathToString k))
+
+let add = fun t -> fun var rt -> Map.add t var rt
+let remove = Map.remove
+let replace = Map.replace 
+
+let toString t =
+List.fold_left (fun accstr (pi, childreni) -> (accstr^"\n "^(Syn.pathToString pi)^" |-> "^(Value.toString childreni))) " " t  
+
+
+end 
+
+
+
+
+
+
+
+
 module PathTypeMap = struct
 
 module ProgramPath =
@@ -262,3 +320,43 @@ let toString t =
 
 
 end 
+
+
+module PathWPMap = struct
+
+module ProgramPath =
+       struct
+         type t = Syn.path(*a variable capturing the  name*)
+         let equal (t1,t2)  =  Syn.equalPath t1 t2 
+         						
+       end
+
+	module PathTypeValue =
+       struct
+         (*Need to change later to scehema*)
+         type t = Predicate.t
+         let equal (t1,t2) = false           
+end
+
+module TyMap   = Applicativemap.ApplicativeMap (ProgramPath) (PathTypeValue) 
+
+type t = TyMap.t
+let empty = TyMap.empty
+let mem = TyMap.mem
+let find t var = 
+    try (TyMap.find t var) 
+  with 
+  | (TyMap.KeyNotFound k) -> raise (NoMappingForVar (Syn.pathToString k))
+
+let add = fun t -> fun var rt -> TyMap.add t var rt
+let remove = TyMap.remove
+
+let toString t = 
+    List.fold_left (fun accstr (vi, pi) -> (accstr^"\n "^(Syn.pathToString vi)^" : "^(Predicate.toString pi))) " " t 
+
+
+
+
+end 
+
+
