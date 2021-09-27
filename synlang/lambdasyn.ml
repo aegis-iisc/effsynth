@@ -70,7 +70,9 @@ and equalTypedMonExp tme1 tme2 =
     equalMonExp tme1.expMon tme2.expMon
 
 
-
+let pathLength p = 
+        List.length p
+        
 let equalPath p1 p2 = 
        try 
             List.fold_left2 (fun accBool ci cj -> 
@@ -190,7 +192,11 @@ let rec buildProgramTerm (path : path) =
                         let boundVar = Var.get_fresh_var "bound" in 
                         let boundx = Evar (boundVar) in 
                       
-                        Ebind (boundx, x, buildProgramTerm xs )    
+                        Ebind (boundx, x, buildProgramTerm xs )
+                 | Eret retme -> 
+                        x
+                 | _ -> raise (IncorrectExp "Building Illformed Term")      
+                                       
 
 let pathToString (p:path) = 
         (List.fold_left (fun accstr ei -> accstr^(" ---> ")^(monExp_toString ei)) "PATH " p)^"\n"

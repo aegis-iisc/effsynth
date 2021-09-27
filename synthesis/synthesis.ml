@@ -79,7 +79,7 @@ val litercount : int ref
 
    val hoarePre :  DPred.gammaCap -> PTypeMap.t -> RefTy.t ->  path -> Syn.monExp -> RefTy.t -> (DPred.gammaCap * PTypeMap.t * Predicate.t * bool)                      
    val distinguish : DPred.gammaCap -> PTypeMap.t -> DMap.t -> RefTy.t ->  path -> Syn.monExp -> RefTy.t -> 
-                                    (DPred.gammaCap * PTypeMap.t * Predicate.t * bool)
+                                    (DPred.gammaCap * Predicate.t * PTypeMap.t * Predicate.t * bool)
    
    val chooseC :  DPred.gammaCap -> path -> RefTy.t -> DMap.t -> PGMap.t ->  PTypeMap.t ->  
                                                                 (DPred.gammaCap * PGMap.t * PTypeMap.t * choiceResult)
@@ -542,7 +542,7 @@ let distinguish gamma ptypeMap dps spec path ci rti=
     let potential_path = path@[ci] in 
 
     let (gammaMap, deltaPred, ptypeMap,  potential_path_type) = 
-                SynTC.typeForPath ptypeMap gammaMap sigmaMap deltaPred spec potential_path
+                SynTC.typeForPath ptypeMap gammaMap sigmaMap deltaPred spec potential_path in 
     
 
 
@@ -551,7 +551,7 @@ let distinguish gamma ptypeMap dps spec path ci rti=
     
 
     
-    in 
+    
     let diffpred_ci = 
             try
                 DMap.find dps ci_name 
@@ -563,25 +563,131 @@ let distinguish gamma ptypeMap dps spec path ci rti=
     
     let diffpred_ci_gammaCap = DPred.getGammaCap diffpred_ci in 
     let diffpred_ci_learntPred = DPred.getLearnt diffpred_ci in 
+    let previous = DPred.getPrevious diffpred_ci in 
 
 
     let gammaMap4vc2 = gammaMap@(DPred.getGamma diffpred_ci_gammaCap) in 
     let deltaPred4vc2 = Predicate.Conj(deltaPred, (DPred.getDelta diffpred_ci_gammaCap)) in  
    
-
-    if (diffpred_ci_learntPred == P.True) then
+    (*till we have not seen ci in a conflict node*)
+    if (diffpred_ci_learntPred == P.True 
+        || DPred.noConjuncts diffpred_ci_learntPred) then
          (*Trivial case sp (pre, (path :: ci)) => True*)
-   
-        ( Message.show ("DISTINGUISH DiffPredicate "^(Predicate.toString diffpred_ci_learntPred));
-          Message.show (" Show ***************D (ci) Trivially Successful************"^(Var.toString ci_name))
-          let gammaCapPotential = 
-            DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
-          (gammaCapPotential, ptypeMap,  potential_path_post, true)
-        )     
+          let () = Message.show ("Show ***********DiffPredicate "^(Predicate.toString diffpred_ci_learntPred)) in 
+          Message.show (" Show ***************Checking ~ (D(ci).previous => sp (pre, (path :: ci))************"^(Var.toString ci_name));
+          
+         
+          if (previous = P.True || Syn.pathLength path < 2) then  (*first visit*) 
+             let () = Message.show (" Show ************ D(ci).previous == True "^(Predicate.toString previous)) in 
+             let gammaCapPotential = 
+              DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+                    (gammaCapPotential, potential_path_post, ptypeMap,  potential_path_post, true)
+          else (*Syn.pathLength >= 2*)
+                (*The semantic apporach is not working, let us trying syntactic unrolling of depth 2.
+                i.e. we only allow ci.ci.cj and never ci.ci.ci.cj*)
+                
+                (*get the last two components from the path*)
+                let lastCMonExp = List.hd (List.rev path) in 
+                let penultimateCMonExp = Syn.previousComponent path in
+                match penultimateCMonExp with 
+                    | None -> 
+                        let gammaCapPotential = 
+                        DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+                        (gammaCapPotential, potential_path_post, ptypeMap,  potential_path_post, true)
+                    | Some mexp -> 
+                        let ultimateCName = Syn.componentNameForMonExp lastCMonExp in 
+                        let penultimateCName = Syn.componentNameForMonExp mexp in 
+                        if (Var.equal (ci_name) ultimateCName && Var.equal (ci_name) penultimateCName) then 
+                            let gammaCapPotential = 
+                            DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+                            (gammaCapPotential, potential_path_post, ptypeMap,  potential_path_post, false)
+                        else 
+                            let gammaCapPotential = 
+                            DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+                            (gammaCapPotential, potential_path_post, ptypeMap,  potential_path_post, true)
+                                
+
+                (*construct and check VC D(ci).previous =>  sp (pre, (path :: ci)) (ci)
+                return false
+                *)
+                (* let () = Message.show (" Show ************ D(ci).previous != True | Previous = "^(Predicate.toString previous)) in 
+                let () = Message.show (" Show ************ pre =  "^(Predicate.toString potential_path_pre)) in 
+                
+                let () = Message.show (" Show ************ sp (pre, path :: ci) =  "^(Predicate.toString potential_path_post)) in 
+                
+                let h_var  = Var.get_fresh_var "h" in 
+                let h_type = RefTy.fromTyD (TyD.Ty_heap) in 
+
+                let h'_var  = Var.get_fresh_var "h'" in 
+                let h'_type = RefTy.fromTyD (TyD.Ty_heap) in 
+
+                let x_var = Var.get_fresh_var "x" in 
+
+                let gammaMap  = Gamma.add gammaMap h_var h_type in 
+                let gammaMap = Gamma.add gammaMap h'_var h'_type in 
+                let gammaMap = Gamma.add gammaMap  x_var t in 
+
+                let pre_applied =
+                            VC.apply potential_path_pre 
+                                        [(h_var, TyD.Ty_heap)] in 
+                 
+
+                let sp_applied = VC.apply potential_path_post 
+                                        [(h_var, TyD.Ty_heap);(x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in 
+                
+            
+                 (*substitute current heap values for D(ci).previous *)
+                let d_ci_prev_applied = 
+                        VC.apply previous [(h_var, TyD.Ty_heap);(x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in 
+
+       
+
+                let bvs = [(h_var, TyD.Ty_heap); (x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in  
+                let previous_imp_sp = Predicate.Forall (bvs, P.If (P.Conj(pre_applied, 
+                                                            d_ci_prev_applied), sp_applied)) in   
+                
+                let vc_progress = VC.VC(gammaMap4vc2, deltaPred4vc2, previous_imp_sp) in 
+
+
+                let vc_progress_st = VC.standardize vc_progress in 
+                
+                
+
+                let noProgress = 
+                    Message.show ("\n Printing VC");
+                    Message.show ("\n"^(VC.string_for_vc_stt vc_progress_st));      
+                   
+                     match (VCE.discharge vc_progress_st) with 
+                        | VCE.Success ->
+                                        true
+                        | VCE.Failure -> 
+                                        false
+                                        
+                        | VCE.Undef -> raise (LearningException "Typechecking Did not terminate")  
+                        
+            
+                in      
+               
+               if (noProgress) then 
+                    let () = Message.show (" Show ************ (D(ci).previous => sp (pre, path :: ci)  ") in      
+                    let gammaCapPotential = 
+                     DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+                        (gammaCapPotential, previous, ptypeMap,  potential_path_post, false)
+                else 
+                    let () = Message.show (" Show ************ NOT (D(ci).previous => sp (pre, path :: ci)  ") in      
+                    let gammaCapPotential = 
+                     DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+                        (gammaCapPotential, previous, ptypeMap,  potential_path_post, true)
+                 *)                  
+
+                            
+             
 
     else
         (*construct and check VCs sp (pre, (path :: ci)) => D(ci)*)
+        let () =   Message.show (" Show ***************DISTINGUISH DiffPredicate != True ************"^(Predicate.toString diffpred_ci_learntPred)) in 
    
+
         let h_var  = Var.get_fresh_var "h" in 
         let h_type = RefTy.fromTyD (TyD.Ty_heap) in 
 
@@ -595,12 +701,12 @@ let distinguish gamma ptypeMap dps spec path ci rti=
         let gammaMap = Gamma.add gammaMap  x_var t in 
 
 
-        let pot_path_post_applied = VC.apply pot_path_post 
+        let pot_path_post_applied = VC.apply potential_path_post 
                                 [(h_var, TyD.Ty_heap);(x_var, RefTy.toTyD t); (h'_var, TyD.Ty_heap)] in 
         
               
 
-        (*substitute current heap values for pre*)
+        (*substitute current heap values for D(ci).learnt*)
         let d_ci_applied_h' = VC.apply diffpred_ci_learntPred [(h'_var, TyD.Ty_heap)] in 
        
 
@@ -645,7 +751,7 @@ let distinguish gamma ptypeMap dps spec path ci rti=
         
         in                   
         let gammaCapPotential = DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
-        (gammaCapPotential, ptypeMap,  potential_path_post, isDistinguished)
+        (gammaCapPotential, previous, ptypeMap,  potential_path_post, isDistinguished)
 
 
 
@@ -780,35 +886,31 @@ let learnP gamma dps (path:Syn.path) path_type disjuncts =
         let sigmaMap = DPred.getSigma gamma in 
         let deltaPred = DPred.getDelta gamma in 
         
-        let RefTy.MArrow (eff, phi_k, (v, t), phi_k') = path_type in 
-        let negationPost = Predicate.Not phi_k' in
-
-
-        (* let disjunction =  List.fold_left (fun disjunct p -> Predicate.Disj (disjunct, p)) (False) disjuncts  in 
-         *)(*the disjunction is not needed*)
-        (* let learntPredicte = Predicate.Disj (negationPost, disjunction) in 
-         *)
-         let learntPredicte = negationPost in 
-         let learnt_dp = DPred.DP {gammacap = gamma;learnt= learntPredicte } in 
-
         let conflictNode = List.hd (List.rev (path)) in 
-    (*     Message.show ("**************Show :: LearnP Adding DP for Conflict Node ********"^(Var.toString conflictNode));
-     *)
         let conflictNode_var = Syn.componentNameForMonExp conflictNode in 
+        
+        (*get the older D(conflict) *)
         let dp_conflictNode = 
                                 try 
                                     DMap.find dps conflictNode_var 
                                 with 
                                     Knowledge.NoMappingForVar e -> DPred.empty
 
-                       in 
+        in 
                     
         
-        let updated_dp_conflictingNode = DPred.conjunction dp_conflictNode learnt_dp in 
+        (*updating the D(conflict)*)
+        let RefTy.MArrow (eff, phi_k, (v, t), phi_k') = path_type in 
+        let negationPost = Predicate.Not phi_k' in
+
+
+        let learntPredicte = negationPost in 
+        let learnt_dp = DPred.DP {gammacap = gamma;learnt= learntPredicte; previous=DPred.getPrevious dp_conflictNode} in 
+
         
+        let updated_dp_conflictingNode = DPred.conjunction dp_conflictNode learnt_dp in 
         let updated_dps = DMap.replace dps conflictNode_var updated_dp_conflictingNode in 
-    (*     Message.show ("**************Show :: LearnP Final DPS ********"^(DMap.toString updated_dps));
-     *)                           
+                                   
         (updated_dps)
 
     
@@ -838,6 +940,17 @@ let backtrackC gamma ptypeMap dps path p2gMap spec =
                     
                     let (gammaMap_km1, deltaPred_km1, ptypeMap, type_pkminus1) = SynTC.typeForPath ptypeMap gammaMap_km1 sigmaMap_km1 deltaPred_km1 spec p_kminus1 in 
                     Message.show ("Show >>>>>>>>>>>>>>>"^(RefTy.toString type_pkminus1));
+                    
+                    let var_k_minus1 = Syn.componentNameForMonExp k_minus1 in 
+                    (*get the older D (Terminal (pk-1)*)
+                    let dp_kminus1 = 
+                                    try 
+                                        DMap.find dps var_k_minus1
+                                    with 
+                                        Knowledge.NoMappingForVar e -> DPred.empty
+
+                    in 
+                    
                     let RefTy.MArrow (_, _, (_,_), post_kminus1 ) = type_pkminus1 in 
                     
                     let ann_k_type = Gamma.find gammaMap_km1 conflictNodeComponent in
@@ -850,15 +963,8 @@ let backtrackC gamma ptypeMap dps path p2gMap spec =
                     let gamma_kminus1 = DPred.T{gamma=gammaMap_km1; sigma = sigmaMap_km1; delta= deltaPred_km1} in 
                     
                     let learnt_predicate = Predicate.Not (Predicate.If (post_kminus1, pre_k)) in 
-                    let diffpred_kminus1_k = DPred.DP {gammacap = gamma_kminus1; learnt=learnt_predicate} in 
-                    let var_k_minus1 = Syn.componentNameForMonExp k_minus1 in 
-                    let dp_kminus1 = 
-                                    try 
-                                        DMap.find dps var_k_minus1
-                                    with 
-                                        Knowledge.NoMappingForVar e -> DPred.empty
-
-                    in 
+                    let diffpred_kminus1_k = DPred.DP {gammacap = gamma_kminus1; learnt=learnt_predicate;
+                                                        previous=DPred.getPrevious dp_kminus1} in 
                         
                     let updated_dp_kminus1 = DPred.conjunction dp_kminus1 diffpred_kminus1_k in 
                     let updated_dps = DMap.replace dps var_k_minus1 updated_dp_kminus1 in 
@@ -1179,7 +1285,7 @@ and esynthesizeFun explored gamma sigma delta spec : Syn.typedMonExp option =
                      isynthesizeFun gamma sigma delta spec               
 
 
-
+(*The main entry for the synthesize*)
 (*In some cases the input spec can be more than the RefinementType*)
 (*synthesize : TypingEnv.t -> Constructors.t -> RefinementType.t -> Syn.typedMonExp option *)
 and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp option)=  
@@ -1422,10 +1528,30 @@ else
                                 let doExpForApp = Syn.Edo (bound, appliedMonExp) in 
                                             
 
-                                let (gamma_with_ci, ptypeMap,  phi_ci', isDistinguished) = distinguish gammacap ptypeMap dps spec path doExpForApp rti in 
+                                let (gamma_with_ci, previous, ptypeMap,  phi_ci', isDistinguished) = 
+                                            distinguish gammacap ptypeMap dps spec path doExpForApp rti in 
                                 
+                                let dp_ci = 
+                                            try 
+                                                DMap.find dps vi 
+                                            with 
+                                                Knowledge.NoMappingForVar e -> DPred.empty
+
+                                in
+
+
+                                let dp_ci = DPred.focusedUpdatePrevious dp_ci previous in 
+                                
+                                (* let updated_dp_ci_prev = DPred.DP {gammacap=gamma_with_ci; 
+                                                                learnt=DPred.getLearnt dp_ci;
+                                                                previous=previous} in
+                                (* TODO :: The two gamma will have overlap, requires thinking*)
+                                let dp_ci = DPred.conjunction dp_ci updated_dp_ci_prev in 
+                                 *)   
+                                   
                                 if (isDistinguished) then 
-                                    (* IMPLEMENT TODO :: NEED to add the rule for binding a variable to the return type of call
+                                    (* IMPLEMENT TODO :: 
+                                        NEED to add the rule for binding a variable to the return type of call
                                        x_bound <- F (xis) Pre v Post, we must add Post[x_bound/v] in the Gamma*)
 
                                     let () = Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi)) in  
@@ -1437,29 +1563,32 @@ else
                                     let p2gMap = PGMap.add p2gMap (new_path) gamma_with_ci in 
                                     
                                     (*chosen a ci s.t. path--> ci is allowed and distinguished*)
+                                    (*update the DMap ( vi)*)
+                                    let dps = DMap.replace dps vi dp_ci in 
+                                   
                                     (gamma_with_ci, p2gMap, ptypeMap, Chosen (dps, doExpForApp, new_path))  
                                 else
                                     (*~phi_ci'*)
                                    let not_phi_ci' =  Predicate.Not phi_ci' in 
-                                   Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi));
-                                   (*D(ci)*)
-                                   let dp_ci = 
-                                            try 
-                                                DMap.find dps vi 
-                                            with 
-                                                Knowledge.NoMappingForVar e -> DPred.empty
-
-                                   in 
-                                   let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'} in
-                                   (*The two gamma will have overlap, requires thinking*)
-                                   let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
-                                   let updated_dps = DMap.replace dps vi updated_dp_ci in 
+                                   Message.show (" Show *************** Not-Distinguished : Now Adding D(ci) conjunct ************"^(Var.toString vi));
+                                   
+                                   (*update the Gamma_cap and learnt for vi*)
+                                   let dp_ci = DPred.focusedUpdateGamma dp_ci gamma_with_ci in 
+                                   let dp_ci = DPred.focusedUpdateLearnt dp_ci not_phi_ci' "Conj" in 
+                                   let dps = DMap.replace dps vi dp_ci in 
                                    (*make a different choice*)
-                                   choice xs gammacap updated_dps failingDisjuncts p2gMap ptypeMap
-                                    
+                                   choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
+                                   
+
+                                   (* let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'; previous = previous} in
+                                    TODO :: The two gamma will have overlap, requires thinking
+                                   
+                                   let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
+                                    *)
+
                             else (*allowed = false*)
                                 let failing_predicate = post_imp_phi_ci' in 
-                                Message.show (" Show *************** Hoare-Not-Allowed : Now Adding Disjuncts ************");
+                                Message.show (" Show *************** Hoare-Not-Allowed : Now Adding D(ci) Disjuncts ************");
                                 (*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
                                 let dps= 
                                     if (List.length path > 0) then 
@@ -1473,12 +1602,16 @@ else
                                                         Knowledge.NoMappingForVar e -> DPred.empty
 
                                            in 
-                                          
-                                        let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate} in
+                                        (*D(c_terminal).learnt = D(c_terminal).learnt \/ failing_predicate*)
+                                        let dp_cterminal = DPred.focusedUpdateGamma dp_cterminal gammacap in                                         
+                                        let dp_cterminal = DPred.focusedUpdateLearnt dp_cterminal failing_predicate "Disj" in
+
+                                        (* let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate;
+                                                                            previous=DPred.getPrevious dp_cterminal} in
                                            (*The two gamma will have overlap, requires thinking
                                              take disjunction*)
-                                        let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
-                                        let dps = DMap.replace dps c_terminial_var updated_dp_cterminal in 
+                                        let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in  *)
+                                        let dps = DMap.replace dps c_terminial_var dp_cterminal in 
                                         dps  
                                     else 
                                         dps  
@@ -1487,7 +1620,7 @@ else
                                 choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
                               
 
-                    ) (*END1*)  
+                         ) (*END1*)  
 
             
                 | RefTy.MArrow (_,_,(_,_),_) -> 
@@ -1501,12 +1634,32 @@ else
 
                         let (gammacap, ptypeMap, post_imp_phi_ci', allowed) = hoarePre gammacap ptypeMap spec path monExpForComp rti in 
                         if (allowed) then 
-                            (
-                            Message.show (" Show *************** Hoare-Allowed : Now Checking distingushing Predicate ************"^(Var.toString vi));
-                            let (gamma_with_ci, ptypeMap, phi_ci', isDistinguished) = distinguish gammacap ptypeMap dps spec path doExpForComp rti in 
+                            let () =  Message.show (" Show *************** 
+                                        Hoare-Allowed : Now Checking distingushing Predicate ************"^(Var.toString vi)) in 
+                            let (gamma_with_ci, previous, ptypeMap, phi_ci', isDistinguished) = distinguish gammacap ptypeMap dps spec path doExpForComp rti in 
+                            
+                            let dp_ci = 
+                                        try 
+                                            DMap.find dps vi 
+                                        with 
+                                                Knowledge.NoMappingForVar e -> DPred.empty
+
+                            in
+                            let dp_ci = DPred.focusedUpdatePrevious dp_ci previous in 
+                               (* 
+                                let updated_dp_ci_prev = DPred.DP {gammacap=gamma_with_ci; 
+                                                                learnt=DPred.getLearnt dp_ci;
+                                                                previous=previous} in
+                                (* TODO :: The two gamma will have overlap, requires thinking*)
+                                let dp_ci = DPred.conjunction dp_ci updated_dp_ci_prev in 
+                               
+ *)
+
                             if (isDistinguished) then 
-                                (
-                                Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi));  
+                                
+                                let () = 
+                                    Message.show (" Show *************** Distinguished : Returning the choice ************"^
+                                            (Var.toString vi)) in 
                                 let RefTy.MArrow (_,_,(vrti, trti),_) = rti  in
                                 let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar trti in     
                                     
@@ -1519,40 +1672,42 @@ else
                                 let p2gMap = PGMap.add p2gMap new_path gamma_with_ci in 
                             (*  Message.show (" Show *************** PGMap After ************"^(PGMap.toString p2gMap));  
                              *) (*chosen a ci s.t. path--> ci is allowed and distinguished*)
+                                let dps = DMap.replace dps vi dp_ci in 
                                 (gamma_with_ci, p2gMap, ptypeMap, Chosen (dps, doExpForComp, new_path))  
-                            )
+                            
                             else
-                                (Message.show (" Show *************** Not-Distinguished : Now Adding conjunct ************"^(Var.toString vi)); 
+                                let () = 
+                                    Message.show (" Show *************** Not-Distinguished : 
+                                                    Now Adding conjunct ************"^(Var.toString vi)) in  
                              
                                (*~phi_ci'*)
                                let not_phi_ci' =  Predicate.Not phi_ci' in 
-                               (*D(ci)*)
                               
-                               let dp_ci = 
-                                        try 
-                                            DMap.find dps vi 
-                                        with 
-                                            Knowledge.NoMappingForVar e -> DPred.empty
-
-                               in 
-
-                               let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'} in
-                               (*The two gamma will have overlap, requires thinking*)
+                              (*update the Gamma_cap and learnt for vi*)
+                                let dp_ci = DPred.focusedUpdateGamma dp_ci gamma_with_ci in 
+                                let dp_ci = DPred.focusedUpdateLearnt dp_ci not_phi_ci' "Conj" in 
+                                let dps = DMap.replace dps vi dp_ci in 
+                               (*     
+                               let learnt_diff_conjunct = DPred.DP {gammacap=gamma_with_ci; learnt=not_phi_ci'; previous = previous} in
+                               The two gamma will have overlap, requires thinking
                                let updated_dp_ci = DPred.conjunction dp_ci learnt_diff_conjunct in 
                                let updated_dps = DMap.replace dps vi updated_dp_ci in 
-                               (*make a different choice*)
-                               choice xs gammacap updated_dps failingDisjuncts p2gMap) ptypeMap
-                            )   
-                         else
+                                *)
+                                (*make a different choice*)
+                               choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
+                               
+                         else (*~(HoareCheck)*)
 
-                            (
-                            Message.show (" Show *************** Hoare-Not-Allowed : Now Adding Disjuncts ************"); 
+                            
+                            let () = 
+                                Message.show (" Show *************** 
+                                        Hoare-Not-Allowed : Now Adding Disjuncts ************") in 
                             let failing_predicate = post_imp_phi_ci' in 
                             (*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
                             let dps= 
                                 if (List.length path > 0) then 
                                     (*D(ci)*)               
-                                    let c_terminial = List.hd (List.rev (path)) in
+                                     let c_terminial = List.hd (List.rev (path)) in
                                      let c_terminial_var = componentNameForMonExp c_terminial in 
                                         
                                     let dp_cterminal = 
@@ -1562,19 +1717,20 @@ else
                                                     Knowledge.NoMappingForVar e -> DPred.empty
 
                                        in 
-                                      
-                                    let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate} in
-                                       (*The two gamma will have overlap, requires thinking
-                                         take disjunction*)
-                                    let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
-                                    let dps = DMap.replace dps c_terminial_var updated_dp_cterminal in 
+                                    let dp_cterminal = DPred.focusedUpdateGamma dp_cterminal gammacap in                                         
+                                    let dp_cterminal = DPred.focusedUpdateLearnt dp_cterminal failing_predicate "Disj" in
+  
+                                   (*let learnt_diff_disjunct  = DPred.DP {gammacap=gammacap; learnt=failing_predicate; previous=DPred.getPrevious dp_cterminal} in
+                                     let updated_dp_cterminal = DPred.disjunction dp_cterminal learnt_diff_disjunct in 
+                                    *) 
+                                    let dps = DMap.replace dps c_terminial_var dp_cterminal in 
                                     dps  
                                 else 
                                     dps  
                             in      
                             let failingDisjuncts = failing_predicate :: failingDisjuncts in 
                             choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
-                           )
+                           
                          (*?? Add (phi' => phi_ci_pre) as a disjunct in the Differentiating predicate
                  TODO add the disjunction predicate learnt from the failure of choosing a component*)   
 
@@ -1628,51 +1784,74 @@ and deduceR (gamma:DPred.gammaCap)
                 let fillerTest = 
                     
                     if (not (TyD.sametype  basePath baseSpec)) 
-                        then(
-                            Message.show ("Show :: Return Type Mismacth "^(pathToString path)^
-                        " Now checking for a pure component to reach goal type ");
-                          let retExp = esynthesizePureApp gammaMap sigmaMap deltaPred tspec in 
-                          (match retExp with 
-                            | Some e -> 
-                                 Message.show ("Show Found a pure component app "^(Syn.typedMonExp_toString e));
-                                
-                                let boundVar = Var.get_fresh_var "bound" in 
-                                let bound = Syn.Evar (boundVar) in 
-                                let doExpForPure = Syn.Edo (bound, e.expMon) in 
-                                   
-                                let completePath = path@[doExpForPure] in 
-                                let (verified_complete, ptypeMap, gamma_complete, path_type_complete) = 
-                                SynTC.typeCheckPath ptypeMap gammaMap sigmaMap deltaPred completePath spec in 
-                                
-                                (if (verified_complete) then 
-                                    let () = Message.show ("Show :: Found correct path "^(Syn.pathToString completePath)) in 
-                             
-                                    Some (ptypeMap, gamma_complete, completePath)
-                                else None)      
-                          
-                            | None -> 
-                                 let retExp = esynthesizeConsApp gammaMap sigmaMap deltaPred tspec in 
-                                    (match retExp with 
-                                    | Some e -> 
-                                         Message.show ("Show Found a Cons APP "^(Syn.typedMonExp_toString e));
-                                        
-                                        let boundVar = Var.get_fresh_var "bound" in 
-                                        let bound = Syn.Evar (boundVar) in 
-                                        let doExpForPure = Syn.Edo (bound, e.expMon) in 
-                                           
-                                        let completePath = path@[doExpForPure] in 
-                                        let (verified_complete, ptypeMap, gamma_complete, path_type_complete) = 
+                        then
+                            (*first check for a bounded program term in the scope which have the correct type 
+                            *)
+                            let _ = Message.show ("Show :: Return Type Mismatch "^(pathToString path)^
+                           " Now checking for a scalar or a pure component to reach goal type ") in 
+                          (*TODO :: focus the scalar search to bound program variables and 
+                            arguments , then we will not have ghost variables from the heap 
+                            returned
+                            Alternatively, we can have two different Gamma, one for 
+                            program variables and other for verification variables
+                            *)      
+                          let scalarInEnv = esynthesizeScalar gammaMap sigmaMap deltaPred tspec in 
+                            match scalarInEnv with 
+                               | Some e -> 
+                                    Message.show ("Show Found a pure Scalar "^(Syn.typedMonExp_toString e));
+                                    let doExpForPure = Syn.Eret(e.expMon) in 
+                                    let completePath = path@[doExpForPure] in 
+                                    let (verified_complete, ptypeMap, gamma_complete, path_type_complete) = 
                                         SynTC.typeCheckPath ptypeMap gammaMap sigmaMap deltaPred completePath spec in 
-                                        (if (verified_complete) then 
+                                         if (verified_complete) then 
                                             let () = Message.show ("Show :: Found correct path "^(Syn.pathToString completePath)) in 
-                                     
                                             Some (ptypeMap, gamma_complete, completePath)
-                                        else None)      
-                                  
-                                     | None -> None   
-                                   )
-                            )                   
-                         )else None
+                                         else None
+
+                              | None ->           
+                                    let retExp = esynthesizePureApp gammaMap sigmaMap deltaPred tspec in 
+                                      (match retExp with 
+                                        | Some e -> 
+                                             Message.show ("Show Found a pure component app "^(Syn.typedMonExp_toString e));
+                                            
+                                            let boundVar = Var.get_fresh_var "bound" in 
+                                            let bound = Syn.Evar (boundVar) in 
+                                            let doExpForPure = Syn.Edo (bound, e.expMon) in 
+                                               
+                                            let completePath = path@[doExpForPure] in 
+                                            let (verified_complete, ptypeMap, gamma_complete, path_type_complete) = 
+                                            SynTC.typeCheckPath ptypeMap gammaMap sigmaMap deltaPred completePath spec in 
+                                            
+                                            (if (verified_complete) then 
+                                                let () = Message.show ("Show :: Found correct path "^(Syn.pathToString completePath)) in 
+                                         
+                                                Some (ptypeMap, gamma_complete, completePath)
+                                            else None)      
+                                      
+                                        | None -> 
+                                             let retExp = esynthesizeConsApp gammaMap sigmaMap deltaPred tspec in 
+                                                (match retExp with 
+                                                | Some e -> 
+                                                     Message.show ("Show Found a Cons APP "^(Syn.typedMonExp_toString e));
+                                                    
+                                                    let boundVar = Var.get_fresh_var "bound" in 
+                                                    let bound = Syn.Evar (boundVar) in 
+                                                    let doExpForPure = Syn.Edo (bound, e.expMon) in 
+                                                       
+                                                    let completePath = path@[doExpForPure] in 
+                                                    let (verified_complete, ptypeMap, gamma_complete, path_type_complete) = 
+                                                    SynTC.typeCheckPath ptypeMap gammaMap sigmaMap deltaPred completePath spec in 
+                                                    (if (verified_complete) then 
+                                                        let () = Message.show ("Show :: Found correct path "^(Syn.pathToString completePath)) in 
+                                                 
+                                                        Some (ptypeMap, gamma_complete, completePath)
+                                                    else None)      
+                                              
+                                                 | None -> None   
+                                               )
+                                        )                   
+                    else 
+                            None
                     
                   in       
                 match fillerTest with 
@@ -1701,7 +1880,7 @@ and deduceR (gamma:DPred.gammaCap)
             )
 
 
-
+(*The forward synthesis algorithm*)
 (*cdcleffSynthesizeBind : DPred.gammaCap -> DMap.t -> RefTy.t -> Syn.monExp*)
  and cdcleffSynthesizeBind (gammaCap : DPred.gammaCap)  
                            (dps : DMap.t) 

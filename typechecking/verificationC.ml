@@ -236,7 +236,6 @@ let rec subst (subs_bindings : ((Var.t* TyD.t)*(Var.t * TyD.t)) list)
                                       [nw_x/x] P  
   *)
  let substi (_phi:pred) (bind_new : vtydbind) (i : int) : (Predicate.t) = 
-    let () = Printf.printf "%s" "\n IN Substi" in 
     match _phi with 
         | Forall (varbindall, phi_forall) -> 
             let len_varbindall = List.length varbindall in 

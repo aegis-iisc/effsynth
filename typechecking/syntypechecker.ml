@@ -70,6 +70,39 @@ let typecheck (gamma : Gamma.t) (sigma:Sigma.t) (t : Syn.typedMonExp) : (RefTy.t
 
 open VerificationC
 open TyD    
+(*ret : x : t -> M {true} v : t {\forall h v h'. h' = h /\ v = x}*)
+let mon_ret   (delta : Predicate.t) 
+              (_Gamma: VerificationC.vctybinds) 
+              (var_x : Var.t)
+              (x_ty : RefTy.t) = 
+
+
+
+                let x_tyd = RefTy.toTyD x_ty in 
+               (*Create Bounded new type*)
+                (*no type inference so need to provide the type for the bound variable of a formula*)
+                let bv_h = Var.get_fresh_var "h" in 
+                let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in 
+                let bv_v = Var.get_fresh_var "v" in 
+                let _Gamma = VC.extend_gamma (bv_v, x_ty ) _Gamma in 
+                let bv_h' = Var.get_fresh_var "h'" in 
+                let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in 
+               
+                let pre =  P.Forall ([(bv_h, Ty_heap)], P.True) in 
+                let post_conjunct1 = P.Base (BP.Eq (BP.Var bv_h, BP.Var bv_h')) in 
+                let post_conjunct2 = P.Base (BP.Eq (BP.Var bv_v, BP.Var var_x)) in 
+   
+                
+                let local_var_binds = [(bv_h, Ty_heap);(bv_v, x_tyd);(bv_h', Ty_heap) ] in 
+                
+                let post = P.Forall (local_var_binds, P.Conj (post_conjunct1, post_conjunct2)) in 
+
+                let retType = RefTy.MArrow (Effect.Pure, 
+                                    pre , (bv_v, x_ty), post) in
+
+                 (_Gamma, delta, retType)   
+
+(*The bind rule*)
 let mon_bind  (acc_delta : Predicate.t) 
               (acc_gamma: VerificationC.vctybinds) 
               (acc_type: RefTy.t) 
@@ -77,12 +110,12 @@ let mon_bind  (acc_delta : Predicate.t)
               (bvi : Var.t) = 
      match (acc_type, ci_type) with 
       | (RefTy.MArrow (eff1, phi1, (v1,t1), phi1') , RefTy.MArrow (eff2,phi2, (v2, t2), phi2')) -> 
-                let () = 
+              (*   let () = 
                   Printf.printf "%s" ("\n Accum Type "^(RefTy.toString acc_type)) in
 
                 let () = 
                   Printf.printf "%s" ("\n Compi Type "^(RefTy.toString ci_type)) in
-                
+               *)  
                
 
                 let fresh_h_int = Var.get_fresh_var "h_int" in 
@@ -99,7 +132,7 @@ let mon_bind  (acc_delta : Predicate.t)
                 let bv_h' = Var.get_fresh_var "h'" in 
                 let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in 
                 
-				(*Following type is now created in this extended environment*)
+				      (*Following type is now created in this extended environment*)
                 (*\forall x, h_int. ( \phi1') h x h_int => \phi2 h_int x)*)
                         
                
@@ -121,11 +154,11 @@ let mon_bind  (acc_delta : Predicate.t)
 
                 in
 
-               (*  let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], P.Conj (f1_pre, f2_pre))  in 
-                *)  
-                 let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], (f1_pre))  in 
+                 (* let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], P.Conj (f1_pre, f2_pre))  in 
+                  *) 
+                let bind_pre (*create pre-condition*) =  P.Forall ([(bv_h, Ty_heap)], (f1_pre))  in 
                 let () = Printf.printf "%s" ("\n PRE \n "^(Predicate.toString bind_pre)) in  
-              
+               
                 (* let () = Printf.printf "%s" "\n Generating The Path Induction post " in 
                  *)
                 (*creating post*)
@@ -144,10 +177,14 @@ let mon_bind  (acc_delta : Predicate.t)
                 let post_conjuntc1 = ( VC.apply phi1' [(bv_h, Ty_heap);(bv_x, RefTy.toTyD t1);(fresh_h_int,Ty_heap)]) in 
                 (*binding of the variable and the return variable*)
                 let post_conjuntc2 = (VC.apply phi2' [(fresh_h_int ,Ty_heap);(bv_v, RefTy.toTyD t2); (bv_h', Ty_heap)]) in 
-                let bind_ret = P.Base (BP.Eq (BP.Var bvi, BP.Var bv_v)) in 
                 
-                let () = 
-                Printf.printf "%s" ("\n POST APPLIED "^(P.toString post_conjuntc2)) in 
+                (*\forall bind_post. we shoud also have [bv_i/bv_v]bind_post *)
+                
+                 let bind_ret = P.Base (BP.Eq (BP.Var bvi, BP.Var bv_v)) in 
+                
+(* 
+                let bind_ret = P.applySubst (bvi, bv_v) (P.Conj(post_conjuntc1, post_conjuntc2)) in 
+ *)
                 
                (*  let post_conjuntc3 = Predicate.reduce (bvi, bv_v) post_conjuntc2 in 
                 *) 
@@ -166,11 +203,11 @@ let mon_bind  (acc_delta : Predicate.t)
                 (* let () = Printf.printf "%s"  (" \n \n \n >>>>>>>>>>><<<<<<<<<<<<<<<<< Gamma BEFORE REMOVAL "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
                 let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> VCS AFTER BIND "^(string_for_vcs acc_vc')) in  
                  *)
-                 let () = 
+                (* let () = 
                  Printf.printf "%s"  (" \n  >>>>>>>>>>><<<<<<<<<<<<<<<<< accumulatePathType "^(RefTy.toString  new_acc_ty)) in  
-                
+                 *)
               (*clean up the gamma*)
-                  let bv_phi1 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1) in 
+                let bv_phi1 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1) in 
                 let bv_phi1' = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi1') in
                 let bv_phi2 = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi2) in
                 let bv_phi2' = List.map (fun (vi, ti) -> vi) (Predicate.getBVs phi2') in
@@ -181,8 +218,8 @@ let mon_bind  (acc_delta : Predicate.t)
                 let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi2 in 
                 let _Gamma = List.fold_left (fun _gamma vi -> VC.remove_from_gamma vi _gamma) _Gamma bv_phi2' in 
 
-                let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> GAMMA AFTER REMOVAL  "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
-                
+               (*  let () = Printf.printf "%s" (" \n \n \n >>>>>>>>>>>>>>>>>>>>>>>>>> GAMMA AFTER REMOVAL  "^(string_of_int (List.length _Gamma))^" = "^(string_gamma _Gamma)) in  
+                *) 
                 (_Gamma, acc_delta, new_acc_ty)
                         
                 
@@ -250,43 +287,83 @@ let typeForPath ptypeMap gamma sigma delta spec  (path:Syn.path)   =
 	         
            | ei :: cs -> 
 	          	(*A path is a list of do expressions of the form do x1 <- e1; do x2 <- e2;...*)
-              let Syn.Edo (bvarMonExp, _) = ei in 
-              let Syn.Evar bvar = bvarMonExp in 
+              match ei with 
+              | Edo (bvarMonExp, _) -> 
+                  let Syn.Evar bvar = bvarMonExp in 
 
-              let ci = Syn.componentNameForMonExp ei in  
-              let found_type = 
+                  let ci = Syn.componentNameForMonExp ei in  
+                  let found_type = 
+                     try  
+                        Gamma.find gamma ci 
+                      with 
+                        Environment.NoMappingForVar msg -> Sigma.find sigma ci
+                  in           
+                  let ci_type = 
+                     match found_type with 
+                       | RefTy.MArrow (_,_,(_,_),_) -> found_type
+                       | RefTy.Arrow ((_,_), _) -> 
+                            let uncurried = RefTy.uncurry_Arrow found_type in 
+                            let RefTy.Uncurried (_, retTy) = uncurried in 
+                            retTy 
+                  in 
+                  (*TODO :: HERE is the bug, we need to map the actual to the formal*)
+                  (*Note to future self , this breaks the u_fun_param1.spec *)
+
+
+
+    	          	let (acc_gamma, acc_delta, acc_type) = 
+                  mon_bind acc_delta acc_gamma acc_type ci_type bvar in
+    	                  accumulatePathType cs acc_gamma acc_delta acc_type
+    	        
+              | Eret (retVarMonExp) ->
+                   let Syn.Evar (v_ret) = retVarMonExp in 
+                  (*implement the P v: t Q >>= return v_ret*)
+                  let type_v_ret = 
+                     try  
+                        Gamma.find gamma v_ret  
+                      with 
+                        Environment.NoMappingForVar msg -> 
+                           raise (SynthesisException ("No Mapping for return Var "^(Var.toString v_ret)))
+                  in 
+                  
+                  let (acc_gamma, delta, liftedType) = mon_ret acc_delta acc_gamma v_ret type_v_ret    
+	                in 
+                  (*return will be the last monExp *)
+                  mon_bind delta acc_gamma acc_type liftedType v_ret
+                  
+
+    in               
+    try 
+       let foundpType = PTypeMap.find ptypeMap path in 
+        let () = Printf.printf "%s" ("Found A type for the path in the PMap") in
+       (*let () = Printf.printf "%s" (RefTy.toString foundpType) in
+       *) (gamma, delta, ptypeMap, foundpType) 
+       
+    with 
+      Knowledge.NoMappingForVar e ->     
+          (*
+          given a pre, create an init path type of length 0
+          Pure pre v : Top {\forall h v h', [h = h'} 
+          *)
+          (* if (Syn.pathLength path = 1) then 
+             let onlyComponent = List.hd path in  
+             let Syn.Edo (bvarMonExp, _) = path in 
+             let Syn.Evar bvar = bvarMonExp in 
+             let ci = Syn.componentNameForMonExp ei in  
+             let found_type = 
                  try  
                     Gamma.find gamma ci 
                   with 
                     Environment.NoMappingForVar msg -> Sigma.find sigma ci
-              in           
-              let ci_type = 
+             in           
+             let ci_type = 
                  match found_type with 
                    | RefTy.MArrow (_,_,(_,_),_) -> found_type
                    | RefTy.Arrow ((_,_), _) -> 
                         let uncurried = RefTy.uncurry_Arrow found_type in 
                         let RefTy.Uncurried (_, retTy) = uncurried in 
                         retTy 
-              in        
-	          	let (acc_gamma, acc_delta, acc_type) = 
-              mon_bind acc_delta acc_gamma acc_type ci_type bvar in
-	                  accumulatePathType cs acc_gamma acc_delta acc_type
-	        
-
-	  in
-
-
-    try 
-       let foundpType = PTypeMap.find ptypeMap path in 
-       let () = Printf.printf "%s" ("Found A type for the path in the PMap") in
-       let () = Printf.printf "%s" (RefTy.toString foundpType) in
-       (gamma, delta, ptypeMap, foundpType) 
-       
-    with 
-      Knowledge.NoMappingForVar e ->     
-          (*given a pre, create an init path type of length 0
-          Pure pre v : Top {\forall h v h', [h = h'} 
-         *)
+              in *) 
           let RefTy.MArrow (_, pre,  (_,_), post) = spec in 
           let initial_effect = Effect.Pure in 
           let retResult = Var.get_fresh_var "v" in 
@@ -339,8 +416,9 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
     
     else    
 
-          (*   let () = Printf.printf "%s" ("Found Path Type "^(RefTy.toString path_type)) in 
-            let () = Printf.printf "%s" ("Compared Against Spec "^(RefTy.toString spec)) in 
+        (*   
+          let () = Printf.printf "%s" ("Found Path Type "^(RefTy.toString path_type)) in 
+          let () = Printf.printf "%s" ("Compared Against Spec "^(RefTy.toString spec)) in 
 	       *)  
 	       	let vc = VC.fromTypeCheck gammaMap [deltaPred] (path_type, spec) in  
 

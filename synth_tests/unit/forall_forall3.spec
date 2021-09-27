@@ -66,7 +66,7 @@ goal : (s : {v : int | true}) ->
 				sel (h, num) == 0 /\
 				ilssel (h, tbl) = Tbl /\
 				not  (0 > size (Tbl)) /\
-				(mem (Tbl, s) = false)}
+				(mem (Tbl, s) = true)}
 				v : {v : float | true}
 		  	{\(h : heap), (v : float), (h' : heap). 
 				\(Tbl' : [int]), (Tbl : [int]).

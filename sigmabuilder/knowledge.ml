@@ -11,7 +11,17 @@ exception NoMappingForVar of string
 module DiffPredicate = struct
 	type gammaCap =  T of {gamma : Gamma.t; sigma : Sigma.t; delta : P.t}
 	(*NOTE : May be keeping separate predicates for conjunts and disjuncts will be a better idea *)
-	type t = DP of {gammacap : gammaCap; learnt : P.t}
+	type t = DP of {gammacap : gammaCap; learnt : P.t ; previous : P.t}
+
+	(*A very imprecise check 
+		to see if we have learnt some D(ci) conjuncts*)
+	let rec noConjuncts p = 
+		match p with 
+			| Predicate.Disj (p1, p2) -> 
+					noConjuncts p1 && noConjuncts p2
+			| Predicate.Conj (p1, p2) -> 
+					  false
+			| _ -> true
 
 	let equalGammaCap g1 g2 = true 
 
@@ -44,6 +54,7 @@ module DiffPredicate = struct
 		T {gamma=gamma;sigma =sigma;delta=delta}
 	
 
+
 	let getGammaCap dpred = 
 		let DP {gammacap;_} = dpred in 
 		gammacap
@@ -52,7 +63,11 @@ module DiffPredicate = struct
 		let DP {learnt;_} = dpred in 
 		learnt
 	
-	let empty = DP {gammacap = emptyGammaCap; learnt = P.True}
+	let getPrevious dpred = 
+		let DP {previous;_} = dpred in 
+		previous
+		
+	let empty = DP {gammacap = emptyGammaCap; learnt = P.True; previous = P.True}
 	
 	let gammaCapToString g = 
 		let T {gamma;sigma;delta} = g in 
@@ -76,9 +91,10 @@ module DiffPredicate = struct
 
 
 	let toString t = 
-	 let DP {gammacap;learnt} = t in 
+	 let DP {gammacap;learnt; previous} = t in 
 	 let str = "\n -----------Gammacap-------------\n : "^(gammaCapToString gammacap) in 
 	 let str = str^"\n --------------Learnt-----------\n "^(Predicate.toString learnt) in 
+	 let str = str^("\n -------------Previous--------\n" ^(Predicate.toString previous)) in 
 	 str
 
 	let equal t1 t2 = 
@@ -91,24 +107,48 @@ module DiffPredicate = struct
 	  true
 
 
+	 let focusedUpdateGamma (dpred : t) (g : gammaCap) = 
+		let DP {gammacap=gcap; learnt=learnt; previous= previous} = dpred in 
+		assert (no_pollution  gcap g);
+	    let gamma = appendGammaCap gcap g in 
+	    DP {gammacap=gamma;learnt=learnt;previous=previous} 
+
+	
+	 let focusedUpdateLearnt (dpred : t) (l : Predicate.t) (mode : string)= 
+		let DP {gammacap=gammacap; learnt=learnt; previous= previous} = dpred in 
+		match mode with 
+			| "Conj" -> let learnt = Predicate.Conj(learnt, l) in 
+				DP {gammacap=gammacap;learnt=learnt;previous=previous} 
+			| "Disj" -> let learnt = Predicate.Disj(learnt, l) in 
+				DP {gammacap=gammacap;learnt=learnt;previous=previous} 	
+		
+
+
+	 let focusedUpdatePrevious (dpred : t) (p : Predicate.t) = 
+		let DP {gammacap=gammacap; learnt=learnt; previous= previous} = dpred in 
+		DP {gammacap=gammacap;learnt=learnt;previous=p} 
+			
 	(*gamma1, pred1 /\ gamma2, pred2 =  noOverlap(gamma1;gamma2), pred1/\ pred2*)
 	let conjunction t1 t2 = 
 		(*the pollution of gammas must be *)
-		let DP {gammacap=gcap1; learnt=learnt1} = t1 in 
-		let DP {gammacap =gcap2; learnt=learnt2} = t2 in 
+		let DP {gammacap=gcap1; learnt=learnt1; previous= previous1} = t1 in 
+		let DP {gammacap =gcap2; learnt=learnt2; previous = previous2} = t2 in 
 		assert (no_pollution  gcap1 gcap2);
 		let gamma = appendGammaCap gcap1 gcap2 in 
 		let pred = Predicate.Conj(learnt1, learnt2) in 
-		DP {gammacap=gamma;learnt=pred} 
+		let previous = Predicate.Conj (previous1, previous2) in 
+		DP {gammacap=gamma;learnt=pred;previous=previous} 
 
 	let disjunction t1 t2 = 
 		(*the pollution of gammas must be *)
-		let DP {gammacap=gcap1; learnt=learnt1} = t1 in 
-		let DP {gammacap =gcap2; learnt=learnt2} = t2 in 
+		let DP {gammacap=gcap1; learnt=learnt1; previous= previous1} = t1 in 
+		let DP {gammacap =gcap2; learnt=learnt2; previous = previous2} = t2 in 
 		assert (no_pollution  gcap1 gcap2);
 		let gamma = appendGammaCap gcap1 gcap2 in 
 		let pred = Predicate.Disj(learnt1, learnt2) in 
-		DP {gammacap=gamma;learnt=pred} 	
+		let previous = Predicate.Disj (previous1, previous2) in 
+		DP {gammacap=gamma;learnt=pred;previous=previous} 
+
 end
 
 module DistinguisherMap = struct

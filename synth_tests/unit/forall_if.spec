@@ -4,6 +4,20 @@ Tbl :  [int];
 num : ref int;
 
 
+mem : (s  : { v : int | true}) -> 
+			(t : {v : tbl | true}) ->  
+			State  
+			{\(h : heap). true} 
+			v : { v : bool | true} 
+			
+			{\(h : heap), (v : bool), (h' : heap). 
+				\(Tbl' : [int]), (Tbl: [int]).
+				ilssel (h', tbl) = Tbl'/\
+				ilssel (h, tbl) = Tbl /\
+				Tbl' = Tbl /\
+				([v=true] <=> ( mem(Tbl', s) = true))/\ 
+				([v=false] <=> (mem (Tbl', s) = false))};
+
 
 fresh_str : State 
 			{\(h : heap). not (sel (h, num) > 2)} 
@@ -51,15 +65,22 @@ goal : (s : {v : int | true}) ->
 			 \(Tbl : [int]). 
 				sel (h, num) == 0 /\
 				ilssel (h, tbl) = Tbl /\
-				not  (0 > size (Tbl)) /\
-				(mem (Tbl, s) = true)}
+				not  (0 > size (Tbl)) }
 				v : {v : float | true}
 		  	{\(h : heap), (v : float), (h' : heap). 
 				\(Tbl' : [int]), (Tbl : [int]).
 				(ilssel (h, tbl) = Tbl /\  
 				ilssel (h', tbl) = Tbl')   
 				=> 
-				size (Tbl') == size (Tbl) + 2 
+				(mem (Tbl', s) = true /\
+				size (Tbl') == size (Tbl) + 2) 
 				
 			};
 
+(*This example shows a bug, showing that the add s and goal s both have s and they get captured
+This requires us to update the function application rule for synthesis following directly from the 
+wp and sp logic for procedures
+
+
+Now we should build a forward algorithm with does a BFS rather than the current DFS 
+*)
