@@ -27,7 +27,7 @@ let generateNilConstraints (macthedArg) =
       (*len (ls) = 0*)
       let nil_length = 
         P.Rel(RP.NEq 
-              ( R (RelLang.instOfRel (RelId.fromString "len"), macthedArg),
+              ( RelLang.R (RelLang.instOfRel (RelId.fromString "len"), macthedArg),
                 RelLang.relexpr_for_int 0
               )
               )  
@@ -316,7 +316,11 @@ let typeForPath ptypeMap gamma sigma delta spec  (path:Syn.path)   =
     	                  accumulatePathType cs acc_gamma acc_delta acc_type
     	        
               | Eret (retVarMonExp) ->
-                   let Syn.Evar (v_ret) = retVarMonExp in 
+                  (*two types of retrun expressions.
+                    return boundVar
+                    return Foo (boundVari)
+                  *)
+                  let Syn.Evar (v_ret) = retVarMonExp in 
                   (*implement the P v: t Q >>= return v_ret*)
                   let type_v_ret = 
                      try  

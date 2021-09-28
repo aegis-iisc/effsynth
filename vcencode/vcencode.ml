@@ -215,6 +215,10 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           let  (tyMap, constMap, relMap, sort_int) = encodeTyD (tyMap, constMap, relMap) (Ty_int) in 
           let  (tyMap, constMap, relMap, sort_tree_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "tree")) in 
           let  (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in 
+          let  (tyMap, constMap, relMap, sort_char) = encodeTyD (tyMap, constMap, relMap) (Ty_char) in 
+         
+          let  (tyMap, constMap, relMap, sort_float) = encodeTyD (tyMap, constMap, relMap) (Ty_float) in 
+         
           let  (tyMap, constMap, relMap, sort_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
           let  (tyMap, constMap, relMap, sort_pair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pair") in 
           let  (tyMap, constMap, relMap, sort_revpair) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "revpair") in 
@@ -222,7 +226,9 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
            let (tyMap, constMap, relMap, sort_heap) = encodeTyD (tyMap, constMap, relMap) (Ty_heap) in  
           let (tyMap, constMap, relMap, sort_int_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_int)) in
           let (tyMap, constMap, relMap, sort_ref_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (Ty_int))) in
-                    
+          let (tyMap, constMap, relMap, sort_ref_char_list) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (Ty_char))) in
+          
+
           let (tyMap, constMap, relMap, sort_bool_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_bool)) in
            let (tyMap, constMap, relMap, sort_intplist_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "intpair"))) in
            let (tyMap, constMap, relMap, sort_intplist) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "intpair")) in
@@ -259,6 +265,11 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           let mem = mkMStrucRel (RI.toString memid, [sort_int_list;sort_int;sort_bool]) in 
           let relMap = RelMap.add relMap (RI.toString memid) mem in 
 
+          let cmemid = RI.fromString "cmem" in 
+          let cmem = mkMStrucRel (RI.toString cmemid, [sort_char_list;sort_char;sort_bool]) in 
+          let relMap = RelMap.add relMap (RI.toString cmemid) cmem in 
+
+        
           
           let sortedid = RI.fromString "sorted" in 
           let sorted = mkStrucRel (RI.toString sortedid, [sort_int_list;sort_bool]) in 
@@ -280,7 +291,7 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
 
           let sizeid = RI.fromString "size" in 
            
-          let size = mkStrucRel (RI.toString sizeid, [sort_int_list;sort_int]) in 
+          let size = mkStrucRel (RI.toString sizeid, [sort_char_list;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString sizeid) size in 
 
            let minid = RI.fromString "min" in 
@@ -299,10 +310,18 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
            
           let fst = mkStrucRel (RI.toString fstid, [sort_pair;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString fstid) fst in 
+         
+          (*fst relation*)      
+          let fstid = RI.fromString "fst" in 
+           
+          let fst = mkStrucRel (RI.toString fstid, [sort_pair;sort_float]) in 
+          let relMap = RelMap.add relMap (RI.toString fstid) fst in 
+         
+
          (*snd relation*)      
           let sndid = RI.fromString "snd" in 
            
-          let snd = mkStrucRel (RI.toString sndid, [sort_pair;sort_int_list]) in 
+          let snd = mkStrucRel (RI.toString sndid, [sort_pair;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString sndid) snd in 
        
 
@@ -408,6 +427,16 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
 
          let relMap = RelMap.add relMap (RI.toString intlist_selid) intlist_sr_sel in 
         
+         
+         let charlist_selid = RI.fromString "clsel" in 
+         let sorts = [sort_heap;sort_ref_char_list;sort_char_list] in 
+         let charlist_sr_sel = mkMStrucRel (RI.toString charlist_selid, sorts) in 
+
+
+         let relMap = RelMap.add relMap (RI.toString charlist_selid) charlist_sr_sel in 
+        
+
+
          let intplist_selid = RI.fromString "plssel" in 
          let sorts = [sort_heap;sort_intplist_ref;sort_intplist] in 
          let intplist_sr_sel = mkMStrucRel (RI.toString intplist_selid, sorts) in 

@@ -70,8 +70,8 @@ module DiffPredicate = struct
 	let empty = DP {gammacap = emptyGammaCap; learnt = P.True; previous = P.True}
 	
 	let gammaCapToString g = 
-		let T {gamma;sigma;delta} = g in 
-		let str = 
+		(* let T {gamma;sigma;delta} = g in 
+		 *)let str = 
 			let gammaStr = "gamma TBU " (*Gamma.toString gamma*) in 
 			let sigmaStr = "sigma TBU" in 
 			let deltaStr = "delat TBU "(*Predicate.toString delta*) in 
@@ -400,3 +400,22 @@ let toString t =
 end 
 
 
+module Experiences = struct 
+
+type t = Syn.path list 
+let naive = [] 
+let mem p t = List.mem p t 
+let add p t = p :: t
+let remove p t = 
+		List.filter (fun a -> Syn.equalPath p a) t
+
+
+let toString t = 
+    List.fold_left (fun accstr (pi) -> 
+    		(accstr^"\n "^(Syn.pathToString pi))) " " t 
+
+
+
+
+
+end

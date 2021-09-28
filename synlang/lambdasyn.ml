@@ -32,6 +32,11 @@ and typedMonExp = {expMon:monExp; ofType:RefTy.t }
 type path =  monExp list 
 
 
+(*The t ~ H relation
+The exact logic can be made less or more precise*)
+let satHypothesis (t : path) (hypothesis : path) : bool = 
+    true
+
 
 let rec equalMonExp m1 m2 =
       match (m1, m2) with
@@ -70,8 +75,6 @@ and equalTypedMonExp tme1 tme2 =
     equalMonExp tme1.expMon tme2.expMon
 
 
-let pathLength p = 
-        List.length p
         
 let equalPath p1 p2 = 
        try 
