@@ -11,14 +11,12 @@
     content -> many AlphaNum
 
 	data-dependent constraints : 
-		length (content) = length (length) - length (typespec)
+		length (content) + length (typespec) = length (length) 
 
 
 
 	(*The outline of the synthesis problem: *)
 	
-
-
 	let len = ref 0;
 
 

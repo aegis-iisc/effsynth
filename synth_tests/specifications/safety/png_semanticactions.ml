@@ -56,8 +56,9 @@ and top-level, goal parser*)
 		(x,y) : (int, char list) 
 		{len' = x /\ len' > 1 /\ IntValOf (y) = x}
 	length = 
+		x <- Natural;
+		
 		[??]
-
 		(*query_1*) 
 		: (x : char list | \forall e \in elems (v) . CharCode (v) \in (asciidigit)} -> 
 		 State {len = 0}  
@@ -65,8 +66,7 @@ and top-level, goal parser*)
 		{len' = x /\ len' > 1 /\ IntValOf (y) = x}
 
 		[[  
-			x <- Natural;
-		
+			
 			let x_int = IntValOf (x) in 
 			if (x_int > 1) then 
 				putFuel x_int;
@@ -112,27 +112,3 @@ and top-level, goal parser*)
 					/\ len' = 0}		
 
 	
-	(*In this case we do NOT need to provide the grammar*)
-	(*query : State {len = 0} 
-				(x,y, z) : (int * char list * char list)
-			{length (z) + length (y) = x  
-					/\ len' = 0}		
-
-	*)					
-
-
-	(*
-	incorrect programs 
-	synthesis1 = getState >>= \x. content >>= \y. \z. content .return Triple x, y z —incorrect —
-
-	synthesis2  = length >>= \x. content >>= \y. return Pair x, y —incorrect —
-
-	synthesis4 = typespec >>= \x. getState >>= \y. return Triple x, x, y — incorrect —
- *)
-	(*correct program*)
-	synthesis3 = length >>= \x. 
-					typespec >>= \y. 
-						content >>= \z. return Triple x y z
-
-
-

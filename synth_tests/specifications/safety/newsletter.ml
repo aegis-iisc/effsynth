@@ -1,6 +1,7 @@
 
-(*scr : On the automated verification of web applications
-with embedded SQL*)
+(*src : On the automated verification of web applications
+with embedded SQL
+*)
 type code = Cs  | Cu | Un
 (*database a record of {fields:value}*)
 type NS = {nletter : string; 

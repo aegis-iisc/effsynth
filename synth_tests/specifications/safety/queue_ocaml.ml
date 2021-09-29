@@ -26,7 +26,6 @@ val take : q : 'a t -> {size (q) > 0} v : 'a
  synonyms pop, dequeue
  *)
 
-Since 4.08
 val pop : q : 'a t -> {size (q) > 0} v : 'a {v \notin q' /\ size (q') = size(q) - 1}
 (* pop is a synonym for take.
  *)
@@ -40,7 +39,6 @@ val drop_n : n : int -> q : 'a t -> {size (q) >= n}
 															 }
 
 val top : q : 'a t -> {size (q) > 0} v : 'a {v \in q' /\ size (q') = size(q)}
-top is a synonym for peek.
 
 val clear : 'a t -> {true } unit {Empty (q')}
 (* Discard all elements from a queue.

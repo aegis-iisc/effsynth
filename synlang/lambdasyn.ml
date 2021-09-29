@@ -38,6 +38,7 @@ let satHypothesis (t : path) (hypothesis : path) : bool =
     true
 
 
+
 let rec equalMonExp m1 m2 =
       match (m1, m2) with
         | (Evar v1, Evar v2) -> Var.equal v1 v2 
@@ -123,7 +124,7 @@ let rec monExp_toString (m:monExp) =
     match m with 
         | Evar v -> (v)
         | Eret ret ->  ("return "^(monExp_toString ret))
-        | Ebind (mne, mne1, mne2) -> ((monExp_toString mne1)^" \n \t >>= \lambda"^
+        | Ebind (mne, mne1, mne2) -> ((monExp_toString mne1)^" \n \t >>= \lambda "^
                                     (monExp_toString mne)^" . \n \t "^
                                     (monExp_toString mne2 ))  
         | Ecapp (cname, argls) -> "Ecapp "^(cname)^" ( "^(
@@ -264,3 +265,102 @@ let rec isComplete path =
     match hls with 
         | None -> true
         | Some _ -> false 
+
+
+let rec substitute (subs : (monExp * monExp) list) (m:monExp) : monExp = 
+      (*TODO : unimplemented*)
+      m
+    (* match m with 
+        | Evar v -> (v)
+        | Eret ret ->  ("return "^(monExp_toString ret))
+        | Ebind (mne, mne1, mne2) -> ((monExp_toString mne1)^" \n \t >>= \lambda "^
+                                    (monExp_toString mne)^" . \n \t "^
+                                    (monExp_toString mne2 ))  
+        | Ecapp (cname, argls) -> "Ecapp "^(cname)^" ( "^(
+                                List.fold_left (fun accstr ai -> 
+                                                accstr^", "^(monExp_toString ai)) "" argls
+
+                                                )^" )" 
+        | Ematch (matchingArg, caselist) -> 
+                let caselist_toString = 
+                    List.fold_left (fun accstr casei -> (accstr^" \n | "^(caseExp_toString casei))) " " caselist 
+                in 
+                ("Ematch "^(typedMonExp_toString matchingArg)^" with "^caselist_toString)
+        | Eapp (fun1, arglsit) -> 
+            ("apply "^(monExp_toString fun1)^"  ("^
+                (List.fold_left 
+                    (fun accStr argi -> accStr^", "^(monExp_toString argi)^" )") ""  arglsit))        
+        
+        | Edo (bound, exp) -> 
+                ("do "^(monExp_toString bound)^" <- "^(monExp_toString exp)) 
+        | Eskip -> "Eskip"
+        | Ehole t -> ("[?? : "^(RefTy.toString t^"]"))
+        | _ -> "Other expression"  
+ *)
+
+
+
+let substituteHoles (subs : (monExp * monExp) list) (hypothesis : path) = 
+    
+   let rec loop substituted remaining_hypothesis = 
+     (match hypothesis with 
+        | [] -> substituted
+        | x :: xs -> 
+            (match x with 
+                | Edo (bound_x, body) -> 
+                       (match body with 
+                        | Ehole tx -> loop substituted xs 
+                        | _ -> 
+                            let subs_body = substitute (subs) body in 
+                            let subs_x = Edo (bound_x, subs_body) in 
+                            substituted@[subs_x]
+                       )
+                | _ -> raise (IncorrectExp "A hole is a do expression")
+            )
+        )
+    in 
+    loop [] hypothesis          
+
+
+
+let rec findFirst (t_fw : monExp) tx = 
+    (*TODO Unimplemented 
+     This and related functions unify the 
+    forward and backward restults post-synthesis
+    *)
+    (t_fw, t_fw)
+    (* match t_fw with 
+        | Ebind (boundx, expx, rem_t_fw) -> 
+        | Eret t_ret ->
+                match t_ret with
+                    | Evar v -> 
+
+
+
+ *)
+let unifyFwBw gamma (t_fw : monExp) (hypothesis  : path) = 
+    if (isComplete (hypothesis)) then 
+        t_fw
+    else      
+      let rec unify subs rem_hypothesis rem_fw_term =  
+        match rem_hypothesis with 
+         | [] -> subs 
+         | x :: xs -> 
+             (*get the first hole*)
+            (match x with 
+                | Edo (boundx, holex) -> 
+                    (match holex with 
+                     | Ehole tx ->     
+                        (*do boundx <- [??] : tx*)
+                        let (fw_boundVar, rem_fw_term) = findFirst rem_fw_term tx in   
+                        let subs = (fw_boundVar, boundx) :: subs in 
+                        unify subs xs rem_fw_term
+                     | _ -> unify subs xs rem_fw_term
+                 )
+                | _ -> raise (IncorrectExp "unfying a nonDo exp")     
+             )    
+        in 
+        let subs = unify [] hypothesis t_fw in 
+        let subst_path = substituteHoles subs hypothesis in 
+        buildProgramTerm subst_path
+

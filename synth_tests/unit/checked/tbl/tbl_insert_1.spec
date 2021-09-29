@@ -4,7 +4,6 @@ Tbl :  [int];
 num : ref int;
 
 
-
 fresh_int : State 
 			{\(h : heap). not (sel (h, num) > 1)} 
 			v : { v : int | true} 
@@ -54,6 +53,7 @@ average_len : State  {\(h : heap).
 
 
 add : (s : {v : int | true}) ->  
+			
 			State  {\(h : heap).
 				\(Tbl : [int]). 
 				ilssel (h, tbl) = Tbl =>  
@@ -69,6 +69,7 @@ add : (s : {v : int | true}) ->
 
 
 goal : (s : {v : int | true}) -> 
+		
 		State {\(h : heap). 
 			 \(Tbl : [int]). 
 				sel (h, num) == 0 /\

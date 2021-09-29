@@ -320,20 +320,23 @@ let typeForPath ptypeMap gamma sigma delta spec  (path:Syn.path)   =
                     return boundVar
                     return Foo (boundVari)
                   *)
-                  let Syn.Evar (v_ret) = retVarMonExp in 
-                  (*implement the P v: t Q >>= return v_ret*)
-                  let type_v_ret = 
-                     try  
-                        Gamma.find gamma v_ret  
-                      with 
-                        Environment.NoMappingForVar msg -> 
-                           raise (SynthesisException ("No Mapping for return Var "^(Var.toString v_ret)))
-                  in 
-                  
-                  let (acc_gamma, delta, liftedType) = mon_ret acc_delta acc_gamma v_ret type_v_ret    
-	                in 
-                  (*return will be the last monExp *)
-                  mon_bind delta acc_gamma acc_type liftedType v_ret
+                  match retVarMonExp with 
+                    | Syn.Evar (v_ret) ->  
+                      (*implement the P v: t Q >>= return v_ret*)
+                      let type_v_ret = 
+                         try  
+                            Gamma.find gamma v_ret  
+                          with 
+                            Environment.NoMappingForVar msg -> 
+                               raise (SynthesisException ("No Mapping for return Var "^(Var.toString v_ret)))
+                      in 
+                      
+                      let (acc_gamma, delta, liftedType) = mon_ret acc_delta acc_gamma v_ret type_v_ret    
+    	                in 
+                      (*return will be the last monExp *)
+                      mon_bind delta acc_gamma acc_type liftedType v_ret
+                    | Syn.Eapp (funName, args) -> 
+                        raise (SynthesisException "FORCED")
                   
 
     in               
