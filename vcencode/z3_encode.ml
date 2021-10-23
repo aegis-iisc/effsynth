@@ -22,13 +22,13 @@ open Arithmetic
 open FuncDecl
 open Integer
 open Quantifier    
- (*  
+  (* 
 module Printf = struct 
   let printf f s = ()
 
 
 end  
-  *) 
+   *)
 
 
 
@@ -314,8 +314,7 @@ let mkSet (name,sorts) =
 
 
 let mkStrucRel (name,sorts) =
-  let
-    nargs = Vector.length sorts in 
+  let nargs = Vector.length sorts in 
   let domainTy = Vector.sub (sorts,0) in 
 
 
@@ -356,7 +355,7 @@ let mkMStrucRel (name,sorts) =
                *)
        let ty' = [co_domainTy] in 
        let pred' = fun asts ->
-      pred (Vector.concat 
+          pred (Vector.concat 
               [ast_list; asts])
     in
     Set {ty = ty';pred = pred'}
@@ -486,11 +485,9 @@ let rec mkEqAssertion (s1,s2) =
   | (Null,Set {ty;_}) -> mkEqAssertion (mkEmptySet ty, s2)
   | (Set {ty;_},Null) -> mkEqAssertion (s1, mkEmptySet ty)
   | (Set {ty=sorts1;pred=pred1}, Set {ty=sorts2;pred=pred2}) -> 
-      (* let () = Printf.printf "%s" "@mkSetEqAssertion" in 
-       *)    (*
-           * Pre-condition of sorts1 = sorts2 is automatically
-           * checked when pred1 and pred2 are applied
-           *)
+       let () = Printf.printf "%s" "@mkSetEqAssertion" in 
+           
+           
      let setPropQuantifier=  mkSetProp (sorts1, fun bvAsts -> 
 
           let fnapp1 = pred1 bvAsts in 

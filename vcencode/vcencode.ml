@@ -216,7 +216,12 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           let  (tyMap, constMap, relMap, sort_tree_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "tree")) in 
           let  (tyMap, constMap, relMap, sort_bool) = encodeTyD (tyMap, constMap, relMap) (Ty_bool) in 
           let  (tyMap, constMap, relMap, sort_char) = encodeTyD (tyMap, constMap, relMap) (Ty_char) in 
-         
+          let  (tyMap, constMap, relMap, sort_string) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_string) in 
+          
+          let  (tyMap, constMap, relMap, sort_string_list) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_string)) in 
+            
           let  (tyMap, constMap, relMap, sort_float) = encodeTyD (tyMap, constMap, relMap) (Ty_float) in 
          
           let  (tyMap, constMap, relMap, sort_int_list) = encodeTyD (tyMap, constMap, relMap) (Ty_list (Ty_int)) in 
@@ -230,10 +235,191 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           
 
           let (tyMap, constMap, relMap, sort_bool_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_bool)) in
-           let (tyMap, constMap, relMap, sort_intplist_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "intpair"))) in
+          let (tyMap, constMap, relMap, sort_intplist_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "intpair"))) in
            let (tyMap, constMap, relMap, sort_intplist) = encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "intpair")) in
 
+
+
+
+
+           (*queue and queue ref*)
+          let  (tyMap, constMap, relMap, sort_queue) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString "queue") in 
+          let  (tyMap, constMap, relMap, sort_queue_ref) = encodeTyD (tyMap, constMap, relMap) (Ty_ref (TyD.fromString "queue")) in 
+            
+          (*nlrecord and nlrecord database
+            type code = Cs | Cu | Cn
+            (*database is a list of record of {fields:value}*)
+            type nlrecord = 
+                  {nletter : string; 
+                    user : string ; 
+                    subscribed : bool ; 
+                    code : code ; 
+                    articles_read : [string]
+                    };  
+
+
+            type nl =  ref [nlrecord];
+  
+            *)
+
+        let  (tyMap, constMap, relMap, sort_nlrecord) = 
+            encodeTyD (tyMap, constMap, relMap) (TyD.fromString "nlrecord") in 
+        let  (tyMap, constMap, relMap, sort_nlrecord_list) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "nlrecord")) in 
+         
+          let  (tyMap, constMap, relMap, sort_nldb) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "nlrecord"))) in 
+         
+         
+          let  (tyMap, constMap, relMap, sort_code) = 
+            encodeTyD (tyMap, constMap, relMap) (TyD.fromString "code") in 
+          
+           (*png and related types*)
+           let  (tyMap, constMap, relMap, sort_pngtriple) = 
+            encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pngtriple") in 
+
+          
+          (*firewall sorts*)
+          let  (tyMap, constMap, relMap, sort_srpair) = 
+            encodeTyD (tyMap, constMap, relMap) (TyD.fromString "srpair") in 
+          
+          let  (tyMap, constMap, relMap, sort_srpair_list) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_list (TyD.fromString "srpair")) in 
+          
+
+          let  (tyMap, constMap, relMap, sort_cstab) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.fromString "spair"))) in 
+                   
+           let  (tyMap, constMap, relMap, sort_dtab) = 
+            encodeTyD (tyMap, constMap, relMap) (Ty_ref (Ty_list (TyD.Ty_int))) in 
+             
+          (*png triple field predicates*)  
+          
+          
+          
+
+
+          (*nlrecord field predicates*)
+          let nletter = mkStrucRel ("nletter", 
+                        [sort_nlrecord; sort_string]) in 
+          let relMap = RelMap.add relMap ("nletter") nletter in 
         
+          let user = mkStrucRel ("user", 
+                        [sort_nlrecord; sort_string]) in 
+          let relMap = RelMap.add relMap ("user") user in 
+    
+      
+           let subscribed = mkMStrucRel ("subscribed", 
+                        [sort_nlrecord_list; sort_string; sort_string;sort_bool]) in 
+          let relMap = RelMap.add relMap ("subscribed") subscribed in 
+      
+
+          let unsubscribed = mkMStrucRel ("unsubscribed", 
+                        [sort_nlrecord_list; sort_string; sort_string;sort_bool]) in 
+          let relMap = RelMap.add relMap ("unsubscribed") unsubscribed in 
+      
+          let confirmed = mkMStrucRel ("confirmed", 
+                        [sort_nlrecord_list; sort_string; sort_string;sort_bool]) in 
+          let relMap = RelMap.add relMap ("confirmed") confirmed in 
+
+         
+          let code = mkStrucRel ("code", 
+                        [sort_nlrecord; sort_code]) in 
+          let relMap = RelMap.add relMap ("code") code in 
+
+          let articles = mkStrucRel ("articles", 
+                        [sort_nlrecord; sort_string_list]) in 
+          let relMap = RelMap.add relMap ("articles") articles in 
+          
+
+           (*nldb predicates*)  
+           let dsel = mkMStrucRel ("dsel", 
+                        [sort_heap; sort_nldb; sort_nlrecord_list]) in 
+          let relMap = RelMap.add relMap ("dsel") dsel in 
+    
+
+          let nlmem = mkMStrucRel ("nlmem", 
+                        [sort_nlrecord_list; sort_string; sort_string;sort_bool]) in 
+          let relMap = RelMap.add relMap ("nlmem") nlmem in 
+    
+
+          let ns = mkMStrucRel ("ns", 
+                        [sort_nlrecord_list; sort_string; sort_string;sort_nlrecord]) in 
+          let relMap = RelMap.add relMap ("ns") ns in 
+    
+
+          let goodcode = mkMStrucRel ("gooccode", 
+                        [sort_nlrecord_list; sort_code;sort_bool]) in 
+          let relMap = RelMap.add relMap ("goodcode") goodcode in 
+    
+          (*firewall predicates*)
+           let didsel = mkMStrucRel ("didsel", 
+                        [sort_heap; sort_dtab; sort_int_list]) in 
+          let relMap = RelMap.add relMap ("didsel") didsel in 
+    
+          let dcssel = mkMStrucRel ("dcssel", 
+                        [sort_heap; sort_cstab; sort_srpair_list]) in 
+          let relMap = RelMap.add relMap ("dcssel") dcssel in 
+     
+          let device = mkMStrucRel ("device", 
+                        [sort_int_list; sort_int; sort_bool]) in 
+          let relMap = RelMap.add relMap ("device") device in 
+     
+          let dsize = mkStrucRel ("dsize", 
+                        [sort_int_list; sort_int]) in 
+          let relMap = RelMap.add relMap ("dsize") dsize in 
+    
+          let cansend = mkMStrucRel ("cansend", 
+                        [sort_srpair_list; sort_int; sort_int; sort_bool]) in 
+          let relMap = RelMap.add relMap ("cansend") cansend in 
+
+          let central = mkMStrucRel ("central", 
+                        [sort_srpair_list; sort_int; sort_int; sort_bool]) in 
+          let relMap = RelMap.add relMap ("central") central in 
+          
+
+           (*queue predicates*)
+          let disjointid = RI.fromString "disjoint" in 
+          let disjointpred = mkMStrucRel (RI.toString disjointid, 
+                        [sort_queue; sort_queue; sort_bool]) in 
+          let relMap = RelMap.add relMap (RI.toString disjointid) disjointpred in 
+ 
+
+          let uniqueid = RI.fromString "unique" in 
+          let uniquepred = mkStrucRel (RI.toString uniqueid, 
+                        [sort_queue; sort_bool]) in 
+          let relMap = RelMap.add relMap (RI.toString uniqueid) uniquepred in 
+  
+          
+          let emptypred = mkStrucRel ("empty", 
+                        [sort_queue; sort_bool]) in 
+          let relMap = RelMap.add relMap ("empty") emptypred in 
+    
+          let qelems = mkStrucRel ("qelems", 
+                        [sort_queue; sort_int]) in 
+          let relMap = RelMap.add relMap ("qelems") qelems in 
+    
+
+          let qsize = mkStrucRel ("qsize", 
+                        [sort_queue; sort_int]) in 
+          let relMap = RelMap.add relMap ("qsize") qsize in 
+    
+
+          let qmem = mkMStrucRel ("qmem", 
+                        [sort_queue; sort_int; sort_bool]) in 
+          let relMap = RelMap.add relMap ("qmem") qmem in 
+    
+
+         let sorts = [sort_heap;sort_queue_ref;sort_queue] in 
+         let qsel = mkMStrucRel ("qsel", sorts) in 
+         let relMap = RelMap.add relMap ("qsel") qsel in 
+        
+
+         (*int list size*)
+          let sorts = [sort_int_list;sort_int] in 
+         let isize = mkStrucRel ("isize", sorts) in 
+         let relMap = RelMap.add relMap ("isize") isize in 
+                  
 
 
            (*node (tree) relation*)      
@@ -294,15 +480,18 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           let size = mkStrucRel (RI.toString sizeid, [sort_char_list;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString sizeid) size in 
 
-           let minid = RI.fromString "min" in 
+
+
+
+          let minid = RI.fromString "min" in 
            
-          let min = mkStrucRel (RI.toString sizeid, [sort_int_list;sort_int]) in 
+          let min = mkStrucRel (RI.toString minid, [sort_int_list;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString minid) min in 
  
 
            let maxid = RI.fromString "max" in 
            
-          let max = mkStrucRel (RI.toString sizeid, [sort_int_list;sort_int]) in 
+          let max = mkStrucRel (RI.toString maxid, [sort_int_list;sort_int]) in 
           let relMap = RelMap.add relMap (RI.toString maxid) max in 
 
           (*fst relation*)      
@@ -916,7 +1105,7 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
               let srforR = getStrucRelForRelId relMap rid in 
               let SR{ty;rel} = srforR in 
                let list_layout_ty = List.map (fun sor-> sort_layout sor) ty in 
-               let str_ty  = (List.fold_left (fun acc l -> acc^(Layout.toString l) ) "{" list_layout_ty)^" }" in 
+               let str_ty  = (List.fold_left (fun acc l -> acc^(Layout.toString l) ) "{ " list_layout_ty)^" }" in 
 
               let ()  = Printf.printf "%s" ("Type "^str_ty) in 
               let const = getConstForVar constMap v in 
@@ -932,7 +1121,7 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
                  let ()  = Printf.printf "%s" ("\n *******encodeRelExpr MultiR******** ") in 
                 let srforR = getStrucRelForRelId relMap rid in 
                 let MSR{mty;mrel} = srforR in 
-               let str_ty  = (List.fold_left (fun acc s -> acc^(sortToString s)^" :-> " ) "{" mty )^" }" in 
+                let str_ty  = (List.fold_left (fun acc s -> acc^(sortToString s)^" :-> " ) "{" mty )^" }" in 
 
               let ()  = Printf.printf "%s" ("Type "^str_ty) in 
 

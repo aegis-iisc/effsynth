@@ -5,6 +5,9 @@ type dID = {devid : int} list ref
 type cSend = {senderid : int ; receiverid : int} list ref
 
 predicate Invfirewall = ∃x (Device(x) ∧ ∀y(Device(y) → CanSend(y, x)))
+predicate device : int :-> bool 
+predicate dsize : [int] :-> int 
+
 
 (*adds the devId to dID table*)
 add_device : d :  int -> state {not Device (d)} v : unit {Device (d)}
@@ -35,6 +38,12 @@ delete_device : d : int -> state {∃x ((x != d) ∧
 									v : unit
 								 {not (Device (d) /\ ∀y(Device(y) → not (CanSend(y, d)))}		 
 
+delete_devices : d : [int] -> state {∃x ((x != d) ∧ 
+									Device(x) ∧ ∀y(Device(y) → CanSend(y, x)))}
+									v : unit
+								 {not (Device (d) /\ ∀y(Device(y) → not (CanSend(y, d)))}		 
+
+
 
 goal_pure : d : int -> s: int list ->  {true} 
 									v : int 
@@ -49,8 +58,17 @@ query1 : d : int -> s: int list ->  {Device (d)}
 
 
 (*given a list of devices, remove them from the dID and cSend maintaining the 
-inv and return the central element*)
+inv *)
 query2 : s : int list -> {true} 
+						v : unit  
+						{∀y. Elems (s, y) => 
+							not Device (y) 
+						/\ (Device (v)) /\ ∀z. (Device(z) → (CanSend(y, v)) }				 
+
+
+(*given a list of devices, remove them from the dID and cSend maintaining the 
+inv and return the central element*)
+query3 : s : int list -> {true} 
 						v : int  
 						{∀y. Elems (s, y) => 
 							not Device (y) 

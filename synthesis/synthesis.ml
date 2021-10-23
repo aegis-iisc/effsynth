@@ -10,6 +10,7 @@ module DPred = Knowledge.DiffPredicate
 module DMap = Knowledge.DistinguisherMap
 module PTypeMap = Knowledge.PathTypeMap
 module P = Predicate  
+module BP = Predicate.BasePredicate
 module SynTC = Syntypechecker
 module WPP2CMap = Knowledge.WPPathChildrenMap
 module PWPMap = Knowledge.PathWPMap
@@ -138,6 +139,8 @@ type deduceResult =
 
 let enumPureE explored gamma sigma delta (spec : RefTy.t) : Syn.typedMonExp option  = 
     (*can enumerate a variable of refined basetype, an arrow type or a effectful component*)
+     Message.show ("\n Show ::  enumPureE Called ");        
+                
     match spec with 
       (*Tvar case*)
       | RefTy.Base (v, t, pred) -> 
@@ -151,7 +154,7 @@ let enumPureE explored gamma sigma delta (spec : RefTy.t) : Syn.typedMonExp opti
              | [] -> None 
              | (vi, rti) :: xs -> 
                  Message.show ("Show ::  EnumPure "^(Var.toString vi));        
-                Message.show ("Show ::  Delta "^(Predicate.toString delta));        
+                 Message.show ("Show ::  Delta "^(Predicate.toString delta));        
                 
 
                 (*substitute, bound variables in both with the argument variable*)
@@ -160,10 +163,14 @@ let enumPureE explored gamma sigma delta (spec : RefTy.t) : Syn.typedMonExp opti
                 let vc = VC.fromTypeCheck gamma [delta] (rti_bound_vi, spec_bound_vi) in 
                 (*make a direct call to the SMT solver*)
                 let vcStandard = VC.standardize vc in 
+                Message.show ("standardized VC "^(VC.string_for_vc_stt vcStandard));
                 let result = VCE.discharge vcStandard  in 
                 match result with 
                 | VCE.Success -> Some {expMon = (Syn.Evar (vi)) ; ofType = rti}
-                | VCE.Failure -> verifyFound xs
+                | VCE.Failure -> 
+
+                        Message.show ("FaiLED NOW ");
+                        verifyFound xs
                 | VCE.Undef -> None  
                 
          in 
@@ -1060,10 +1067,24 @@ let rec esynthesizePureApp gamma sigma delta specs_path : Syn.typedMonExp option
                         
                                     choice xs gamma sigma delta 
                             | Some es -> 
+                                Message.show (" Show *************** Successfully Synthesize Args ei ");
+                        
                                 let monExps_es = List.map (fun ei -> ei.expMon) es in 
                                 let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
-                                Some {expMon= appliedMonExp; ofType=spec}                                  
-                                  
+                                
+                                let funAppType =  SynTC.typecheck gamma sigma delta appliedMonExp spec in 
+
+                                match funAppType with 
+                                 | Some type4AppliedMonExp -> 
+                                         Message.show (" Show *************** TypeChecking Succsessful "^(RefTy.toString type4AppliedMonExp));
+                               
+                                        (*
+                                        TODO :: resolved
+                                         Check the type of the synthesized Exp
+                                         The Pure-Fun-App rule of synthesis
+                                        *)
+                                    Some {expMon= appliedMonExp; ofType=type4AppliedMonExp}                                  
+                                | None -> choice xs gamma sigma delta  
 
                         ) (*END1*)  
                      | _ -> raise (SynthesisException  "Illegeal choice for Pure Application")   
@@ -1177,6 +1198,8 @@ and esynthesizeScalar gamma sigma delta specs_path  : Syn.typedMonExp option  =
           Message.show ("Show :: esynthesizeScalar for "^(RefTy.toString leaf_spec)); 
     
          let foundbyEnum = enumPureE explored gamma sigma delta leaf_spec in 
+         
+         
          match foundbyEnum with 
            | Some t -> 
                       Message.show ("Show :: Found Scalar "^(Syn.typedMonExp_toString t)); 
@@ -1216,7 +1239,8 @@ and  esynthesizeRet gamma sigma spec : (Syn.typedMonExp option)=
 
 
 
-(* TODO :: First implement a special rule for list, then generalize it to ant algebraic type, say tree*)
+(* TODO :: 
+    This is a first implementation  of a special rule for list, then generalize it to any algebraic type, say tree*)
 and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option = 
     Message.show ("Show :: Synthesize Match "^(RefTy.toString spec));
     let (matchingArg, matchingArgType) = argToMatch in 
@@ -1282,15 +1306,203 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
          
     | _ ->   
         Message.show "Show :: Non List Case";
-        synthesize gamma sigma delta spec learnConst !bidirectional !maxPathLength
+        None
+       (*  synthesize gamma sigma delta spec learnConst !bidirectional !maxPathLength
+   *)
   
+ and isynthesizeIf gamma sigma delta spec : Syn.typedMonExp option = 
+    Message.show ("Show ::::::::::::::: iSynthesize If THEN ELSE "^(RefTy.toString spec));
+    
   
 
+    (*val createGammai Gamma, t : (Gamma *ptrue * pfalse)*)
+    let createGammai gamma t  = 
+        match t with 
+            | RefTy.Base (vn, _, pn) ->
+
+                        (*create a new var newvar for vn.
+                        generate truepredicate [newvar/vn]pn /\ [newvar = true]
+                        generate falsepredicate [newvar/vn]pn /\ [newvar = false]
+                        add newvar to Gamma
+                        
+                        *)    
+                        let newvar = Var.get_fresh_var "v" in 
+                        let newvarString =Var.toString newvar in 
+                        let truep = Predicate.Conj (Predicate.Base (BP.Eq (BP.Var newvarString, (BP.Bool true))), 
+                                        Predicate.applySubst (newvar, vn) pn) in 
+                        let falsep = Predicate.Conj(Predicate.Base (BP.Eq (BP.Var newvarString, (BP.Bool false))), 
+                                        Predicate.applySubst (newvar, vn) pn) in 
+                        let gamma = VC.extend_gamma (newvar, t) gamma  in 
+                        (gamma, truep, falsep)
+                        
+
+            
+             | MArrow (_, _, (vn, tn), postBool) -> 
+                        let Predicate.Forall (bvs, predBool) = postBool in     
+                        Message.show ("RefTy "^(RefTy.toString t));
+                        Message.show ("Post "^(Predicate.toString postBool));
+                        let newvar = Var.get_fresh_var "v" in 
+                        let newvarString =Var.toString newvar in 
+                       
+                        let truep = Predicate.Conj (Predicate.Base (BP.Eq (BP.Var newvarString, (BP.Bool true))), 
+                                       Predicate.applySubst (newvar, vn) predBool) in 
+                        let falsep = Predicate.Conj(Predicate.Base (BP.Eq (BP.Var newvarString, (BP.Bool false))), 
+                                        Predicate.applySubst (newvar, vn)  predBool) in 
+                        let gamma = VC.extend_gamma (newvar, tn) gamma  in 
+                      
+                        (gamma, truep, falsep)
+                        
+                       
+                                    
+             | _ -> raise (SynthesisException "Case must be handled in Pure Effect");   
+
+    in          
+
+
+
+    (*synthesize a boolean / rather we need to synthesize all the booleans*) 
+    let v = Var.get_fresh_var "v" in 
+    let boolSpec = RefTy.Base (v, 
+                                TyD.Ty_bool, 
+                                Predicate.True) in 
+    Message.show ("Show :: iSynthesize Boolean "^(RefTy.toString boolSpec));
+    
+    let bi = esynthesizeScalar gamma sigma delta [boolSpec] in 
+    match bi with 
+        | Some eb ->
+              (*get the predicate \phi in the If-rule for synthesis*)   
+             (*either a fun-application or *)
+             let eb_expmon = eb.expMon in  
+             (*type for the eb_expmon*)
+             let eb_type = eb.ofType in 
+             let refTy4bi = eb_type in 
+             Message.show ("Show :: iSynthesize Boolean Successful "^(Syn.monExp_toString eb_expmon));
+             Message.show ("Show :: iSynthesize Boolean Successful "^(RefTy.toString eb_type));
+            (*create true predicate = \phi /\ [v= true] & false predicate = \phi /\ [v=false]*)
+             let (gamma, true_pred4bi, false_pred4bi) = createGammai gamma refTy4bi in 
+             let delta_true 
+              = Predicate.Conj (delta, true_pred4bi) in 
+             Message.show ("Show :: Synthesizing the true branch");
+             Message.show ("Show :: True Predicate "^(Predicate.toString true_pred4bi));
+
+           
+             (*\Gamma, [v=true]\phi |- spec ~~~> t_true*)
+                      
+             let t_true = synthesize gamma sigma delta_true spec learnConst !bidirectional !maxPathLength in 
+             
+
+            (match t_true with 
+                | Some exp_true -> 
+                      Message.show ("Show :: Successfully Synthesisized the True Branch Now Trying False Branch");
+                      let delta_false = Predicate.Conj (delta, false_pred4bi) in 
+                      (*\Gamma, [v=false]\phi |- spec ~~~> t_false*)
+                       Message.show ("Show :: Synthesizing the false branch");
+                       Message.show ("Show :: False Predicate "^(Predicate.toString false_pred4bi));
+             
+
+                      let t_false = synthesize gamma sigma delta_false spec learnConst !bidirectional !maxPathLength in 
+                      (match (t_false) with 
+                       | (Some exp_false)-> 
+                              Message.show ("Show :: Successfully Synthesisized False Branch ");
+                              let monexp_t_true = exp_true.expMon in 
+                              let monexp_t_false = exp_false.expMon in 
+                              let eite_exp = Syn.Eite (eb_expmon, monexp_t_true, monexp_t_false) in 
+                              Some {Syn.expMon = eite_exp; Syn.ofType = spec} 
+                        | None ->
+                                Message.show ("Show :: Failed Synthesis False Branch ");
+                                None
+                       ) 
+                 | None -> 
+                            Message.show ("Show :: Failed Synthesis True Branch");
+                            None 
+            )           
+        | None -> 
+                Message.show (" Failed to find a Pure Boolean Function App, Now looking for Effectful Bool Function");
+                
+                let bv_h = Var.get_fresh_var "h" in 
+                let bv_h' = Var.get_fresh_var "h'" in 
+                
+                let pre = Predicate.Forall ([bv_h, Ty_heap], Predicate.True) in 
+                let post = Predicate.Forall ([(bv_h, Ty_heap);(v, TyD.Ty_bool);(bv_h', Ty_heap)], Predicate.True) in 
+          
+                let effBoolSpec = RefTy.MArrow (Effect.State, pre, (v, boolSpec), post) in  
+                Message.show (" Type Constructed "^(RefTy.toString effBoolSpec)); 
+                (*It returns a term of the form Eapp f ai >>= eskip*)
+                let boolArgs = synthesize gamma sigma delta effBoolSpec learnConst false !maxPathLength in  
+
+                match boolArgs with 
+                    | None -> 
+                           Message.show ("Show :: Failed EffBool"); 
+                           None
+                    | Some eb -> 
+                            Message.show ("Show Successful EffBool");
+                            Message.show ("result Type "^(Syn.typedMonExp_toString eb));
+                                              
+                            let eb_expmon = eb.expMon in 
+                            match eb_expmon with 
+                                (*Extract the Type of the boolean valued call*)
+                                | Ebind (bv, fappExp, _)  ->
+                                    let Eapp (funVar, argslist) = fappExp in 
+                                    (*get the type of the function from the Gamma*)
+                                    let Evar fbool = funVar in 
+                                    let fboolType =
+                                            try 
+                                                Gamma.find gamma fbool
+                                            with 
+                                             | e -> raise (SynthesisException "DEAD CODE")
+                                    in 
+                                    let uncurriedFBoolType = RefTy.uncurry_Arrow fboolType in 
+                                    let RefTy.Uncurried (_, resRefTy4b) = uncurriedFBoolType in 
+                                    
+                                    let (gamma, true_pred4bi, false_pred4bi) = createGammai gamma resRefTy4b in 
+                                    let delta_true = Predicate.Conj (delta, true_pred4bi) in 
+                                    Message.show ("Show :: IF/ELSE Branch Synthesis in Gamma_i");
+                                         
+                                    (*\Gamma, [v=true]\phi |- spec ~~~> t_true*)
+                                    (*The general case will be for effectful functions 
+                                            \Gamma |- SP (Pre, f i ) v : t spec.post ----> t_true*)
+ (*                                                    let uncurriedspec =  RefTy.uncurry_Arrow spec in 
+  let RefTy.Uncurried (_, retty) = uncurriedspec in 
+  let RefTy.MArrow (_,pre, (_,_),post) = retty in 
+ *)
+                                  
+                                    let (_,_,_,sp_pre_AppFbool) = SynTC.typeForPath PTypeMap.empty gamma sigma delta spec [Edo (bv, fappExp)] in 
+
+
+
+                                    Message.show ("Show :: SP (Pre, eb"^(RefTy.toString sp_pre_AppFbool));
+
+                                    let t_true = synthesize gamma sigma delta_true spec learnConst !bidirectional !maxPathLength in 
+                                    match t_true with 
+                                        | Some exp_true -> 
+                                              Message.show ("Show :: Successfully Synthesisized the True Branch Now Trying False Branch");
+                                              let delta_false = Predicate.Conj (delta, false_pred4bi) in 
+                                              (*\Gamma, [v=false]\phi |- spec ~~~> t_false*)
+                                              let t_false = synthesize gamma sigma delta_false spec learnConst !bidirectional !maxPathLength in 
+                                              (match (t_false) with 
+                                               | (Some exp_false)-> 
+                                                      Message.show ("Show :: Successfully Synthesisized False Branch ");
+                                                      let monexp_t_true = exp_true.expMon in 
+                                                      let monexp_t_false = exp_false.expMon in 
+                                                      let eite_exp = Syn.Eite (eb_expmon, monexp_t_true, monexp_t_false) in 
+                                                      Some {Syn.expMon = eite_exp; Syn.ofType = spec} 
+                                                | None ->
+                                                        Message.show ("Show :: Failed Synthesis False Branch ");
+                                                        None
+                                               ) 
+                                         | None -> 
+                                                    Message.show ("Show :: Failed Synthesis True Branch");
+                                                    None 
+                                    
+
+                                | _ -> raise (SynthesisException "The bool Valued Call should be a f i >>= skip");
+                           
+                        
                                     
 
 
 (*Top level syntheis goals for Lambda, same as the traditional syntehsis rules
-calls the top-level macthing and application followed by the standard learning based rule *)
+calls the top-level macthing and application followed by if-rule and then the standard learning based rule *)
 and isynthesizeFun gamma sigma delta spec : Syn.typedMonExp option= 
   (*TODO unhandled case of isynthesize*)   
   let uncurried_spec = RefTy.uncurry_Arrow spec in 
@@ -1302,21 +1514,25 @@ and isynthesizeFun gamma sigma delta spec : Syn.typedMonExp option=
   (*ASSUMPTION, the argumnet to deconstruct will be at the head*)
   let argToMatch = List.hd (fargs_type_list) in 
   (*Given disjunctions in the spec we can directly try match*)
-  Message.show ("Show Trying :: Non-Match case"); 
-        (*TODO *make a call to conditional case*)
-  let simple_exp = synthesize gamma_extended sigma delta retT learnConst !bidirectional !maxPathLength in 
-  
-       
-
-  match simple_exp with 
-    | Some e ->
-            Message.show ("Show Found a Non-Match solution"); 
-  
-            Some e
-    | None ->
-          Message.show ("Show Non-Match case failed :: Try Match"); 
-          let match_expression = isynthesizeMatch gamma_extended sigma delta argToMatch retT in 
-          match_expression
+  Message.show ("Show Trying :: Top-level Match"); 
+  let match_expression = isynthesizeMatch gamma_extended sigma delta argToMatch retT in 
+  match match_expression with 
+    | Some e_match -> 
+       Message.show ("EXPLORED :: Show Found Match match x with ... solution"); 
+       Some e_match
+    | None -> 
+         Message.show ("Show ::::::::: Match-case failed :: Try Top-level If then else "); 
+         let if_exp = isynthesizeIf gamma_extended sigma delta retT in 
+         match if_exp with 
+            | Some e ->
+                Message.show ("Show ::::::: Found a If Then Else solution"); 
+                Some e
+            | None ->
+                Message.show ("Show ::::::: If then esle Failed :: Try CDCL without subdivision"); 
+                synthesize gamma_extended sigma delta retT learnConst !bidirectional !maxPathLength 
+              
+     
+               
         
 (*enumerates and finds function term variable of functional type*)
 and esynthesizeFun explored gamma sigma delta spec : Syn.typedMonExp option = 
@@ -1748,7 +1964,13 @@ else
                             let monExpForComp = Syn.Evar vi in     
                             let boundVar = Var.get_fresh_var "bound" in 
                             let bound = Syn.Evar (boundVar) in 
-                            let doExpForComp = Syn.Edo (bound, monExpForComp) in 
+                            let argsMonExps = [] in 
+                            let appliedMonExp = Syn.Eapp (monExpForComp, argsMonExps) in  (*apply vi ()*)
+                               
+
+(*                             let doExpForComp = Syn.Edo (bound, monExpForComp) in 
+ *)                            
+                            let doExpForComp = Syn.Edo (bound, appliedMonExp) in 
                                    
                             let hSat = satHypothesis path hypothesis  in 
                             if (hSat = false) then 
@@ -2224,7 +2446,7 @@ and bottomUpChoose
                 (pre:Predicate.t) 
                 (post:Predicate.t) : (PWPMap.t * WPP2CMap.t * DPred.gammaCap * Predicate.t * Syn.path * wpresult)  = 
     
-    Message.show ("Show :: EXPLORED :: WP :: PATH "^(Syn.pathToString path));
+    Message.show ("Show :: BW-CHOOSE :: WP :: PATH "^(Syn.pathToString path));
     let gammacap = DPred.T{gamma=gammaMap;sigma=sigmaMap;delta=deltaPred} in 
     
     (*recursive loop, used by both paths with holes and without holes*)            
@@ -2250,8 +2472,9 @@ and bottomUpChoose
                 (path2wpMap, path2visitedMap, gammacap, post, prefixPath@[hole]@suffixPath, Break)
         | (vi, rti) :: xs -> 
             
-            Message.show (" WPPathChildrenMap "^(WPP2CMap.toString path2visitedMap)); 
-            let visited4Suffix = 
+            (* Message.show (" WPPathChildrenMap "^(WPP2CMap.toString path2visitedMap)); 
+             *)
+             let visited4Suffix = 
                     try
                      WPP2CMap.find path2visitedMap suffixPath 
                     with 
@@ -2283,7 +2506,6 @@ and bottomUpChoose
                         wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred xs prefixPath holeVar holeType suffixPath pre post
                     else    
                         let () = Message.show (" Show *************** WP : Matching Return Type "^(TyD.toString holeBaseType)) in 
-                       
                         let () = Message.show (" Show *************** WP : Synthesizing Args ei : ti for ************"^(Var.toString vi)) in 
                         
                         (*TODO create a unit test for this*)
@@ -2306,6 +2528,14 @@ and bottomUpChoose
                                                 | Some ei -> 
                                                           let ei_monExp = ei.expMon in 
                                                           let Syn.Evar xi = ei_monExp in 
+                                                          let Syn.Evar xhole = holeVar in 
+                                                          (*do not select the same argument*)
+                                                          if (Var.equal xi xhole) then 
+                                                            (bindingsAcc,
+                                                                substAcc, 
+                                                                holesAcc)
+
+                                                          else
                                                           ( bindingsAcc@[(xi, ti)],
                                                             substAcc@[(
                                                                     (xi, base_ti), 
@@ -2317,56 +2547,59 @@ and bottomUpChoose
                                                       ) ([],[],[]) args_ty_list 
 
                         in 
+                        if (not (List.length args_ty_list == List.length newbindings)) then 
+                            let () = Message.show (" &&&&& No Argument Found Skipping ") in 
+                            wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred xs prefixPath holeVar holeType suffixPath pre post 
+                            
+                        else    
+                            (*No WP CHecks required , directly creaate a pure App*)
+                            let actualArgs = List.map (fun (vi,ti) -> Syn.Evar vi) newbindings in 
+                            let appliedMonExp = Syn.Edo (   holeVar,
+                                                            Syn.Eapp (Syn.Evar vi, actualArgs)) in  (*apply vi e_arg*)
+                            let synthesized_partial = holes@[appliedMonExp] in 
+                            let updatedPath = prefixPath@synthesized_partial@suffixPath in 
+                            
 
+                            (*The holesVar -> Type match must be made visible in the environment*)
+                            let gammaMap  = DPred.getGamma gammacap in 
+                            let gammaMap = List.fold_left (fun _gamma holei ->
+                                                           let Syn.Edo (evar, ehole) = holei in 
+                                                           let Syn.Evar hole_vi = evar in 
+                                                           let Syn.Ehole hole_ti = ehole in 
+                                                           VC.extend_gamma (hole_vi, hole_ti) _gamma) gammaMap holes in 
 
-                        (*No WP CHecks required , directly creaate a pure App*)
-                        let actualArgs = List.map (fun (vi,ti) -> Syn.Evar vi) newbindings in 
-                        let appliedMonExp = Syn.Edo (   holeVar,
-                                                        Syn.Eapp (Syn.Evar vi, actualArgs)) in  (*apply vi e_arg*)
-                        let synthesized_partial = holes@[appliedMonExp] in 
-                        let updatedPath = prefixPath@synthesized_partial@suffixPath in 
-                        
-
-                        (*The holesVar -> Type match must be made visible in the environment*)
-                        let gammaMap  = DPred.getGamma gammacap in 
-                        let gammaMap = List.fold_left (fun _gamma holei ->
-                                                       let Syn.Edo (evar, ehole) = holei in 
-                                                       let Syn.Evar hole_vi = evar in 
-                                                       let Syn.Ehole hole_ti = ehole in 
-                                                       VC.extend_gamma (hole_vi, hole_ti) _gamma) gammaMap holes in 
-
-                        let gammacap = DPred.updateGamma gammacap gammaMap in 
-
-
-
-                        (*The Post Spec remains the same*)
-                        
+                            let gammacap = DPred.updateGamma gammacap gammaMap in 
 
 
 
-                        let () = Message.show (" Show *************** WP : UPDATED PATH "^(Syn.pathToString updatedPath)) in 
-                        
-                        (*Calculate post/fun return type see rule for bind-backward
-                         for simple expamples this will work just replacing the return type,
-                        but for more complex Post. just replacing the variable type may makes the 
-                        Post invalid, 
-                        E.g. v : pair .Q = Mem (res) /\ fst (v) > 0
-                        changing v to Top . will make the fst(v) > 0 as invalid
-
-                        .*)    
-                        let new_retType = TyD.Ty_unknown in 
-                        let new_retVar = Var.get_fresh_var "v" in 
-
-                        let new_retBind = (new_retVar, new_retType)  in 
-                        let new_post = VC.substi post (new_retBind) 2 in 
-                        Message.show (" Show :: WP :: NEW POST "^(Predicate.toString new_post));
-                        (* TODO :: add to visited and path2WP maps*)
-
-                        let path2wpMap =  PWPMap.add path2wpMap updatedPath new_post in 
-                        let path2visitedMap = WPP2CMap.replace path2visitedMap suffixPath (vi :: visited4Suffix) in 
+                            (*The Post Spec remains the same*)
+                            
 
 
-                        (path2wpMap, path2visitedMap, gammacap, new_post, updatedPath, Continue)            
+
+                            let () = Message.show (" Show *************** WP : UPDATED PATH "^(Syn.pathToString updatedPath)) in 
+                            
+                            (*Calculate post/fun return type see rule for bind-backward
+                             for simple expamples this will work just replacing the return type,
+                            but for more complex Post. just replacing the variable type may makes the 
+                            Post invalid, 
+                            E.g. v : pair .Q = Mem (res) /\ fst (v) > 0
+                            changing v to Top . will make the fst(v) > 0 as invalid
+
+                            .*)    
+                            let new_retType = TyD.Ty_unknown in 
+                            let new_retVar = Var.get_fresh_var "v" in 
+
+                            let new_retBind = (new_retVar, new_retType)  in 
+                            let new_post = VC.substi post (new_retBind) 2 in 
+                            Message.show (" Show :: WP :: NEW POST "^(Predicate.toString new_post));
+                            (* TODO :: add to visited and path2WP maps*)
+
+                            let path2wpMap =  PWPMap.add path2wpMap updatedPath new_post in 
+                            let path2visitedMap = WPP2CMap.replace path2visitedMap suffixPath (vi :: visited4Suffix) in 
+
+
+                            (path2wpMap, path2visitedMap, gammacap, new_post, updatedPath, Continue)            
 
                  | RefTy.MArrow (effret, preRet, (vret, retbt), postRet) -> 
                     Message.show (" Show *************** WP : Arrow Component ************"^(Var.toString vi));
@@ -2389,7 +2622,6 @@ and bottomUpChoose
                         (*Currently the argument is always a scalar/Base Refinement*)
                         let () = Message.show (" Show *************** WP : Synthesizing Args ei : ti for ************"^(Var.toString vi)) in 
                         
-                        (*TODO create a unit test for this*)
                         (*create holes if required and 
                             (actual*Tyd)/(foraml*Tyd) subst for the arguments*)
                         let (newbindings, subst, holes) = List.fold_left 
@@ -2400,16 +2632,25 @@ and bottomUpChoose
                                             let boundVari = Var.get_fresh_var argi in 
                                             match actualArgi with 
                                                 | None ->  
-                                                          ( bindingsAcc@[boundVari, ti],
-                                                            substAcc@[((boundVari, base_ti), 
+                                                          (bindingsAcc@[boundVari, ti],
+                                                           substAcc@[((boundVari, base_ti), 
                                                                             (argi, base_ti))], 
-                                                                holesAcc@[(Syn.Edo (Syn.Evar (boundVari), 
+                                                            holesAcc@[(Syn.Edo (Syn.Evar (boundVari), 
                                                                                     Syn.Ehole ti))
                                                                         ])  
                                                 | Some ei -> 
+                                                          
                                                           let ei_monExp = ei.expMon in 
                                                           let Syn.Evar xi = ei_monExp in 
-                                                          ( bindingsAcc@[(xi, ti)],
+                                                          let Syn.Evar xhole = holeVar in 
+                                                          (*Hack :: do not select the same argument as the holed variable*)
+                                                          if (Var.equal xi xhole) then 
+                                                            (bindingsAcc,
+                                                                substAcc, 
+                                                                holesAcc)
+
+                                                          else  
+                                                            (bindingsAcc@[(xi, ti)],
                                                             substAcc@[(
                                                                     (xi, base_ti), 
                                                                     (argi, base_ti)
@@ -2421,70 +2662,64 @@ and bottomUpChoose
 
                         in 
 
-                        
-                      
-                        (*create the wp*) 
-                        (*either a Pure function or an effectful arrow component*)    
-                       (*  match retty with 
-                            | RefTy.Base (vret, tret, pred) -> 
-                                raise (SynthesisException "Unhandled WP CHOOSE");
-                                (*Simpler Case, can always be called*)
-                            | RefTy.MArrow (effret, preRet, (vret, tret), postRet) ->
-                        *)         
-                        let () = Message.show (" Show *************** WP : Generating WP for Effectful Ci "^(Var.toString vi)) in 
-                        (*Case which checks the dual of the forward condition*)
-                        (*\Gamma |- wp (vi, post*)    
-                        let (gammaMap, wp_vi_post) = 
-                                (*WP :: given Post, preRet, postRet, actualArgi*)
-                                createWP gammaMap retty post subst  in 
+                        if (not (List.length args_ty_list == List.length newbindings)) then 
+                            let () = Message.show (" &&&&& "^(string_of_int (List.length args_ty_list))^ "!= "^(string_of_int (List.length newbindings))) in 
+                            wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred xs prefixPath holeVar holeType suffixPath pre post 
+                        else         
+                            let () = Message.show (" Show *************** WP : Generating WP for Effectful Ci "^(Var.toString vi)) in 
+                            (*Case which checks the dual of the forward condition*)
+                            (*\Gamma |- wp (vi, post*)    
+                            let (gammaMap, wp_vi_post) = 
+                                    (*WP :: given Post, preRet, postRet, actualArgi*)
+                                    createWP gammaMap retty post subst  in 
 
-                        let extended_gammaMap = (*EXTEND GAMMA WITH new bindings*)
-                                    List.fold_left (fun _g (vi, ti) -> 
-                                         VC.extend_gamma (vi, ti) _g) gammaMap newbindings in 
-                        let gammacap = DPred.updateGamma gammacap extended_gammaMap in 
-                                   
-                        let (wpCheck) = 
-                             wpPreCheck extended_gammaMap sigmaMap deltaPred wp_vi_post  in
-                           
-                        let actualArgs = List.map (fun (vi,ti) -> Syn.Evar vi) newbindings in 
-                                         
-                        match wpCheck with 
-                            | Break -> 
-                                    Message.show (" Show *************** WP : Break WP_Check Failed for Ci "^(Var.toString vi));
-                                    wp_choose path2wpMap 
-                                                path2visitedMap 
-                                                    gammaMap 
-                                                        sigmaMap 
-                                                            deltaPred xs prefixPath holeVar holeType suffixPath pre post
-                            | Continue -> (*Ci is a correct wp choice*)
-                                    Message.show (" Show *************** WP : Continue  Ci "^(Var.toString vi));
-                                    let appliedMonExp = Syn.Edo ( holeVar,
-                                                                    Syn.Eapp (Syn.Evar vi, actualArgs)) in 
-                                    Message.show ("Show WP :: HOles "^(Syn.pathToString actualArgs));
-                                    (*The current component is successfully chosen*)
-                                    
-                                    let synthesized_partial = holes@[appliedMonExp] in 
-                                    let updatedPath = prefixPath@synthesized_partial@suffixPath in 
-                                    (*call using an updated gamma, where the holeVar is not available*)
-                                    let Syn.Evar holeVarPlain = holeVar in 
-                                    let gammaMap = DPred.getGamma gammacap in 
-                                    let gammaMap = Gamma.remove gammaMap holeVarPlain  in 
-                                    let gammacap = DPred.updateGamma gammacap gammaMap in 
-                                    (*add to path2wp and visited map*)
-                                    let path2wpMap =  PWPMap.add path2wpMap updatedPath wp_vi_post in 
-                                    let path2visitedMap = WPP2CMap.replace path2visitedMap suffixPath (vi :: visited4Suffix) in 
+                            let extended_gammaMap = (*EXTEND GAMMA WITH new bindings*)
+                                        List.fold_left (fun _g (vi, ti) -> 
+                                             VC.extend_gamma (vi, ti) _g) gammaMap newbindings in 
+                            let gammacap = DPred.updateGamma gammacap extended_gammaMap in 
+                                       
+                            let (wpCheck) = 
+                                 wpPreCheck extended_gammaMap sigmaMap deltaPred wp_vi_post  in
+                               
+                            let actualArgs = List.map (fun (vi,ti) -> Syn.Evar vi) newbindings in 
+                                             
+                            match wpCheck with 
+                                | Break -> 
+                                        Message.show (" Show *************** WP : Break WP_Check Failed for Ci "^(Var.toString vi));
+                                        wp_choose path2wpMap 
+                                                    path2visitedMap 
+                                                        gammaMap 
+                                                            sigmaMap 
+                                                                deltaPred xs prefixPath holeVar holeType suffixPath pre post
+                                | Continue -> (*Ci is a correct wp choice*)
+                                        Message.show (" Show *************** WP : Continue  Ci "^(Var.toString vi));
+                                        let appliedMonExp = Syn.Edo ( holeVar,
+                                                                        Syn.Eapp (Syn.Evar vi, actualArgs)) in 
+                                        Message.show ("Show WP :: HOles "^(Syn.pathToString actualArgs));
+                                        (*The current component is successfully chosen*)
+                                        
+                                        let synthesized_partial = holes@[appliedMonExp] in 
+                                        let updatedPath = prefixPath@synthesized_partial@suffixPath in 
+                                        (*call using an updated gamma, where the holeVar is not available*)
+                                        let Syn.Evar holeVarPlain = holeVar in 
+                                        let gammaMap = DPred.getGamma gammacap in 
+                                        let gammaMap = Gamma.remove gammaMap holeVarPlain  in 
+                                        let gammacap = DPred.updateGamma gammacap gammaMap in 
+                                        (*add to path2wp and visited map*)
+                                        let path2wpMap =  PWPMap.add path2wpMap updatedPath wp_vi_post in 
+                                        let path2visitedMap = WPP2CMap.replace path2visitedMap suffixPath (vi :: visited4Suffix) in 
 
-                                    (path2wpMap, path2visitedMap, gammacap, wp_vi_post, updatedPath, Continue)
-                            | Flip -> 
-                                    Message.show (" Show *************** WP : Flip  Ci "^(Var.toString vi));
-                                                        
-                                    let appliedMonExp = Syn.Eapp (Syn.Evar vi, actualArgs) in 
-                                    let synthesized_partial = holes@[appliedMonExp] in 
-                                    let updatedPath = prefixPath@synthesized_partial@suffixPath in 
-                                    let path2wpMap =  PWPMap.add path2wpMap updatedPath wp_vi_post in 
-                                                                            
-                                    
-                                    (path2wpMap, path2visitedMap, gammacap, wp_vi_post, updatedPath, Flip)
+                                        (path2wpMap, path2visitedMap, gammacap, wp_vi_post, updatedPath, Continue)
+                                | Flip -> 
+                                        Message.show (" Show *************** WP : Flip  Ci "^(Var.toString vi));
+                                                            
+                                        let appliedMonExp = Syn.Eapp (Syn.Evar vi, actualArgs) in 
+                                        let synthesized_partial = holes@[appliedMonExp] in 
+                                        let updatedPath = prefixPath@synthesized_partial@suffixPath in 
+                                        let path2wpMap =  PWPMap.add path2wpMap updatedPath wp_vi_post in 
+                                                                                
+                                        
+                                        (path2wpMap, path2visitedMap, gammacap, wp_vi_post, updatedPath, Flip)
         in 
                 
 

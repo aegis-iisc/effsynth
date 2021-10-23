@@ -4,33 +4,14 @@ Tbl :  [int];
 num : ref int;
 
 
-mem : (s  : { v : int | true}) -> 
-			(t : {v : tbl | true}) ->  
-			State  
-			{\(h : heap). true} 
-			v : { v : bool | true} 
-			
-			{\(h : heap), (v : bool), (h' : heap). 
+mem : (s  : { v : int | true}) ->  { v : bool | \(h : heap), (v : bool), (h' : heap). 
 				\(Tbl' : [int]), (Tbl: [int]).
 				ilssel (h', tbl) = Tbl'/\
 				ilssel (h, tbl) = Tbl /\
 				Tbl' = Tbl /\
 				([v=true] <=> ( mem(Tbl', s) = true))/\ 
-				([v=false] <=> (mem (Tbl', s) = false))};
-
-
-mem : (s  : { v : int | true}) -> State  
-			{\(h : heap). true} 
-			v : { v : bool | true} 
-			
-			{\(h : heap), (v : bool), (h' : heap). 
-				\(Tbl' : [int]), (Tbl: [int]).
-				ilssel (h', tbl) = Tbl'/\
-				ilssel (h, tbl) = Tbl /\
-				Tbl' = Tbl /\
-				([v=true] <=> ( mem(Tbl', s) = true))/\ 
-				([v=false] <=> (mem (Tbl', s) = false))};
-
+				([v=false] <=> (mem (Tbl', s) = false))
+				};
 
 
 fresh_str : State 
@@ -87,14 +68,6 @@ goal : (s : {v : int | true}) ->
 				ilssel (h', tbl) = Tbl')   
 				=> 
 				(mem (Tbl', s) = true /\
-				size (Tbl') == size (Tbl) + 2) 
+				size (Tbl') == size (Tbl) + 1) 
 				
 			};
-
-(*This example shows a bug, showing that the add s and goal s both have s and they get captured
-This requires us to update the function application rule for synthesis following directly from the 
-wp and sp logic for procedures
-
-
-Now we should build a forward algorithm with does a BFS rather than the current DFS 
-*)

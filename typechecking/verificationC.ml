@@ -389,8 +389,8 @@ T (List.concat [(havocGamma _g);_gfrom_ante;_gfrom_cons], standard_ante, standar
 (*Computation subtyping= This is where we also elaborate from Predicates to VC.VC*)
 let trans_subtyping ({gamma;preds} as env : pc) (annotated : RefTy.t) (inferred:RefTy.t) : t = 
  
- let () = Printf.printf "%s" (">>>>>>>>Annot Type<<<<<<<<<< "^(RefTy.toString annotated)) in 
-let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toString inferred)) in 
+let () = Printf.printf "%s" ("\n >>>>>>>>>>>Annot Type<<<<<<<<<<<<<<<< "^(RefTy.toString annotated)) in 
+let () = Printf.printf "%s" ("\n >>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toString inferred)) in 
   match (inferred , annotated) with
         (Base (v1, bt1, p1), Base (v2, bt2, p2))  -> raise (Error "Unimplemented subtyping") 
        | (Arrow ( t1, t1'), Arrow (t2, t2'))  ->  raise (Error "Unimplemented subtyping") 
@@ -415,10 +415,8 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
                 let temp_h = Var.get_fresh_var "_temp_h" in 
                 let temp_v = Var.get_fresh_var "_temp_v" in 
                 let temp_h' = Var.get_fresh_var "_temp_h'" in 
-                let temp_v_err = Var.get_fresh_var "_temp_v_err" in 
-                let t_err = TyD.fromString "error" in 
                 (*new int heap variable*)
-                let fresh_bvs = [(temp_h, TyD.Ty_heap);(temp_v, RefTy.toTyD t2);(temp_h', TyD.Ty_heap);(temp_v_err, t_err)] in 
+                let fresh_bvs = [(temp_h, TyD.Ty_heap);(temp_v, RefTy.toTyD t2);(temp_h', TyD.Ty_heap)] in 
                 (*_Gamma_ext, add to Gamma whenever existential*)
                 let fresh_bvs_for_gamma = List.map (fun (v, t) -> (v, RefTy.lift_base t)) fresh_bvs in
                 let gamma = List.fold_left (fun _g  (v,t) -> extend_gamma (v,t) _g) gamma fresh_bvs_for_gamma in 
@@ -439,75 +437,40 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
 
 
 
-                (*TODO Work on this one*) 
+                (*Post1 => pre2*) 
                 let phi_annot_imp_pre = P.If (p2_temp, p1_temp) in 
+        
+
+          
+                let () = Printf.printf "%s" ("\n Case Non-Exceptional: Original Inferred post "^P.toString p1') in 
+                let t1_tyd = RefTy.toTyD t1 in 
+                let t2_tyd = RefTy.toTyD t2 in 
                 
+                let p1'_temp = apply p1' [(temp_h, TyD.Ty_heap);(temp_v, t1_tyd);(temp_h', TyD.Ty_heap)] in 
 
-                if ( TyD.sametype (RefTy.toTyD t1) t_err) then 
-                  (*    let () = Printf.printf "%s" ("\n Case : Exceptional : Original Inferred post "^P.toString p1') in 
-                   *)   match eff2 with 
-                        | Effect.StExc -> 
-                             let p2'_err = (match p2' with 
-                                | P.Disj (_, p_err) -> p_err
-                                | _ -> p2') in 
+                 
+               (*@NOTE : Handling the case of Weakest-Pre acting as post*)
+               let bvs_p2' = P.getBVs p2' in 
+                let p2'_temp = 
+                    if (List.length bvs_p2' = 3) then 
+                      apply p2' [(temp_h, TyD.Ty_heap);(temp_v, t2_tyd);(temp_h', TyD.Ty_heap)] 
+                    else if (List.length bvs_p2' = 1) then 
+                       apply p2' [(temp_h', TyD.Ty_heap)]
+                    else 
+                        raise (Error "Post-condition is either of the form forall h v h'. Q | forall h' Q")     
+                in 
 
-                             let p1'_err_temp = apply p1' [(temp_h, TyD.Ty_heap);(temp_v_err, t_err);(temp_h', TyD.Ty_heap)] in 
-                           (*   let () = Printf.printf "%s" ("\n Applied Inferred post "^P.toString p1'_err_temp) in 
-                            *)     
-                                (*update the initial heap for *)
-
-                           (*      let () = Printf.printf "%s" ("\n Orginal Annotated post "^P.toString p2') in 
-                            *)     let p2'_err_temp = apply p2'_err [(temp_h, TyD.Ty_heap);(temp_v, RefTy.toTyD t2);(temp_h', TyD.Ty_heap)] in 
-
-(*                                 let () = Printf.printf "%s" ("\n Applied Annotated post "^P.toString p2'_err_temp) in 
- *)                               (*add the pre to the ante*)
-
-                               let ante_conj = P.True in 
+              
+               let ante_conj = P.True in 
 
 
-                                let phi_post_imp_anno = P.If (p1'_err_temp, p2'_err_temp)  in  
-                                let () = Printf.printf "%s" (" \n POST => ANNO \n "^(P.toString phi_post_imp_anno)) in 
-                                let ante = env.preds in  
-                                let ante_conj = P.Conj( ante_conj, pred_conjunction ante) in
-                                let vc_for_path = VC (gamma, P.Conj(ante_conj, phi_annot_imp_pre), phi_post_imp_anno) in   
-                         (*let vc_for_path = VC (gamma, ante_conj, P.Conj (phi_annot_imp_pre, phi_post_imp_anno)) in*)
-                               vc_for_path 
- 
-                        | _ -> raise (Error ("Illegal Effect Ordering StExc !< "^(Effect.toString eff2)))
-                
-                (*instantiate the bv of p1' and p2' with a set of variables. and then generate imp*)
-                 else   
-                        let () = Printf.printf "%s" ("\n Case Non-Exceptional: Original Inferred post "^P.toString p1') in 
-                        let t1_tyd = RefTy.toTyD t1 in 
-                        let t2_tyd = RefTy.toTyD t2 in 
-                        
-                        let p1'_temp = apply p1' [(temp_h, TyD.Ty_heap);(temp_v, t1_tyd);(temp_h', TyD.Ty_heap)] in 
-
-                       (*@NOTE : Handling the case of Weakest-Pre acting as post*)
-                       let bvs_p2' = P.getBVs p2' in 
-
-                        let p2'_temp = 
-                            if (List.length bvs_p2' = 3) then 
-                                apply p2' [(temp_h, TyD.Ty_heap);(temp_v, t2_tyd);(temp_h', TyD.Ty_heap)] 
-                            else if (List.length bvs_p2' = 1) then 
-                                apply p2' [(temp_h', TyD.Ty_heap)]
-                            else 
-                                raise (Error "Post-condition is either of the form forall h v h'. Q | forall h' Q")     
-                        in 
-
-                       (*  let () = Printf.printf "%s" ("\n Applied Annotated post "^P.toString p2'_temp) in 
-                        *)(*add the pre to the ante*)
-
-                       let ante_conj = P.True in 
-
-
-                        let phi_post_imp_anno = P.If (p1'_temp, p2'_temp)  in  
+                let phi_post_imp_anno = P.If (p1'_temp, p2'_temp)  in  
 (*                         let () = Printf.printf "%s" (" \n POST => ANNO_POst \n "^(P.toString phi_post_imp_anno)) in
- *)
-                       let ante = env.preds in  
-                       let ante_conj = P.Conj( ante_conj, pred_conjunction ante) in
-                       
-                       (*Gamma |- delta => Pre /\ post*)
+*)
+               let ante = env.preds in  
+               let ante_conj = P.Conj( ante_conj, pred_conjunction ante) in
+               
+               (*Gamma |- delta => Pre /\ post*)
                        
                        (* 
 
@@ -516,7 +479,7 @@ let () = Printf.printf "%s" (">>>>>>>>>>>Inferred Type<<<<<<<<<<<<< "^(RefTy.toS
                                         P.Conj (phi_annot_imp_pre, 
                                                 (P.If (p1_temp, phi_post_imp_anno)))) in    *)
                         
-                        let vc_for_path = VC (gamma, 
+                let vc_for_path = VC (gamma, 
                                              P.Conj (ante_conj, p1_temp), 
                                              phi_post_imp_anno) in                             
                        (* let vc_pre = VC (gamma, 
@@ -536,15 +499,13 @@ let rec fromTypeCheck (_gamma) _delta (subTy, supTy) =
         let env = {gamma=_gamma;preds=_delta} in 
         match (subTy, supTy) with 
         | (RefTy.Base (v1, t1, p1), RefTy.Base (v2, t2, p2)) ->
-        let () = Printf.printf "%s" ("SubTy "^(RefTy.toString subTy)) in 
-        let () = Printf.printf "%s" ("SuperTy "^(RefTy.toString supTy)) in 
-        let _ = assert (TyD.sametype t1 t2) in 
-        let p2 = P.applySubst (v1,v2) p2 in 
-        let _gamma = extend_gamma (v1, subTy) _gamma in 
-        
-        let delta_pred = Predicate.list_conjunction _delta in 
-        VC (_gamma, P.Conj(delta_pred,p1), p2) 
-
+            let () = Printf.printf "%s" ("SubTy "^(RefTy.toString subTy)) in 
+            let () = Printf.printf "%s" ("SuperTy "^(RefTy.toString supTy)) in 
+            let _ = assert (TyD.sametype t1 t2) in 
+            let p2 = P.applySubst (v1,v2) p2 in 
+            let _gamma = extend_gamma (v1, subTy) _gamma in 
+            let delta_pred = Predicate.list_conjunction _delta in 
+              VC (_gamma, P.Conj(delta_pred,p1), p2) 
         | (RefTy.MArrow (_,_,_,_), RefTy.MArrow (_,_,_,_)) ->     
             trans_subtyping env supTy subTy 
         | (_,_) -> 

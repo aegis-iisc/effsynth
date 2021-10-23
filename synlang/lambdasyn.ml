@@ -11,7 +11,7 @@ type var = Var.t
 type caseExp = {constuctor : var;
                 args : var list ;
                 exp : typedMonExp}
-
+(*terms generated will be in A-normal form*)
 and  monExp = 
         | Evar of var 
         | Elam of (typedMonExp list) * typedMonExp (*Named Lambda Elam x1 : t1, x2:t2 . body *)
@@ -24,6 +24,7 @@ and  monExp =
         | Ecapp of var * ( monExp list ) 
         | Ehole of RefTy.t(*a hole in place of an expression*)
         | Edo of monExp * monExp (*do x <- E*)
+        | Eite of (monExp * monExp * monExp)
         | Eskip   
 
 and typedMonExp = {expMon:monExp; ofType:RefTy.t }
@@ -70,6 +71,8 @@ let rec equalMonExp m1 m2 =
                 (equalMonExp bound1 bound2 && equalMonExp exp1 exp2)
         | (Ehole t1, Ehole t2) ->
                  (RefTy.compare_types t1 t2)    
+        | (Eite (b1, tr1, fl1), Eite (b2, tr2, fl2))-> 
+                equalMonExp b1 b2 && equalMonExp tr1 tr2 && equalMonExp fl1 fl2
         |  (_,_) -> false         
 
 and equalTypedMonExp tme1 tme2 = 
@@ -146,13 +149,15 @@ let rec monExp_toString (m:monExp) =
                 ("do "^(monExp_toString bound)^" <- "^(monExp_toString exp)) 
         | Eskip -> "Eskip"
         | Ehole t -> ("[?? : "^(RefTy.toString t^"]"))
+        | Eite (bi, ttr, tfl) -> 
+                ("If ("^(monExp_toString bi)^" ) then \n "^(monExp_toString ttr)^" \n else "^(monExp_toString tfl))
         | _ -> "Other expression"  
 
 
 (*We will add more auxiliary functions here as we go along synthesis*)
 and typedMonExp_toString (t:typedMonExp) : string = 
    let {expMon;ofType} = t in  
-   ("{ \n"^monExp_toString expMon^" \n }") 
+   ("{ \n"^(RefTy.toString ofType)^" \n "^monExp_toString expMon^" \n }") 
 
 and caseExp_toString (t : caseExp) : string = 
     let argsToString = List.fold_left (fun accstr argi -> (accstr^" ,"^(Var.toString argi))) " " t.args in 

@@ -1115,7 +1115,7 @@ struct
       |  NEq (e1,e2) -> NEq (f e1, f e2)
       | Q e -> Q (f e)
 
-   let applySubst subst t = exprMap t (RelLang.applySubsts ( [subst]))
+   let applySubst subst t = exprMap t (RelLang.applySubsts ([subst]))
 
    let mapTyD t f = 
       let g = RelLang.mapTyD in 
@@ -1742,11 +1742,11 @@ struct
   
   let rec applySubsts substs refty = 
 	   mapBaseTy refty (fun (bv,t,pred) ->
-	   (* if List.exists (fun(n,ol) -> 
+	    (* if List.exists (fun(n,ol) -> 
           let () = Printf.printf "%s" ("Matching Replaced "^(Var.toString ol)) in 
           varStrEq (ol,bv)) substs 
 				then  raise (RefTyEx ("Attempted substitution of bound var "))
-				else  *)(bv,t,Predicate.applySubsts substs pred))
+				else *) (bv,t,Predicate.applySubsts substs pred))
 
   let  alphaRenameToVar refty newbv = match refty with
       Base (bv,t,p) -> Base (newbv,t,
