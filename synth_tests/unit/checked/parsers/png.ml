@@ -11,6 +11,8 @@ predicate pnglen : triple :-> int
 predicate ts : triple :-> [char]
 predicate data : triple :-> [char]
 
+
+
 getFuel : (u :{ v : unit | true})  -> 
 				State {\(h : heap).true} 
 				v : { v : int | true} 

@@ -68,7 +68,7 @@ let rec equalMonExp m1 m2 =
                 (equalTypedMonExp matchingArg1 matchingArg2)  
                          
         | (Edo (bound1, exp1), Edo (bound2, exp2)) -> 
-                (equalMonExp bound1 bound2 && equalMonExp exp1 exp2)
+                (equalMonExp exp1 exp2)
         | (Ehole t1, Ehole t2) ->
                  (RefTy.compare_types t1 t2)    
         | (Eite (b1, tr1, fl1), Eite (b2, tr2, fl2))-> 
@@ -79,15 +79,7 @@ and equalTypedMonExp tme1 tme2 =
     equalMonExp tme1.expMon tme2.expMon
 
 
-        
-let equalPath p1 p2 = 
-       try 
-            List.fold_left2 (fun accBool ci cj -> 
-                accBool && equalMonExp ci cj) true p1 p2 
-       with 
-           Invalid_argument e-> false   
-
-
+   
 let rec doExp (ls : monExp list) : monExp= 
     match ls with 
         [] -> Eskip
@@ -369,3 +361,14 @@ let unifyFwBw gamma (t_fw : monExp) (hypothesis  : path) =
         let subst_path = substituteHoles subs hypothesis in 
         buildProgramTerm subst_path
 
+     
+let equalPath p1 p2 = 
+       try 
+            List.fold_left2 (fun accBool ci cj -> 
+                accBool && equalMonExp ci cj) true p1 p2 
+       with 
+           Invalid_argument e-> false   
+
+
+let pathInList p plist = 
+    List.fold_left (fun accBool pi -> (accBool)||( equalPath p pi)) false plist
