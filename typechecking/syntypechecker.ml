@@ -134,11 +134,11 @@ let mon_ret   (delta : Predicate.t)
                (*Create Bounded new type*)
                 (*no type inference so need to provide the type for the bound variable of a formula*)
                 let bv_h = Var.get_fresh_var "h" in 
-                let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in 
+                (* let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in  *)
                 let bv_v = Var.get_fresh_var "v" in 
-                let _Gamma = VC.extend_gamma (bv_v, x_ty ) _Gamma in 
+                (* let _Gamma = VC.extend_gamma (bv_v, x_ty ) _Gamma in  *)
                 let bv_h' = Var.get_fresh_var "h'" in 
-                let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in 
+                (* let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in  *)
                
                 let pre =  P.Forall ([(bv_h, Ty_heap)], P.True) in 
                 let post_conjunct1 = P.Base (BP.Eq (BP.Var bv_h, BP.Var bv_h')) in 
@@ -172,11 +172,11 @@ let mon_bind  (acc_delta : Predicate.t)
                (*Create Bounded new type*)
                 (*no type inference so need to provide the type for the bound variable of a formula*)
                 let bv_h = Var.get_fresh_var "h" in 
-                let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in 
+                (* let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in  *)
                 let bv_x = Var.get_fresh_var "x" in 
                 let _Gamma = VC.extend_gamma (bv_x,  t1) _Gamma in  
                 let bv_h' = Var.get_fresh_var "h'" in 
-                let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in 
+                (* let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in  *)
                 
 				      (*Following type is now created in this extended environment*)
                 (*\forall x, h_int. ( \phi1') h x h_int => \phi2 h_int x)*)
@@ -204,7 +204,7 @@ let mon_bind  (acc_delta : Predicate.t)
                 (*creating post*)
                 (*forall v h h' x h_int. phi1 x h h_int*)
                 let (bv_v)= Var.get_fresh_var "v" in 
-                let _Gamma = VC.extend_gamma (bv_v,  t2) _Gamma in 
+                (* let _Gamma = VC.extend_gamma (bv_v,  t2) _Gamma in  *)
                 
                 (*
                   This is an ungly hack, as we do not define a type for let x = e1 in e2
@@ -231,16 +231,16 @@ let mon_bind  (acc_delta : Predicate.t)
                   (*\forall bind_post. we shoud also have [bv_i/bv_v]bind_post *)
 
                
-                let bind_ret = P.applySubst (bvi, bv_v) post_conjuntc2 in 
-                
+                (* let bind_ret = P.applySubst (bvi, bv_v) post_conjuntc2 in 
+                 *)
                   
-                (* let bind_ret = 
+                let bind_ret = 
                  if (Var.toString bvi = "skip") then 
                    P.True
                   else 
                     P.Base (BP.Eq (BP.Var bvi, BP.Var bv_v)) 
                   
-                in  *)
+                in 
 
 
 
@@ -284,14 +284,14 @@ let mon_bind  (acc_delta : Predicate.t)
 
 
             let bv_h = Var.get_fresh_var "h" in 
-            let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in 
+            (* let _Gamma = VC.extend_gamma (bv_h, (RefTy.lift_base Ty_heap)) _Gamma in  *)
             let bv_x = Var.get_fresh_var "x" in 
             
             let ret_ty_subs = RefTy.applySubsts [(bv_x, vbase)] ci_type in 
             
             let _Gamma = VC.extend_gamma (bv_x, ret_ty_subs) _Gamma in 
             let bv_h' = Var.get_fresh_var "h'" in 
-            let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in 
+            (* let _Gamma = VC.extend_gamma (bv_h', (RefTy.lift_base Ty_heap)) _Gamma in  *)
             
             let res_pre = VC.apply phi1 [(bv_h, Ty_heap)] in 
             
@@ -428,8 +428,8 @@ let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type =
     in               
     try 
       let foundpType = PTypeMap.find ptypeMap path in 
-      let () = Printf.printf "%s" ("Found A type for the path in the PMap") in
-      let () = Printf.printf "%s" (RefTy.toString foundpType) in
+      let () = Printf.printf "%s" ("\n Found a type for the path in the PMap") in
+      (* let () = Printf.printf "%s" (RefTy.toString foundpType) in *)
       (gamma, delta, ptypeMap, foundpType) 
        
     with 
@@ -459,7 +459,7 @@ let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type =
           let post = P.Base (BP.Eq (BP.Var bv_h, BP.Var bv_h')) in 
  
           let preInit = P.Forall ([(bv_h, Ty_heap)], pre_h) in 
-          let postInit = P.Forall ([(bv_h, Ty_heap);(retResult, Ty_unknown);(bv_h', Ty_heap)], post) in 
+          let postInit = P.Forall ([(bv_h, Ty_heap);(retResult, Ty_unknown);(bv_h', Ty_heap)], P.Conj (pre_h, post)) in 
           let initial_type = RefTy.MArrow (initial_effect, 
              										preInit, (retResult, unKnownType), 
              										postInit) in
@@ -475,8 +475,8 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
   	
     let (gammaMap, deltaPred, ptypeMap, path_type) = 
 			   typeForPath ptypeMap gammaMap sigmaMap deltaPred spec path in 
-	 let () = Printf.printf "%s" ("\n Show Type for path "^(Syn.pathToString path))  in 
-   let () = Printf.printf "%s" ("\n "^(RefTy.toString path_type)) in 
+	 (* let () = Printf.printf "%s" ("\n Show Type for path "^(Syn.pathToString path))  in 
+   let () = Printf.printf "%s" ("\n "^(RefTy.toString path_type)) in  *)
 
 	  let gammacap = DPred.T{gamma=gammaMap;
 							sigma = sigmaMap;
@@ -552,5 +552,32 @@ let verifyWP gammacap pre wp : bool =
                        (false) 
             | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
       
-            
-   
+(*  spec = forall h1... v1 : _ \forall h1, v1, h1'
+    p' = \forall h2 v2 h2' phi_p'
+    
+    -> 
+    \exists h2, v2. \forall phi_p' [h2' -> h1])
+     *)            
+let createP'_Q gamma (spec : RefTy.t) (p' : Predicate.t) = 
+  match spec with 
+    | MArrow (eff, pre_spec, (v, t), post_spec) -> 
+        let P.Forall (bvs_p', p'_pred) = p' in 
+        let (h2,_)  = List.nth bvs_p' 0 in 
+        let (v2, t2) = List.nth bvs_p' 1 in 
+        let (h2', t2') = List.nth bvs_p' 2 in 
+        
+        let gamma = VC.extend_gamma (h2, (RefTy.lift_base Ty_heap)) gamma in 
+        let gamma = VC.extend_gamma (v2, (RefTy.lift_base t2)) gamma in 
+
+        let P.Forall (bvs_prespec,_) = pre_spec in 
+        let (h1, t1) = List.nth bvs_prespec 0 in 
+
+        let p'_pred =  P.applySubst (h1, h2') p'_pred in 
+        let out = P.Forall ([(h1, Ty_heap)], p'_pred) in 
+
+        let p'_q = RefTy.MArrow (eff, out, (v, t), post_spec) in 
+
+       (gamma, p'_q) 
+       
+    | _ -> raise (SynthesisException "SynTC :: Illegeal body Type");
+                          

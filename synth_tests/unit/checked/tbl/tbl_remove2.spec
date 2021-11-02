@@ -3,8 +3,6 @@ Tbl' : [int];
 Tbl :  [int];
 num : ref int;
 
-
-(*Note this is an intersting example, as add can be called even with the removed element, but that will not increase the size, as well as will break the postcondition, it goes into remove and add cycle*)
 fresh_str : State 
 			{\(h : heap). not (sel (h, num) > 2)} 
 			v : { v : int | true} 
@@ -14,8 +12,6 @@ fresh_str : State
 				ilssel (h', tbl) = Tbl' /\  
 				ilssel (h', tbl) = ilssel (h, tbl) /\
 				mem (Tbl', v) = false};
-
-
 
 remove 	: (s : {v : int  | true}) -> 
 
@@ -32,9 +28,6 @@ remove 	: (s : {v : int  | true}) ->
 				(mem (Tbl', s) = false) /\ 
 				size (Tbl') == size (Tbl) -- 1};
 
-
-
-
 average_len : State  {\(h : heap).
 					\(Tbl : [int]).
 					Tbl = ilssel (h, tbl) 
@@ -44,8 +37,6 @@ average_len : State  {\(h : heap).
 				ilssel (h', tbl) = 	ilssel (h, tbl) /\ 
 				sel (h', num) == sel (h, num)
 				};
-
-
 
 add : (s : {v : int | true}) ->  
 			State  {\(h : heap).

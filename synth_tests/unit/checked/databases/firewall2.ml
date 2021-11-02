@@ -86,15 +86,12 @@ delete_device : (d : { v : int | true}) ->
 								 };		 
 
 
-(*rermove d from the device and cansend*)
+(*add x and d and add a connection between d and x *)
 goal : (d : { v : int | true}) -> 
 	   (x : { v : int | true}) -> 		
-	 				State {\(h: heap).
-								\(D : [int]).
-								didsel (h, dtab) = D /\ device (D, d) = true /\
-								device (D, x) = true /\ not [x = d]} 
+	 				State {\(h: heap).true} 
 								v : {v : int | true} 
 		 						{\(h: heap),(v : int),(h': heap).
-		 							\(D: [int]),(D' : [int]),(y : int). 
-		 							device (D', d) = false 
+		 							\(D : [int]), (D' : [int]),(CS : [srpair]),(CS' : [srpair]).
+									cansend (CS', d, x)
 		 						};

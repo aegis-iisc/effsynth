@@ -200,7 +200,7 @@ let rec buildProgramTerm (path : path) =
                                        
 
 let pathToString (p:path) = 
-        (List.fold_left (fun accstr ei -> accstr^(" ---> ")^(monExp_toString ei)) "PATH " p)^"\n"
+        (List.fold_left (fun accstr ei -> accstr^(" ---> ")^(monExp_toString ei)) "pp-path " p)^"\n"
 
 let previousComponent (p:path) = 
     if (List.length p < 2) then None 

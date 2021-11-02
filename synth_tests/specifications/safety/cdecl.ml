@@ -63,21 +63,21 @@ Disjoint l1 l2 =
 
 (*query1*)
 type_declaration : 
-				{Disjoint (types, identifiers) /\ not Empty inp 
-	 	 	 	 v : tdecl option		
+				{
+				disjoint (Types, Identifiers) = true /\ (empty (Inp) = false 
+	 	 	 	 v : tdecl 		
 	 	 	    { 
-	 	 	    match v with 
-	 	 	     | Some y =>
 	 	 	    	Elems (y) C= Elems (inp) /\
 	 	 	    	Disjoint (types', identifiers') 
 	 	 	    	/\ len (types') = len (types) + 1
 	 	 	    	/\ len (identifiers') = len (identifiers)
 	 	 	    	/\ len (inp') < len (inp)
-	 	 	    | None => 
+	 	 	    \/ 
 	 	 	    	 Disjoint (types', identifiers')
 	 	 	    	 len (types') = len (types) 
 	 	 	    	/\ len (identifiers') = len (identifiers)
-	 	 	    	/\ len (inp') <= len (inp)}
+	 	 	    	/\ len (inp') <= len (inp)
+				}
 
 type_declaration = 
 			    [[

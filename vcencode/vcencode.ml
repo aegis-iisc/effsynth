@@ -274,11 +274,15 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
           let  (tyMap, constMap, relMap, sort_code) = 
             encodeTyD (tyMap, constMap, relMap) (TyD.fromString "code") in 
           
-           (*png and related types*)
+           (*png and related types
+           type pngtriple = Triple of {len : int ; ts :  [char]; data : [char]}*)
            let  (tyMap, constMap, relMap, sort_pngtriple) = 
             encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pngtriple") in 
+          (**pair of int, [char] *)
+          let  (tyMap, constMap, relMap, sort_pngpair) = 
+            encodeTyD (tyMap, constMap, relMap) (TyD.fromString "pngpair") in 
 
-          
+
           (*firewall sorts*)
           let  (tyMap, constMap, relMap, sort_srpair) = 
             encodeTyD (tyMap, constMap, relMap) (TyD.fromString "srpair") in 
@@ -295,11 +299,55 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
              
           (*png triple field predicates*)  
           
-          
-          
+          let intval = mkStrucRel ("intval", 
+                        [sort_char; sort_int]) in 
+          let relMap = RelMap.add relMap ("intval") intval in 
 
 
-          (*nlrecord field predicates*)
+          let asciinumberlist = mkStrucRel ("asciinumberlist", 
+                        [sort_char_list; sort_bool]) in 
+          let relMap = RelMap.add relMap ("asciinumberlist") asciinumberlist in 
+
+
+          
+          let asciinumber = mkStrucRel ("asciinumber", 
+                        [sort_char_list; sort_bool]) in 
+          let relMap = RelMap.add relMap ("asciinumber") asciinumber in 
+  
+        
+          let asciiupper = mkStrucRel ("asciiupper", 
+                        [sort_char_list; sort_bool]) in 
+          let relMap = RelMap.add relMap ("asciiupper") asciiupper in 
+  
+          
+          let asciialphanum = mkStrucRel ("asciialphanum", 
+                        [sort_char_list; sort_bool]) in 
+          let relMap = RelMap.add relMap ("asciialphanum") asciialphanum in 
+  
+          
+
+          let pnglen = mkStrucRel ("pnglen", 
+                        [sort_pngtriple; sort_int]) in 
+          let relMap = RelMap.add relMap ("pnglen") pnglen in 
+  
+
+          let pngts = mkStrucRel ("pngts", 
+                        [sort_pngtriple; sort_char_list]) in 
+          let relMap = RelMap.add relMap ("pngts") pngts in 
+  
+          let pngdata = mkStrucRel ("pngdata", 
+                        [sort_pngtriple; sort_char_list]) in 
+          let relMap = RelMap.add relMap ("pngdata") pngdata in 
+
+          let ppfst = mkStrucRel ("ppfst", 
+                        [sort_pngpair; sort_int]) in 
+          let relMap = RelMap.add relMap ("ppfst") ppfst in 
+
+          let ppsnd = mkStrucRel ("ppsnd", 
+                        [sort_pngpair; sort_char_list]) in 
+          let relMap = RelMap.add relMap ("ppsnd") ppsnd in 
+
+            (*nlrecord field predicates*)
           let nletter = mkStrucRel ("nletter", 
                         [sort_nlrecord; sort_string]) in 
           let relMap = RelMap.add relMap ("nletter") nletter in 

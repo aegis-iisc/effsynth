@@ -69,6 +69,16 @@ make_central : (d : { v : int | true}) -> State {
 
 
 
+is_device : (d : { v : int | true}) -> State {
+										\(h : heap).true}
+										v : {v : bool | true}
+										{\(h: heap),(v : unit),(h': heap).
+											\(D : [did]), (D' : [did]).
+										[v = true] <=> device (D, d) = true /\ 
+										[v = false] <=> device (D, d) = false
+										}; 
+
+
 
 delete_device : (d : { v : int | true}) -> 
 								State {\(h : heap).
@@ -86,15 +96,15 @@ delete_device : (d : { v : int | true}) ->
 								 };		 
 
 
-(*rermove d from the device and cansend*)
+(*remove this device and make another device central
+requires a check that the device is present*)
 goal : (d : { v : int | true}) -> 
-	   (x : { v : int | true}) -> 		
-	 				State {\(h: heap).
-								\(D : [int]).
-								didsel (h, dtab) = D /\ device (D, d) = true /\
-								device (D, x) = true /\ not [x = d]} 
+	   			State {\(h: heap).			
+	   						\(D : [int]), (CS : [srpair]) .
+								dsize (D) > 0	} 
 								v : {v : int | true} 
 		 						{\(h: heap),(v : int),(h': heap).
-		 							\(D: [int]),(D' : [int]),(y : int). 
-		 							device (D', d) = false 
+		 							\(D : [int]), (D' : [int]),(CS : [srpair]),(CS' : [srpair]), (y:int).
+									device (D', d) = false 
+									central (CS', y) = true
 		 						};

@@ -6,11 +6,11 @@ res : ref int;
 boolf : (i : { v : int | true}) -> State {\(h : heap). true} 
 			v : { v : bool | true} 
 			{\(h : heap), (v : bool), (h' : heap). 
-				([v=true] <=> (sel  (h, res) > 0 )) /\
-				([v=false] <=> (sel (h, res) == 0))};
+				([v=true] <=> (sel  (h', res) > 0 )) /\
+				([v=false] <=> (sel (h', res) == 0))};
 
 
-foo' : (i : { v : int | [v = 0]}) -> 
+foo' : (i : { v : int | true}) -> 
 		State  {\(h : heap). (sel (h, res) > 0)} 
 		v : { v : int |  true} 
 		{\(h : heap), (v : int), (h' : heap). sel (h', res) == v /\ [v=10]};

@@ -11,10 +11,11 @@ exception NoMappingForVar of string
 module DiffPredicate = struct
 	type gammaCap =  T of {gamma : Gamma.t; sigma : Sigma.t; delta : P.t}
 	(*NOTE : May be keeping separate predicates for conjunts and disjuncts will be a better idea *)
-	type t = DP of {gammacap : gammaCap; learnt : P.t ; previous : P.t}
+	type t = DP of {gammacap : gammaCap; learntConj : P.t ; 
+							   learntDisj : P.t ;	previous : P.t}
 
 	(*A very imprecise check 
-		to see if we have learnt some D(ci) conjuncts*)
+	to see if we have learnt some D(ci) conjuncts*)
 	let rec noConjuncts p = 
 		match p with 
 			| Predicate.Disj (p1, p2) -> 
@@ -59,15 +60,20 @@ module DiffPredicate = struct
 		let DP {gammacap;_} = dpred in 
 		gammacap
 
-	let getLearnt dpred = 
-		let DP {learnt;_} = dpred in 
-		learnt
+	let getLearntConj dpred = 
+		let DP {learntConj;_} = dpred in 
+		learntConj
 	
+
+	let getLearntDisj dpred = 
+		let DP {learntDisj;_} = dpred in 
+		learntDisj
+
 	let getPrevious dpred = 
 		let DP {previous;_} = dpred in 
 		previous
 		
-	let empty = DP {gammacap = emptyGammaCap; learnt = P.True; previous = P.True}
+	let empty = DP {gammacap = emptyGammaCap; learntConj = P.True; learntDisj=P.False; previous = P.True}
 	
 	let gammaCapToString g = 
 		(* let T {gamma;sigma;delta} = g in 
@@ -81,8 +87,13 @@ module DiffPredicate = struct
 	let appendGammaCap gcap1 gcap2 = 
 		let T {gamma= gamma1;sigma=sigma1;delta=delta1}  = gcap1 in 
 		let T {gamma= gamma2;sigma=sigma2;delta=delta2}  = gcap2 in 
+		(* let () = Printf.printf "%s" ("\n Gamma Before "^(Gamma.toString gamma2)) in 
+		let () = Printf.printf "%s" ("\n Size Gamma Before "^(string_of_int (List.length (gamma2)))) in 
+		 *)
 		let nonOverlappingG2 = 
-			List.filter (fun (vi, ti) -> not (List.mem_assoc vi gamma1)) gamma2 in 
+			List.filter (fun (vi, ti) -> not (Gamma.mem gamma1 vi)) gamma2 in 
+		(* let () = Printf.printf "%s" ("\n Gamma After "^(Gamma.toString nonOverlappingG2)) in 
+		let () = Printf.printf "%s" ("\n Size Gamma After "^(string_of_int (List.length (nonOverlappingG2)))) in  *)
 		let nonOverlappingS2 =
 			List.filter (fun (vi, ti) -> not (List.mem_assoc vi sigma1)) sigma2 in 
 		T {gamma=gamma1@nonOverlappingG2 ; 
@@ -91,13 +102,15 @@ module DiffPredicate = struct
 
 
 	let toString t = 
-	 let DP {gammacap;learnt; previous} = t in 
+	 let DP {gammacap;learntConj; learntDisj; previous} = t in 
 	 let str = "\n -----------Gammacap-------------\n : "^(gammaCapToString gammacap) in 
-	 let str = str^"\n --------------Learnt-----------\n "^(Predicate.toString learnt) in 
-	 let str = str^("\n -------------Previous--------\n" ^(Predicate.toString previous)) in 
+	 let str = str^"\n --------------LearntConj-----------\n "^(Predicate.toString learntConj) in
+	 let str = str^"\n --------------LearntDisj-----------\n "^(Predicate.toString learntDisj) in
+	  let str = str^("\n -------------Previous--------\n" ^(Predicate.toString previous)) in 
 	 str
 
 	let equal t1 t2 = 
+	 
 	 (*TODO ??*)
 	 true
 
@@ -108,46 +121,85 @@ module DiffPredicate = struct
 
 
 	 let focusedUpdateGamma (dpred : t) (g : gammaCap) = 
-		let DP {gammacap=gcap; learnt=learnt; previous= previous} = dpred in 
+		let DP {gammacap=gcap; learntConj=learntConj;
+				learntDisj= learntDisj;
+				previous= previous} = dpred in 
 		assert (no_pollution  gcap g);
 	    let gamma = appendGammaCap gcap g in 
-	    DP {gammacap=gamma;learnt=learnt;previous=previous} 
+	    DP {gammacap=gamma;
+				learntConj=learntConj;
+				learntDisj= learntDisj;
+				previous=previous} 
 
 	
-	 let focusedUpdateLearnt (dpred : t) (l : Predicate.t) (mode : string)= 
-		let DP {gammacap=gammacap; learnt=learnt; previous= previous} = dpred in 
-		match mode with 
-			| "Conj" -> let learnt = Predicate.Conj(learnt, l) in 
-				DP {gammacap=gammacap;learnt=learnt;previous=previous} 
-			| "Disj" -> let learnt = Predicate.Disj(learnt, l) in 
-				DP {gammacap=gammacap;learnt=learnt;previous=previous} 	
+	 let focusedUpdateLearntConj (dpred : t) (lConj : Predicate.t)= 
+		let DP {gammacap=gcap; learntConj=learntConj;
+				learntDisj= learntDisj;
+				previous= previous} = dpred in 
+		DP {gammacap=gcap; 
+			learntConj=lConj;
+			learntDisj= learntDisj;
+			previous= previous}		
+
+
+	 let focusedUpdateLearntDisj (dpred : t) (lDisj : Predicate.t)= 
+		let DP {gammacap=gcap; learntConj=learntConj;
+				learntDisj= learntDisj;
+				previous= previous} = dpred in 
+		DP {gammacap=gcap; 
+			learntConj=learntConj;
+			learntDisj= lDisj;
+			previous= previous}		
 		
 
-
 	 let focusedUpdatePrevious (dpred : t) (p : Predicate.t) = 
-		let DP {gammacap=gammacap; learnt=learnt; previous= previous} = dpred in 
-		DP {gammacap=gammacap;learnt=learnt;previous=p} 
+		let DP {gammacap=gcap; 
+				learntConj=learntConj;
+				learntDisj= learntDisj;
+				previous= previous} = dpred in 
+		DP {gammacap=gcap; 
+			learntConj=learntConj;
+			learntDisj= learntDisj;
+			previous= p}		
 			
 	(*gamma1, pred1 /\ gamma2, pred2 =  noOverlap(gamma1;gamma2), pred1/\ pred2*)
 	let conjunction t1 t2 = 
 		(*the pollution of gammas must be *)
-		let DP {gammacap=gcap1; learnt=learnt1; previous= previous1} = t1 in 
-		let DP {gammacap =gcap2; learnt=learnt2; previous = previous2} = t2 in 
+		let DP {gammacap=gcap1; learntConj=learntConj1;
+				learntDisj= learntDisj1;
+				previous= previous1} = t1 in 
+		let DP {gammacap=gcap2; 
+				learntConj=learntConj2;
+				learntDisj= learntDisj2;
+				previous= previous2} = t2 in 
 		assert (no_pollution  gcap1 gcap2);
 		let gamma = appendGammaCap gcap1 gcap2 in 
-		let pred = Predicate.Conj(learnt1, learnt2) in 
+		let learntConj = Predicate.Conj(learntConj1, learntConj2) in 
+		let learntDisj = Predicate.Disj(learntDisj1, learntDisj2) in 
+	
 		let previous = Predicate.Conj (previous1, previous2) in 
-		DP {gammacap=gamma;learnt=pred;previous=previous} 
+		DP {gammacap=gamma;learntConj=learntConj;  learntDisj=learntDisj; 
+		previous=previous} 
+
 
 	let disjunction t1 t2 = 
 		(*the pollution of gammas must be *)
-		let DP {gammacap=gcap1; learnt=learnt1; previous= previous1} = t1 in 
-		let DP {gammacap =gcap2; learnt=learnt2; previous = previous2} = t2 in 
+		let DP {gammacap=gcap1; learntConj=learntConj1;
+				learntDisj= learntDisj1;
+				previous= previous1} = t1 in 
+		let DP {gammacap=gcap2; 
+				learntConj=learntConj2;
+				learntDisj= learntDisj2;
+				previous= previous2} = t2 in 
 		assert (no_pollution  gcap1 gcap2);
 		let gamma = appendGammaCap gcap1 gcap2 in 
-		let pred = Predicate.Disj(learnt1, learnt2) in 
-		let previous = Predicate.Disj (previous1, previous2) in 
-		DP {gammacap=gamma;learnt=pred;previous=previous} 
+		let learntConj = Predicate.Conj(learntConj1, learntConj2) in 
+		let learntDisj = Predicate.Disj(learntDisj1, learntDisj2) in 
+	
+		let previous = Predicate.Conj (previous1, previous2) in 
+		DP {gammacap=gamma;learntConj=learntConj;  learntDisj=learntDisj; 
+		previous=previous} 
+
 
 end
 
@@ -227,7 +279,7 @@ module Key =
        struct
          type t = Syn.path(*a variable capturing the  name*)
          let equal (t1,t2)  =  Syn.equalPath t1 t2
-       end
+end
 
 module Value =
        struct

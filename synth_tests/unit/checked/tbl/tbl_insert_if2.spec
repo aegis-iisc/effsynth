@@ -4,14 +4,20 @@ Tbl :  [int];
 num : ref int;
 
 
-mem : (s  : { v : int | true}) ->  { v : bool | \(h : heap), (v : bool), (h' : heap). 
+mem : (s  : { v : int | true}) -> 
+			State  
+			{\(h : heap). true} 
+			v : { v : bool | true} 
+			
+			{\(h : heap), (v : bool), (h' : heap). 
 				\(Tbl' : [int]), (Tbl: [int]).
 				ilssel (h', tbl) = Tbl'/\
 				ilssel (h, tbl) = Tbl /\
-				Tbl' = Tbl /\
+				sel (h', num) == sel (h, num) /\
+				ilssel (h', tbl) = ilssel (h, tbl) /\
+				size (Tbl') == size (Tbl) /\
 				([v=true] <=> ( mem(Tbl', s) = true))/\ 
-				([v=false] <=> (mem (Tbl', s) = false))
-				};
+				([v=false] <=> (mem (Tbl', s) = false))};
 
 
 fresh_str : State 
@@ -60,14 +66,14 @@ goal : (s : {v : int | true}) ->
 			 \(Tbl : [int]). 
 				sel (h, num) == 0 /\
 				ilssel (h, tbl) = Tbl /\
-				not  (0 > size (Tbl)) }
-				v : {v : float | true}
-		  	{\(h : heap), (v : float), (h' : heap). 
+				not  (0 > size (Tbl))}
+				v : {v : unit | true}
+		  	{\(h : heap), (v : unit), (h' : heap). 
 				\(Tbl' : [int]), (Tbl : [int]).
 				(ilssel (h, tbl) = Tbl /\  
 				ilssel (h', tbl) = Tbl')   
 				=> 
-				(mem (Tbl', s) = true /\
-				size (Tbl') == size (Tbl) + 1) 
+				((mem (Tbl', s) = true) /\
+				size (Tbl') == size (Tbl) + 2 )
 				
 			};

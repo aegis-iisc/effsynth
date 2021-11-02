@@ -61,7 +61,7 @@ length : State {\(h : heap).
 			  	{\(h: heap),(v : pair),(h': heap).
 					\(cp : [char]),(i : int).
 					(snd (v) = cp => fst (v) = intval(cp)) /\ 
-					sel (h', len) == fst (v)};
+					sel (h', len) == fst (v)  };
 
 
 
