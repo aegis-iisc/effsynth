@@ -99,6 +99,14 @@ module Var = struct
     Ident.create id
 
 
+  let fresh_binding_var s = 
+    let id = "loc"^(s)^ string_of_int !count in 
+    let _ = count := !count + 1
+    in 
+    Ident.create id
+
+
+
   let fromString s = Ident.create s
   let noName = Ident.create ""
   let equal t1 t2 = Ident.equal t1 t2

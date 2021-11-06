@@ -9,7 +9,7 @@ fresh_el :  State
 			{\(h : heap), (v : int), (h' : heap). 
 				\(Q' : queue).
 				sel (h', num) == sel (h, num) + 1 /\
-				qssel (h', q) = Q' /\  
+				qsel (h', q) = Q' /\  
 				qsel (h', q) = qsel (h, q) /\
 				qmem (Q', v) = false};
 

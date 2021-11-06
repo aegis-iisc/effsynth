@@ -81,12 +81,11 @@ typespec : State {\(h : heap).
 goal : State {\(h : heap).
 				sel (h, fuel) == 0} 
 				v : { v : pngtriple | true}
-				{\(h: heap),(v : pngtriple),(h': heap).
+				{\(h: heap),(v : pair),(h': heap).
 				 \(Len : int), (Tys:quad), (Con:[char]).
-				  (pnglen (v) = Len /\
-				  pngts (v) = Tys /\
-				  pngdata (v) = Con) => 	
+				  (ppfst (v) = Len /\
+				  ppsnd (v) = Con) => 	
                             (
 					  		sel (h', fuel) == 0 /\
-				  			Len == (length (Con) + 4)
+				  			Len == (length (Con))
 						  )};

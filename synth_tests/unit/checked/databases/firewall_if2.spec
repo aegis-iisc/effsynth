@@ -2,24 +2,8 @@ dtab : ref [int];
 cstab : ref [srpair];
 D : [int];
 CS : [srpair];
-
-add_device : (d : { v : int | true}) -> State {
-										\(h : heap).	
-										\(D : [int]), (CS : [srpair]).
-										didsel (h, dtab) = D =>		
-										device (D, d) = false}
-										v : {v : unit | true}
-										{\(h: heap),(v : unit),(h': heap).
-											\(D : [int]), (D' : [int]).
-											dissel (h, dtab) = D /\		
-											didsel (h', dtab) = D' /\
-											dcssel (h', cstab) = dcssel (h, cstab) /\
-											device (D', d) = true	/\
-											dsize (D') == dsize (D) + 1 	
-										};  
-
-
-
+D' : [int];
+CS' : [srpair];
 
 diff_device : (d : { v : int | true}) -> State {
 										\(h : heap).
@@ -29,8 +13,8 @@ diff_device : (d : { v : int | true}) -> State {
 											v : {v : int | true}
 											{\(h: heap),(v : int),(h': heap).
 												\(D : [int]), (D' : [int]),(CS : [srpair]),(CS' : [srpair]).
-												 D' = D /\
-												 CS' = CS /\
+												didsel (h', dtab) = didsel (h, dtab) /\
+												dcssel (h', cstab) =  dcssel (h, cstab) /\
 												device (D', v) = true /\ 
 												not ([v = d])
 											}; 
@@ -40,15 +24,18 @@ add_connection : (s : { v : int | true})
 					-> (r : { v : int | true}) -> 
 									State {
 										\(h : heap).
-											\(D : [int]), (CS : [srpair]).
+											\(D : [int]).
 											didsel (h, dtab) = D =>	
-											(device (D, s) = true /\ device (D, r) = true)	
+											(device (D, s) = true /\ 
+											device (D, r) = true /\
+											not [s=r])	
 											}
 											v : {v : unit | true}
 											{\(h: heap),(v : unit),(h': heap).
 												\(D : [int]), (D' : [int]),(CS : [srpair]),(CS' : [srpair]).
-												 D' = D /\
-												 cansend (CS', s, r) = true 
+												didsel (h', dtab) = didsel (h, dtab) /\
+												dcssel (h', cstab) = CS' /\
+												cansend (CS', s, r) = true 
 											}; 
 
 
@@ -63,10 +50,50 @@ make_central : (d : { v : int | true}) -> State {
 										 { \(h: heap),(v : unit),(h': heap).
 												\(CS : [srpair]), (CS' : [srpair]).
 										 		didsel (h', dtab) = didsel (h, dtab) /\
+												dcssel (h', cstab) = CS' /\
 												central (CS', d) = true
 										 };
 
 
+
+
+
+delete_device : (d : { v : int | true}) -> 
+								(x : { v : int | true}) -> 
+								State {\(h : heap).
+											\(D : [int]),(CS : [srpair]).
+											(didsel (h, dtab) = D /\
+											dcssel (h, cstab) = CS )=>	
+												(device (D, d) = true /\ 
+												device (D, x) = true /\ 
+												central (CS, x) = true /\
+												not [d=x]
+												)}
+									v : {v : unit | true}
+								 { \(h: heap),(v : unit),(h': heap).
+										\(D : [int]), (D' : [int]).
+										 didsel (h', dtab) = D' /\
+										 dcssel (h', cstab) = CS' /\
+										 device (D', d) = false /\
+										 central (CS', x) = true 
+								 };		 
+
+
+
+add_device : (d : { v : int | true}) -> State {
+										\(h : heap).	
+										\(D : [int]), (CS : [srpair]).
+										didsel (h, dtab) = D =>		
+										device (D, d) = false}
+										v : {v : unit | true}
+										{\(h: heap),(v : unit),(h': heap).
+											\(D : [int]), (D' : [int]).
+											didsel (h, dtab) = D /\		
+											didsel (h', dtab) = D' /\
+											dcssel (h', cstab) = dcssel (h, cstab) /\
+											device (D', d) = true	/\
+											dsize (D') == dsize (D) + 1 	
+										};  
 
 
 is_device : (d : { v : int | true}) -> State {
@@ -79,26 +106,6 @@ is_device : (d : { v : int | true}) -> State {
 										}; 
 
 
-
-delete_device : (d : { v : int | true}) -> 
-								State {\(h : heap).
-											\(D : [int]), (CS : [srpair]),(y : int).
-											didsel (h, dtab) = D =>	
-											(device (D, d) = true /\ 
-											device (D, y) = true /\ 
-											central (CS, y) = true)}
-									v : {v : unit | true}
-								 { \(h: heap),(v : unit),(h': heap).
-										\(D : [int]), (D' : [int]), (y : int).
-										 device (D', d) = false /\
-								 		 device(D', y) = true => 
-								 		 cansend(D', y, d) = false
-								 };		 
-
-
-(*add this device and make the device central if not present,
-if present, make the device central.
-requires a check that the device is present and if it is not requires removing the central device*)
 goal : (d : { v : int | true}) -> 
 	   			State {\(h: heap).			
 	   						\(D : [int]), (CS : [srpair]) .

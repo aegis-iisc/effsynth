@@ -422,7 +422,8 @@ let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type =
               let v_skip = Var.fromString "skip" in 
               mon_bind delta acc_gamma acc_type liftedType v_skip
             | Syn.Eapp (funName, args) -> 
-                raise (SynthesisException "return F (A) not Allowed")
+                
+                raise (SynthesisException ("return F (A) not Allowed "^(Syn.monExp_toString funName)));
           
 
     in               

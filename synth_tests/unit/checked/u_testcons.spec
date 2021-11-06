@@ -21,9 +21,7 @@ foo : (ls : { v : list | len (v) > 0}) ->
 
 
 
-baz : 
-		(l1 : { v : list | true}) -> 
-	    (l2 : {v : char | true}) -> 	
+baz : (l2 : {v : char | true}) -> 	
 
 		State  {\(h : heap). sel (h, res) == 3} 
 		v : { v : int | true} 

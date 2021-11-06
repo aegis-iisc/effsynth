@@ -1,7 +1,15 @@
 fuel : ref int;
+long : ref bool;
 Len : int;
 Tys : quad;
 Con : [char];
+
+hasTypeSpec : State {\(h:heap). true}
+                v : { v : bool | true} 
+				{\(h: heap),(v : bool),(h': heap).
+                    sel (h', fuel) == sel (h, fuel) /\   
+					([v=true] <=>  bsel (h', long) = true) /\
+                    ([v=false] <=>  bsel (h', long) = false)};
 
 
 
@@ -71,14 +79,23 @@ content : State {\(h : heap).
 
 
 
-typespec : State {\(h : heap).
-				sel (h, fuel) > 4} 
+typespecFix : State {\(h : heap).
+				sel (h, fuel) > 4 /\ 
+                bsel (h, long) = false} 
 				v : { v : quad | true} 
 			  	{\(h: heap),(v : quad),(h': heap).
 					sel (h',fuel) == sel (h, fuel) -- 4};
 
 
-goal : State {\(h : heap).
+typespecVar : State {\(h : heap).
+				sel (h, fuel) > 4 /\ bsel (h, long) = true} 
+				v : { v : quad | true} 
+			  	{\(h: heap),(v : quad),(h': heap).
+					sel (h',fuel) == sel (h, fuel) -- quadlength (v)};
+
+
+
+goal : (x : { v : unit | true}) -> State {\(h : heap).
 				sel (h, fuel) == 0} 
 				v : { v : pngtriple | true}
 				{\(h: heap),(v : pngtriple),(h': heap).
@@ -88,5 +105,7 @@ goal : State {\(h : heap).
 				  pngdata (v) = Con) => 	
                             (
 					  		sel (h', fuel) == 0 /\
-				  			Len == (length (Con) + 4)
+				  			(   Len == length (Con) + 4 \/ 
+                                Len == length (Con) + quadlength (Tys)
+                            )
 						  )};

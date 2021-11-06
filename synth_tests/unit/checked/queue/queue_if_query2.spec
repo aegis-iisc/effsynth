@@ -1,18 +1,20 @@
 q : ref queue;
 num : ref int;
+Q : queue;
+Q' : queue;
 
 
-take : 	State {\(h : heap).	
-				\(Q : queue).qsel (h, q) = Q => qsize (Q) > 0}
-						v : {v : int | true}
-									{\(h : heap), (v : int), (h' : heap).
-									\(Q : queue), (Q' : queue).
-									qsel (h', q) = Q'/\
-									qsel (h, q) = Q /\
-									qmem (Q', v) = false /\
-									qsize (Q') == qsize (Q) -- 1 /\
-									sel (h', num) == sel (h, num)};
-
+qmem : (x : { v : int | true})  -> 
+                    State {\(h : heap). 
+					true}
+						v : {v : bool | true}
+					{\(h : heap), (v : bool), (h' : heap).
+						\(Q : queue), (Q' : queue).
+							qsel (h', q) = Q'/\
+							qsel (h, q) = Q /\
+				            sel (h', num) == sel (h, num) /\
+				            ([v=true] <=> ( qmem(Q', x) = true))/\ 
+				            ([v=false] <=> ( qmem (Q', x) = false))};
 
 
 fresh_el :  State 
@@ -20,23 +22,10 @@ fresh_el :  State
 			v : { v : int | true} 
 			{\(h : heap), (v : int), (h' : heap). 
 				\(Q' : queue).
-				qsel (h', q) = Q' /\
 				sel (h', num) == sel (h, num) + 1 /\
-				qsel (h', q) = qsel (h, q) /\  
+				qsel (h', q) = Q' /\  
+				qsel (h', q) = qsel (h, q) /\
 				qmem (Q', v) = false};
-
-
-peek : State {\(h : heap). \(Q: queue). (qsel (h, q) = Q => qsize (Q) > 0)}
-							  v : {v : int | true}
-							 {\(h : heap), (v : int), (h' : heap).
-							 \(Q' : queue).
-								qsel (h', q) = Q' /\
-								qsel (h', q) = qsel (h, q) /\
-								qmem (Q', v) = true /\
-								sel (h', num) == sel (h, num) 
-							  };
-
-
 
 add : (x : { v : int | true})   -> State {\(h : heap). 
 									\(Q : queue).
@@ -52,20 +41,32 @@ add : (x : { v : int | true})   -> State {\(h : heap).
 									sel (h', num) == sel (h, num)};
 
 
-
-
-remove : (x : { v : int | true}) -> State {\(h : heap).	
-				\(Q : queue).qsel (h, q) = Q => 
-									qsize (Q) > 0 /\
-									qmem (Q, x) = true}
+take : 	State {\(h : heap).	
+				\(Q : queue).
+									qsel (h, q) = Q => 
+									qsize (Q) > 0}
 									v : {v : int | true}
 									{\(h : heap), (v : int), (h' : heap).
 									\(Q : queue), (Q' : queue).
 									qsel (h', q) = Q'/\
 									qsel (h, q) = Q /\
-									qmem (Q', x) = false /\
+									qmem (Q', v) = false /\
 									qsize (Q') == qsize (Q) -- 1 /\
 									sel (h', num) == sel (h, num)};
+
+
+
+peek : State {\(h : heap). \(Q: queue). (qsel (h, q) = Q => qsize (Q) > 0)}
+							  v : {v : int | true}
+							 {\(h : heap), (v : int), (h' : heap).
+							 \(Q : queue), (Q' : queue).
+								qsel (h', q) = Q'/\
+								qsel (h, q) = Q /\
+								qmem (Q', v) = true /\
+								sel (h', num) == sel (h, num) /\
+								Q' = Q
+							  };
+
 
 
 
@@ -74,14 +75,12 @@ goal : (x : {v : int | true})->
 			\(Q: queue).
 			sel (h, num) == 0 /\
 			qsel (h, q) = Q /\
-			qmem (Q, x) = true /\
-			qsize (Q) > 0
+			not  (0 > qsize (Q))
 		 }
 			v : {v : int | true}  
 	{\(h : heap), (v : int), (h' : heap). 
 		\(Q: queue), (Q': queue).
 		(qsel (h, q) = Q /\
 		qsel (h', q) = Q') => 
-		(qmem (Q', x) = false /\
-		qsize (Q') == qsize (Q)+ 1)
-};
+		(qmem (Q', x) = true /\
+		qsize (Q') == qsize (Q) + 2)};

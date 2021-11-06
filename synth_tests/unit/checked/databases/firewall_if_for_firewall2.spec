@@ -9,6 +9,23 @@ CS' : [srpair];
 
 
 
+is_device : (x : { v : int | true}) -> State {
+										\(h : heap).true}
+										v : {v : bool | true}
+										{\(h: heap),(v : bool),(h': heap).
+											\(D : [int]),(D' : [int]) .
+                                            (didsel (h, dtab) = D /\
+											didsel (h', dtab) = D') => 
+
+										(
+										(device (D, d) = true => device (D', d)	= true) /\
+										[v = true] <=> device (D', x) = true /\ 
+										[v = false] <=> device (D', x) = false)
+										}; 
+
+
+
+
 diff_device : (d : { v : int | true}) -> State {
 										\(h : heap).
 											\(D : [int]), (CS : [srpair]).
@@ -107,8 +124,7 @@ goal : (d : { v : int | true}) ->
 								\(D : [int]), (CS : [srpair]).
 								didsel (h, dtab) = D /\	
 								dcssel (h, cstab) = CS /\
-                                device (D, d) = true /\
-								device (D, x) = false   
+                                device (D, d) = true    
 								} 
 								v : {v : unit | true} 
 		 						{\(h: heap),(v : unit),(h': heap).

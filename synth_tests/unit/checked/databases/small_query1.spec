@@ -3,23 +3,9 @@ D' : [nlrecord];
 d : ref [nlrecord];
 
 
-confirmU :  (n  : { v : string | true})-> 
-		  (u : { v :string | true}) -> 
-		State {\(h:heap).
-				\(D : [nlrecord]).
-				(dsel (h, d) = D =>  subscribed (D, n, u) = true)}
-			v : {v : unit | true}
-			{ \(h: heap),(v : unit),(h': heap).
-				\(D : [nlrecord]), (D' : [nlrecord]).
-				dsel (h', d) = D'/\
-				dsel (h, d) = D /\
-				subscribed (D', n, u) = true /\ 		
-				nlmem (D', n, u) = true /\
-				confirmed (D', n, u) = true};
 
-
-confirmS :  (n  : { v : string | true})-> 
-		  (u : { v :string | true}) -> 
+confirmS :  (n  : { v : nl | true})-> 
+		  (u : { v : user | true}) -> 
 		State {\(h:heap).
 				\(D : [nlrecord]).
 				(dsel (h, d) = D =>  subscribed (D, n, u) = false)}
@@ -36,24 +22,9 @@ confirmS :  (n  : { v : string | true})->
 
 
 
-nlmem : (n  : { v : string | true}) -> 
-		(u : { v :string | true}) -> 
-									 State {\(h : heap).true} 
-										v : {v : bool | true} 
-									{\(h: heap),(v : bool),(h': heap).
-										\(D : [nlrecord]), (D' : [nlrecord]).
-										dsel (h', d) = D' /\
-										dsel (h, d) = D /\
-										D' = D /\
-										[v = true] <=> nlmem (D, n, u) = true /\
-										[v = false] <=> nlmem (D, n, u) = false
-										};
 
-
-
-
-subscribe : (n  : { v : string | true})-> 
-			 (u : { v :string | true}) -> 
+subscribe : (n  : { v : nl | true})-> 
+			 (u : { v : user | true}) -> 
 					State {\(h : heap). 
 							\(D : [nlrecord]).
 								dsel (h, d) = D => 
@@ -74,27 +45,9 @@ subscribe : (n  : { v : string | true})->
 
 
 
-unsubscribe : (n  : { v : string | true})-> 
-			 (u : { v :string | true}) -> 
-					State {\(h : heap). 
-							\(D : [nlrecord]).
-								dsel (h, d) = D => 
-									(nlmem (D , n , u) = true /\ confirmed (D, n, u) = true /\
-									subscribed (D, n, u) = true))}
-					v : { v : unit | true}  
-						{\(h: heap),(v : unit),(h': heap).
-							\(D : [nlrecord]), (D' : [nlrecord]).
-							dsel (h', d) = D'/\
-							dsel (h, d) = D /\
-							nlmem (D', n, u) = true /\
-							subscribed (D', n, u) = false 		
-							};	
 
-
-
-
-read :  (n  : { v : string | true})-> 
-		(u : { v :string | true}) -> 
+read :  (n  : { v : nl | true})-> 
+		(u : { v : user | true}) -> 
 		State {\(h : heap). 
 				\(D : [nlrecord]).
 					dsel (h, d) = D =>
@@ -109,11 +62,11 @@ read :  (n  : { v : string | true})->
 				dsel (h, d) = D /\
 				nlmem (D', n, u) = true /\
 				subscribed (D', n, u) = true /\ 		
-				v = articles (D', n, u)};
+				v = articles (D')};
 		
 		 
-remove : (n  : { v : string | true})-> 
-		 (u : { v :string | true}) -> 
+remove : (n  : { v : nl | true})-> 
+		 (u : { v : user| true}) -> 
 				State {\(h : heap). 
 						\(D : [nlrecord]).
 						(dsel (h, d) = D =>
@@ -123,7 +76,7 @@ remove : (n  : { v : string | true})->
 					}
 				v : { v : unit | true}  
 				{\(h: heap),(v : unit),(h': heap).
-						\(D : [nlrecord]), (D' : [nlrecord]), (NS : nlrecord).
+						\(D : [nlrecord]), (D' : [nlrecord]).
 							dsel (h', d) = D' /\ 
 							dsel (h, d) = D /\
 							nlmem (D', n, u) = false 
@@ -132,18 +85,55 @@ remove : (n  : { v : string | true})->
 
 
 
-goal : 	 (n  : { v : string | true})-> 
-		 (u : { v :string | true}) -> 
+unsubscribe : (n  : { v : nl | true})-> 
+			 (u : { v : user | true}) -> 
+					State {\(h : heap). 
+							\(D : [nlrecord]).
+								dsel (h, d) = D => 
+									(nlmem (D , n , u) = true /\ confirmed (D, n, u) = true /\
+									subscribed (D, n, u) = true)}
+					v : { v : unit | true}  
+						{\(h: heap),(v : unit),(h': heap).
+							\(D : [nlrecord]), (D' : [nlrecord]).
+							dsel (h', d) = D'/\
+							dsel (h, d) = D /\
+							nlmem (D', n, u) = true /\
+							subscribed (D', n, u) = false 		
+							};	
+
+
+
+
+confirmU :  (n  : { v : nl | true}) -> 
+		    (u : { v : user | true}) -> 
+		State {\(h:heap).
+				\(D : [nlrecord]).
+				(dsel (h, d) = D =>  (subscribed (D, n, u) = true /\ confirmed (D, n, u) = false))}
+			v : {v : unit | true}
+			{ \(h: heap),(v : unit),(h': heap).
+				\(D : [nlrecord]), (D' : [nlrecord]).
+				dsel (h', d) = D'/\
+				dsel (h, d) = D /\
+				subscribed (D', n, u) = true /\ 		
+				nlmem (D', n, u) = true /\
+				confirmed (D', n, u) = true};
+
+
+
+goal : 	 (n  : { v : nl | true})-> 
+		 (u : { v : user | true}) -> 
 				State {\(h : heap). 
 						\(D : [nlrecord]).
-						(dsel (h, d) = D /\ 
-						subscribed (D, n, u) = true)}
+						dsel (h, d) = D /\
+						nlmem (D , n , u) = true /\
+						subscribed (D, n, u) = true /\
+						confirmed (D, n, u) = false}
 				v : { v : unit | true}  
 				{\(h: heap),(v : unit),(h': heap).
 						\(D : [nlrecord]), (D' : [nlrecord]).
-							dsel (h', d) = D' /\ 
-							dsel (h, d) = D /\
-							nlmem (D', n, u) = true /\
-							subscribed (D', n, u) = false
+							(dsel (h', d) = D' /\ 
+							dsel (h, d) = D) => 
+							(nlmem (D', n, u) = true /\
+							subscribed (D', n, u) = false)
 				};
 		 

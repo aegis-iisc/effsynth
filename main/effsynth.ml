@@ -13,7 +13,7 @@ let () =
  (*    let maxPathlength = int_of_string (Sys.argv.(4)) in 
 
   *)
-    let maxPathlength = 10 in 
+    let maxPathlength = 6 in 
     let _ = Printf.printf "%s" ("\n Show LEARNING :: "^(Sys.argv.(2))) in 
     let _ = Printf.printf "%s" ("\n Show Bidirectional :: "^(Sys.argv.(3))) in 
     
