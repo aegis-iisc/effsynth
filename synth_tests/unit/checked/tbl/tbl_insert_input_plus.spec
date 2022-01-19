@@ -3,7 +3,8 @@ Tbl' : [int];
 Tbl :  [int];
 num : ref int;
 
-
+create_pair : (p1 : {v : int | true}) -> 
+				(p2 : {v : float | true}) -> { v : pair | true}; 
 
 fresh_str : State 
 			{\(h : heap). not (sel (h, num) > 2)} 

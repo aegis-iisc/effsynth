@@ -77,7 +77,7 @@ make_central : (d : { v : int | true}) -> State {
 
 
 delete_device : (d : { v : int | true}) -> 
-								(y : { v : int | true}) -> 
+								(y : { v : int | not [v=d]}) -> 
 								State {\(h : heap).
 											\(D : [int]),(CS : [srpair]).
 											(didsel (h, dtab) = D /\
@@ -98,12 +98,12 @@ delete_device : (d : { v : int | true}) ->
 
 
 goal : (d : { v : int | true}) -> 
-	   (x : { v : int | true}) -> 		
+	   (x : { v : int | not [v = d]}) -> 		
 	 				State {\(h: heap).
 								\(D : [int]).
 								didsel (h, dtab) = D /\ 
 								device (D, d) = true /\
-								device (D, x) = true /\ not [x = d]} 
+								device (D, x) = true } 
 								v : {v : int | true} 
 		 						{\(h: heap),(v : int),(h': heap).
 		 							\(D: [int]),(D' : [int]). 

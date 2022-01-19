@@ -4,6 +4,24 @@ d : ref [nlrecord];
 
 
 
+
+
+select : (n  : { v : string | true})
+							-> (u : { v :string | true}) -> 
+									 
+									 State {\(h : heap).
+									 	\(D : [nlrecord]).
+									 	true									 	} 
+										v : { v : unit | true}
+									   {\(h: heap),(v : unit),(h': heap).
+										\(D : [nlrecord]), (D' : [nlrecord]).
+										dsel (h', d) = D' /\
+										dsel (h, d) = D /\
+										D' = D /\
+										nlmem (D, n, u) = true
+										};
+
+
 confirmS :  (n  : { v : nl | true})-> 
 		  (u : { v : user | true}) -> 
 		State {\(h:heap).
@@ -117,6 +135,8 @@ confirmU :  (n  : { v : nl | true}) ->
 				subscribed (D', n, u) = true /\ 		
 				nlmem (D', n, u) = true /\
 				confirmed (D', n, u) = true};
+
+
 
 
 

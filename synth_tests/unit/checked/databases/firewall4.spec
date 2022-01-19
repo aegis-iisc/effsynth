@@ -24,6 +24,22 @@ add_device : (d : { v : int | true}) -> State {
 
 
 
+make_central : (d : { v : int | true}) -> State {
+										\(h : heap).
+											\(D : [int]), (CS : [srpair]).
+											(didsel (h, dtab) = D /\ dcssel (h, cstab) = CS) =>	
+											(device (D, d) = true /\ central (CS, d) = false)											}
+											v :  { v : unit | true}
+										 { \(h: heap),(v : unit),(h': heap).
+												\(CS : [srpair]), (CS' : [srpair]).
+										 		didsel (h', dtab) = didsel (h, dtab) /\
+												dcssel (h', cstab) = CS' /\
+												central (CS', d) = true
+										 };
+
+
+
+
 diff_device : (d : { v : int | true}) -> State {
 										\(h : heap).
 											\(D : [int]), (CS : [srpair]).
@@ -55,22 +71,6 @@ add_connection : (s : { v : int | true})
 												dcssel (h', cstab) = CS' /\
 												cansend (CS', s, r) = true 
 											}; 
-
-
-
-make_central : (d : { v : int | true}) -> State {
-										\(h : heap).
-											\(D : [int]), (CS : [srpair]).
-											(didsel (h, dtab) = D /\ dcssel (h, cstab) = CS) =>	
-											(device (D, d) = true /\ central (CS, d) = false)											}
-											v :  { v : unit | true}
-										 { \(h: heap),(v : unit),(h': heap).
-												\(CS : [srpair]), (CS' : [srpair]).
-										 		didsel (h', dtab) = didsel (h, dtab) /\
-												dcssel (h', cstab) = CS' /\
-												central (CS', d) = true
-										 };
-
 
 delete_device : (d : { v : int | true}) -> 
 				(y : { v : int | not [v = d]}) -> 

@@ -33,25 +33,6 @@ natural : State {\(h : heap).
 					sel (h', fuel) == sel (h, fuel) /\
 					asciinumber (v) = true};
 
-
-
-uppercase  : State {\(h : heap).
-				true} 
-				v : { v : [char] | true} 
-			  	{\(h: heap),(v : [char]),(h': heap).
-					\(e : char), (cc : int).
-					sel (h', fuel) == sel (h, fuel) /\
-					asciiupper (cc) = true};
-
-
-alphanum : State {\(h : heap).
-				true} 
-				v : { v : [char] | true} 
-			  	{\(h: heap),(v : [char]),(h': heap).
-					\(e : char), (cc : int).
-					sel (h', fuel) == sel (h, fuel) /\
-					asciialphanum (cc) = true};
-
 length : State {\(h : heap).
 				sel (h, fuel) == 0} 
 				v : { v : int | true} 

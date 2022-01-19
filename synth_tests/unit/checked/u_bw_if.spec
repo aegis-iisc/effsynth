@@ -27,3 +27,17 @@ goal : (i : {v : int | true}) ->
 		sel (h', res) == 10 
 		};
 
+
+(*
+ If (apply boolf  (, i ) ) then 
+ apply foo_true  (, i ) 
+ 	 >>= \lambda var_ret4 . 
+ 	 Eskip 
+ else apply foo_false  (, i ) 
+ 	 >>= \lambda loci17 . 
+ 	 apply foo_true  (, loci17 ) 
+ 	 >>= \lambda var_ret16 . 
+ 	 Eskip 
+ }
+
+*)

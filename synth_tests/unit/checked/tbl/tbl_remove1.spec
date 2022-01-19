@@ -4,6 +4,22 @@ Tbl :  [int];
 num : ref int;
 
 
+mem : (s  : { v : int | true}) -> 
+			State  
+			{\(h : heap). true} 
+			v : { v : bool | true} 
+			
+			{\(h : heap), (v : bool), (h' : heap). 
+				\(Tbl' : [int]), (Tbl: [int]).
+				ilssel (h', tbl) = Tbl'/\
+				ilssel (h, tbl) = Tbl /\
+				sel (h', num) == sel (h, num) /\
+				ilssel (h', tbl) = ilssel (h, tbl) /\
+				size (Tbl') == size (Tbl) /\
+				([v=true] <=> ( mem(Tbl', s) = true))/\ 
+				([v=false] <=> (mem (Tbl', s) = false))};
+
+
 
 fresh_str : State 
 			{\(h : heap). not (sel (h, num) > 2)} 
@@ -68,7 +84,6 @@ goal : (s : {v : int | true}) ->
 			 \(Tbl : [int]). 
 				sel (h, num) == 0 /\
 				ilssel (h, tbl) = Tbl /\
-				mem (Tbl, s) = true  /\
 				size (Tbl) > 0}
 				v : {v : float | true}
 		  	{\(h : heap), (v : float), (h' : heap). 

@@ -61,19 +61,19 @@ add : (s : {v : int | true}) ->
 				};
 
 
-goal : (s : {v : int | true}) -> 
-		State {\(h : heap). 
-			 \(Tbl : [int]). 
-				sel (h, num) == 0 /\
-				ilssel (h, tbl) = Tbl /\
-				not  (0 > size (Tbl))}
-				v : {v : unit | true}
-		  	{\(h : heap), (v : unit), (h' : heap). 
-				\(Tbl' : [int]), (Tbl : [int]).
-				(ilssel (h, tbl) = Tbl /\  
-				ilssel (h', tbl) = Tbl')   
-				=> 
-				((mem (Tbl', s) = true) /\
-				size (Tbl') == size (Tbl) + 2 )
-				
-			};
+	goal : (s : {v : int | true}) -> 
+			State {\(h : heap). 
+				\(Tbl : [int]). 
+					sel (h, num) == 0 /\
+					ilssel (h, tbl) = Tbl /\
+					not  (0 > size (Tbl))}
+					v : {v : unit | true}
+				{\(h : heap), (v : unit), (h' : heap). 
+					\(Tbl' : [int]), (Tbl : [int]).
+					(ilssel (h, tbl) = Tbl /\  
+					ilssel (h', tbl) = Tbl')   
+					=> 
+					((mem (Tbl', s) = true) /\
+					size (Tbl') == size (Tbl) + 2 )
+					
+				};

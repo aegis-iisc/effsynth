@@ -7,10 +7,11 @@ fresh_el :  State
 			{\(h : heap). not (sel (h, num) > 2)} 
 			v : { v : int | true} 
 			{\(h : heap), (v : int), (h' : heap). 
-				\(Q' : queue).
+				\(Q' : queue),(Q : queue).
 				sel (h', num) == sel (h, num) + 1 /\
 				qsel (h', q) = Q' /\  
-				qsel (h', q) = qsel (h, q) /\
+				qsel (h, q) = Q /\
+				qsize (Q') = qsize(Q) /\
 				qmem (Q', v) = false};
 
 add : (x : { v : int | true})   -> State {\(h : heap). 
@@ -72,12 +73,13 @@ clear :	State {\(h : heap).
 goal : (x : {v : int | true})-> 
 	State {\(h : heap).
 			\(Q: queue).
+			sel (h, num) == 0 /\
 			qsel (h, q) = Q /\
-			qmem (Q, x) = false /\
+			qmem (Q, x) = true /\
 			not  (0 > qsize (Q))
 		 }
-			v : {v : int | true}  
-	{\(h : heap), (v : int), (h' : heap). 
+			v : {v : unit | true}  
+	{\(h : heap), (v : unit), (h' : heap). 
 		\(Q: queue), (Q': queue).
 		(qsel (h, q) = Q /\
 		qsel (h', q) = Q') => 

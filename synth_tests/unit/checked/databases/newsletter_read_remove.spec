@@ -132,14 +132,14 @@ goal : 	 (n  : { v : nl | true})->
 						\(D : [nlrecord]).
 						dsel (h, d) = D /\
 						nlmem (D , n , u) = true /\
-						subscribed (D, n, u) = false /\
-						confirmed (D, n, u) = false}
+						subscribed (D, n, u) = true /\
+						confirmed (D, n, u) = true }
 				v : { v : [string] | true}  
 				{\(h: heap),(v : [string]),(h': heap).
 						\(D : [nlrecord]), (D' : [nlrecord]).
 							(dsel (h', d) = D' /\ 
 							dsel (h, d) = D ) => 
-							(nlmem (D', n, u) = false /\
-							v = articles (D'))};
+								(v = articles (D') /\
+								nlmem (D', n, u) = false)};
 		 
-		 
+

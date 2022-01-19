@@ -80,3 +80,4 @@ goal : (x : {v : int | true})->
 		qsize (Q') == qsize (Q) + 1)
 
 	};
+

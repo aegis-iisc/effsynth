@@ -5,18 +5,6 @@ num : ref int;
 
 
 
-fresh_str : State 
-			{\(h : heap). not (sel (h, num) > 1)} 
-			v : { v : int | true} 
-			{\(h : heap), (v : int), (h' : heap). 
-				\(Tbl' : [int]).
-				sel (h', num) == sel (h, num) + 1 /\
-				ilssel (h', tbl) = Tbl' /\  
-				ilssel (h', tbl) = ilssel (h, tbl) /\
-				mem (Tbl', v) = false};
-
-
-
 
 
 average_len : State  {\(h : heap).
@@ -45,6 +33,32 @@ remove 	: (s : {v : int  | true}) ->  (t : {v : tbl | true}) ->
 				size (Tbl') == size (Tbl) - 1)};
 
 
+
+fresh_str : State 
+			{\(h : heap). not (sel (h, num) > 1)} 
+			v : { v : int | true} 
+			{\(h : heap), (v : int), (h' : heap). 
+				\(Tbl' : [int]).
+				sel (h', num) == sel (h, num) + 1 /\
+				ilssel (h', tbl) = Tbl' /\  
+				ilssel (h', tbl) = ilssel (h, tbl) /\
+				mem (Tbl', v) = false};
+
+
+
+
+size : State 
+			{\(h : heap). true} 
+			v : { v : int | true} 
+			{\(h : heap), (v : int), (h' : heap). 
+				\(Tbl' : [int]),(Tbl : [int]).
+				ilssel (h, tbl) = Tbl /\  
+				ilssel (h', tbl) = Tbl' /\  
+				v == size (Tbl) /\
+				ilssel (h', tbl) = ilssel (h, tbl)};
+
+
+
 add : (s : {v : int | true}) ->  
 			State  {\(h : heap).
 				\(Tbl : [int]). 
@@ -58,6 +72,8 @@ add : (s : {v : int | true}) ->
 				mem (Tbl', s) = true /\
 				size (Tbl') == size (Tbl) + 1
 				};
+
+
 
 
 goal : (s : {v : int | true}) -> 

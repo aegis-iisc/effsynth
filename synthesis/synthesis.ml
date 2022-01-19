@@ -138,9 +138,30 @@ type deduceResult =
                         }
 
 
+let	split list	n =	
+	let	rec	aux	i acc	=	function	
+		|	[]	->	(List.rev acc,	[])	
+		|	h	::	t	as	l	->	
+                if	(i	=	0)	then	
+                   (List.rev acc,l)	
+				else aux (i-1) (h::acc) t		
+    in	
+	aux	n []	list	
+			
+let	rotate	list	n	=	
+	let	len	=	List.length	list	in	
+	let	n =	if	(len=0)	
+                then 0	
+                else (n	mod	len	+len) mod len in	
+	if	n	=	0	then	
+        list	
+	else	
+        let	(a,	b)	=	split list n in	
+            b	@	a	
+
 let enumPureE explored gamma sigma delta (spec : RefTy.t) : (Syn.typedMonExp) list  = 
     (*can enumerate a variable of refined basetype, an arrow type or a effectful component*)
-     Message.show ("\n Show ::  In enumPureE");        
+     (* Message.show ("\n Show ::  In enumPureE");         *)
                 
     match spec with 
       (*Tvar case*)
@@ -157,9 +178,9 @@ let enumPureE explored gamma sigma delta (spec : RefTy.t) : (Syn.typedMonExp) li
             match fs with
              | [] -> potentialExps 
              | (vi, rti) :: xs -> 
-                 Message.show ("\n Show ::  Enumerating a Pure Term "^(Var.toString vi));
+                 (* Message.show ("\n Show ::  Enumerating a Pure Term "^(Var.toString vi));
                  Message.show ("\n Show ::  Enumerating a Pure Term "^(Char.escaped (vi.[0])));
-                 
+                  *)
                  (** Skip the ghost Vars like [A-Z]**)
                  let  startCharvar = vi.[0] in 
                  let upper = Char.uppercase_ascii startCharvar in 
@@ -180,7 +201,7 @@ let enumPureE explored gamma sigma delta (spec : RefTy.t) : (Syn.typedMonExp) li
                     if (isGhost) then 
                       verifyFound xs potentialExps 
                     else                   
-                        let () = Message.show ("\n Show ::  Associated Delta "^(Predicate.toString delta)) in
+                        (* let () = Message.show ("\n Show ::  Associated Delta "^(Predicate.toString delta)) in *)
                         (*substitute, bound variables in both with the argument variable*)
                         let rti_bound_vi = RefTy.alphaRenameToVar rti vi in 
                         let spec_bound_vi = RefTy.alphaRenameToVar spec vi in 
@@ -625,7 +646,14 @@ let distinguish gamma ptypeMap dps spec path ci rti=
     let gammaMap4vc2 = gammaMap@(DPred.getGamma diffpred_ci_gammaCap) in 
     let deltaPred4vc2 = Predicate.Conj(deltaPred, (DPred.getDelta diffpred_ci_gammaCap)) in  
    
+     (* if (true) then (** hack for NO-CDCL numbers *)
+           let () = Message.show ("Show-EXPLORED********* NO CDCL :: Trivial DiffPredicate ") in 
+          
+           let gammaCapPotential = DPred.T {gamma=gammaMap4vc2;sigma=sigmaMap;delta=deltaPred4vc2} in 
+            (gammaCapPotential, potential_path_post, ptypeMap,  potential_path_post, true)
+     
     (*till we have not seen ci in a conflict node, we try to discard cj.ck.ci**)
+     else  *)
     if (diffpred_ci_learntConj == P.True) then
          (*Trivial case sp (pre, (path :: ci)) => True*)
           let () = Message.show ("Show ***********DiffPredicate "^(Predicate.toString diffpred_ci_learntConj)) in 
@@ -1667,6 +1695,8 @@ and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp opti
                                         Message.show "Show ***********WP : COMPLETE ***************";
                                         Some {Syn.expMon=Syn.buildProgramTerm backpath;Syn.ofType = spec}
                             | _ ->     
+                                   
+                                   (* raise (SynthesisException "Backward Failed"); *)
                                    Message.show "Show ***********WP : FLIP/BREAK : Calling CDCL ***************";
                                    (*if there are holes in the backpath, find the last hole and try makes the forward call treating the type of the hole as the 
                                     retrun type , Thus the spec for the forward call is constructed as follows :
@@ -1764,7 +1794,8 @@ and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp opti
                     let hypothesis = initialP in 
                     let experiences = Experiences.naive in 
                     let (res, _) = cdcleffSynthesizeBind k hypothesis gammacap dps spec experiences in 
-                        
+                    (* let res = NoLearning.cdcleffSynthesizeBind gammacap dps_empty spec  in   *)
+                    
                     (match res with 
                             | Some me ->  Some {Syn.expMon = me; 
                                                     Syn.ofType = spec}
@@ -1850,6 +1881,7 @@ else
                c_wellRetTypeLambda@c_bools
             else             
                 c_wellRetTypeLambda@c_es in  
+        let c_es = rotate c_es (List.length path) in 
         Message.show ("CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
 
         (*
@@ -1911,23 +1943,20 @@ else
                                 
                                 let () = List.iter (fun ai_list -> 
                                                      List.iter (
-                                                                fun aij -> Message.show (" \n Argij "^(Syn.typedMonExp_toString aij))
+                                                                fun aij -> Message.show (" \n Show Argij "^(Syn.typedMonExp_toString aij))
                                                                 ) ai_list) es in 
                                 (*A Hack for the examples* *)
                                 let ei_hds =  
-                                if (List.length es > 1) then 
+                                (* if (List.length es > 1) then  *)
                                         (List.map (fun ei_list -> 
-                                                if (List.length ei_list > 1) then 
-                                                    (List.nth ei_list 1) 
+                                                if (List.length ei_list > 2) then 
+                                                    (List.nth (ei_list) 2) 
                                                         else 
                                                 List.hd (ei_list)) es) 
-                                else 
-                                        (List.map (fun ei_list -> List.hd (ei_list)) es)
+                                (* else 
+                                        (List.map (fun ei_list -> List.hd (ei_list)) es) *)
                                 in 
-                                let () = List.iter (
-                                                                fun aij -> Message.show (" \n Headi "^(Syn.typedMonExp_toString aij))
-                                                                ) ei_hds in 
-                                
+                                let () = List.iter (fun aij -> Message.show (" \n Show Headi "^(Syn.typedMonExp_toString aij))) ei_hds in 
                                 let monExps_es = List.map (fun ei -> ei.expMon) ei_hds in 
                                 let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
                                 let boundVar = Var.fresh_binding_var "bound" in 
@@ -2628,6 +2657,7 @@ and bottomUpChoose
                                             let actualArgi = esynthesizeScalar gammaMap sigmaMap deltaPred [ti ;holeType] in
                                             let base_ti = RefTy.toTyD ti in 
                                             let boundVari = Var.fresh_binding_var argi in 
+                                            
                                             match actualArgi with 
                                                 | [] ->  
                                                           ( bindingsAcc@[boundVari, ti],
@@ -2641,7 +2671,6 @@ and bottomUpChoose
                                                                             List.nth actualArgi 1 
                                                                       else 
                                                                             List.hd (actualArgi) in 
-                                                        Message.show ("\n Show Argi &&&&&&&&&&&&&&&&&&&&&&"^(Syn.typedMonExp_toString ei));
                                                         
                                                           let ei_monExp = ei.expMon in 
                                                           let Syn.Evar xi = ei_monExp in 
@@ -2887,7 +2916,9 @@ and bottomUpChoose
                                         else 
                                             Effect.isSubEffect effi eff) gammaMap (*c_wellRetType*) in 
 
-
+                        let c_es = rotate c_es (List.length path) in 
+                        Message.show ("Show >>>>>>>>>.Potential Functions");
+                
 
                         wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred c_es prefixPath holeVar topType suffixPath (pre:Predicate.t) post
                 else (*try filling some more holes*)
@@ -2937,8 +2968,10 @@ and bottomUpChoose
             
              let c_es = c_wellRetTypeLambda@c_es in 
 
-             Message.show ("Show Potential Functions");
-             Message.show (List.fold_left (fun acc (vi, _) -> acc^", \n Show"^Var.toString vi) " " c_es);
+            let c_es = rotate c_es (List.length path) in 
+            Message.show ("Show &&&&&&&&&&&&& Potential Functions");
+            
+            Message.show (List.fold_left (fun acc (vi, _) -> acc^", \n Show"^Var.toString vi) " " c_es);
    
                                                                   
 

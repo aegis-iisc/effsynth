@@ -4,6 +4,8 @@ ids :  ref [string];
 
 Ty : [string];
 Id : [string];
+Ty' : [string];
+Id' : [string];
 
 
 
