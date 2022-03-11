@@ -18,7 +18,6 @@ module Experiences = Knowledge.Experiences
 
 
 
-
 exception SynthesisException of string 
 exception Unhandled
 
@@ -37,6 +36,13 @@ module Message = struct
 end
 
 
+module Quals = Set.Make( 
+  struct
+    type t = RelId.t
+    let equal t1 t2 = RelId.equal (t1, t2)
+    let compare t1 t2 = if (equal t1 t2) then 0 else -1 
+   
+  end )
 
 module Bidirectional : sig
   val itercount : int ref 
@@ -45,6 +51,9 @@ module Bidirectional : sig
   val learnConst : bool 
   val noLearnConst : bool 
   val visitedPaths : path list ref 
+
+  val count_filter : int ref
+  val count_chosen : int ref
 
   type ('a, 'b) result = 
             Success of 'a 
@@ -106,6 +115,12 @@ let enumerated = ref []
 let subprobplem = ref []
 let visitedPaths = ref [[]]
 let tryCount = ref 0
+
+
+let   count_filter = ref 0
+let   count_chosen = ref 0
+
+
 
 let learnConst = true 
 let noLearnConst = false
@@ -330,9 +345,12 @@ let rec enumerateEffAndFind explored gamma sigma delta (spec : RefTy.t)  : (Expl
                             | VCE.Success -> 
                                             let explored = vi :: explored in 
                                             Message.show ("***************Selection Successful************"^(Var.toString vi));    
+                                            let _ = count_chosen := !count_chosen + 1 in  
                                             let retMonExp = Syn.Eret (Syn.Evar (vi)) in 
                                             (explored, Some {expMon = retMonExp; ofType=rti})
                             | VCE.Failure -> 
+                                            let _ = count_filter := !count_filter + 1 in 
+
                                             Message.show ("***************Selection Failed************"^(Var.toString vi));    
                                             verifyFound explored xs
                             | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
@@ -1103,7 +1121,9 @@ let rec esynthesizePureApp gamma sigma delta specs_path : Syn.typedMonExp option
                                     let funAppType =  SynTC.typecheck gamma sigma delta appliedMonExp spec in 
                                     match funAppType with 
                                         | Some type4AppliedMonExp -> 
+                                            
                                             Message.show (" Show *************** TypeChecking Succsessful "^(RefTy.toString type4AppliedMonExp));
+                                            
                                             Some {expMon= appliedMonExp; ofType=type4AppliedMonExp}                                  
                                         | None ->  choice xs gamma sigma delta 
                                     
@@ -1678,7 +1698,10 @@ and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp opti
                     (*initial path H1 : pair*)
                     
                     let () = Message.show ("Show EXPLORED :: "^Syn.pathToString path) in 
+                    let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+                    let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
                    
+
                     let () = Message.show "Show ***********Calling weakestPreSynththesis***************" in 
                     if (!itercount >= 5) then 
                             None 
@@ -1882,7 +1905,87 @@ else
             else             
                 c_wellRetTypeLambda@c_es in  
         let c_es = rotate c_es (List.length path) in 
+        
+
+
+
         Message.show ("CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
+(*         
+        let set_of_qualifier_list lst = List.fold_left (fun quals rid_i -> if (List.exists (rid_i quals)) then 
+                                                                        quals 
+                                                                        else 
+                                                                        rid_i :: quals) [] lst in 
+
+
+
+        let union lst1 lst2 = set_of_qualifier_list (list1@list2) in 
+            
+
+                                                                     *)
+        
+        (* filter out the functions s specs are not-interesting ss *)
+        let qualifier_spec_pre = Quals.of_list (Predicate.getRelation pre)  in 
+        let qualifier_spec_post = Quals.of_list (Predicate.getRelation post)  in 
+
+        let qualifier_spec = Quals.union (qualifier_spec_pre) (qualifier_spec_post) in 
+        
+        let () = Quals.iter (fun e -> Printf.printf "%s" ("\n SPEC QUALS "^(RelId.toString e))) qualifier_spec in 
+        let c_es = 
+            List.filter (fun (vi , ti) -> 
+                     let () = Printf.printf "%s" ("\n Component "^(Var.toString vi)) in 
+
+                           
+                       match ti with 
+                         | RefTy.Arrow ((varg, argty), _) -> 
+                            let uncurried = RefTy.uncurry_Arrow ti in 
+                            let RefTy.Uncurried (args_ty_list, retty) = uncurried in 
+                            let RefTy.MArrow (_, pre_lib, (_, _), post_lib) = retty in 
+                            (* let  () = List.iter (fun e -> Printf.printf "%s" ("\n Lib Rels PRE "^(RelId.toString e))) (Predicate.getRelation pre_lib) in  *)
+                            let qualifier_lib_pre = Quals.of_list(Predicate.getRelation pre_lib) in 
+                            
+                            (* let  () = List.iter (fun e -> Printf.printf "%s" ("\n Lib Rels POST "^(RelId.toString e))) (Predicate.getRelation post_lib) in  *)
+                            
+                            let qualifier_lib_post = Quals.of_list (Predicate.getRelation post_lib) in 
+                            let qualifier_lib = Quals.union qualifier_lib_pre qualifier_lib_post in 
+                            (* let () = Quals.iter (fun e -> Printf.printf "%s" ("\n Lib QUALS "^(RelId.toString e))) qualifier_lib in  *)
+        
+                            let qualifier_intersection = Quals.inter qualifier_spec qualifier_lib in 
+                            (* let () = Quals.iter (fun e -> Printf.printf "%s" ("\n INTER "^(RelId.toString e))) qualifier_intersection in  *)
+
+                            (* can add more elements to {sel}*)
+                            let diff = Quals.diff qualifier_intersection (Quals.singleton "sel") in     
+
+                            (* let () = Quals.iter (fun e -> Printf.printf "%s" ("\n DIFF "^(RelId.toString e))) diff in  *)
+
+                            not (Quals.is_empty diff)
+                                
+
+                        | RefTy.MArrow (_,pre_lib,(_,_), post_lib) ->
+                            let qualifier_lib_pre = Quals.of_list (Predicate.getRelation pre_lib) in 
+                            let qualifier_lib_post = Quals.of_list (Predicate.getRelation post_lib) in 
+                            let qualifier_lib = Quals.union qualifier_lib_pre qualifier_lib_post in 
+                            (* let () = Quals.iter (fun e -> Printf.printf "%s" ("\n Lib QUALS "^(RelId.toString e))) qualifier_lib in  *)
+        
+                            let qualifier_intersection = Quals.inter qualifier_spec qualifier_lib in 
+                           
+                            (* let () = Quals.iter (fun e -> Printf.printf "%s" ("\n INTER "^(RelId.toString e))) qualifier_intersection in  *)
+                            
+                            (* can add more elements to {sel}*)
+                            let diff = Quals.diff qualifier_intersection (Quals.singleton "sel") in     
+
+                            (* let () = Quals.iter (fun e -> Printf.printf "%s" ("\n DIFF "^(RelId.toString e))) diff in  *)
+
+                            not (Quals.is_empty diff)
+                            
+
+                        | RefTy.Base  (_,_, predicate_lib) -> 
+                            true
+                    ) c_es    
+
+        in 
+
+          Message.show ("After Filtering CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
+       
 
         (*
         loop over the potential choices
@@ -1936,6 +2039,7 @@ else
                         (match e_allsuccessful with (*BEGIN1*)
                             | None -> (*Atleast one required argument cannot be synthesized thus cannot make the call*)
                                     Message.show (" Show *************** Synthesizing Args ei : Failed for some  arg");
+                                    let _ = count_filter := !count_filter + 1 in 
                                     choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
                             | Some es -> (* es is a list of lists ([i;j...k]; [p;q;...n]...) *)
                                 Message.show (" Show *************** Successfully Synthesized Args ei Forall i "^(string_of_int (List.length es)));
@@ -1966,6 +2070,7 @@ else
                                 (*Hypethesis Satisfiability Check*)
                                 let hSat = Syn.satHypothesis path hypothesis in 
                                 if (hSat = false) then 
+                                    let _ = count_filter := !count_filter + 1 in 
                                     choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
                                 else        
                                 (*Optimization, filter out the path if it is syntactically same as other path
@@ -1976,7 +2081,8 @@ else
                                 Message.show (List.fold_left (fun str pi -> str^"\n"^( Syn.pathToString pi)) ("\n ") !visitedPaths);
                             
                                 if (Syn.pathInList potentialPath (!visitedPaths)) then 
-                                    (*skip*)    
+                                    (*skip*)  
+                                    let _ = count_filter := !count_filter + 1 in   
                                     choice xs gammacap dps failingDisjuncts p2gMap ptypeMap    
                                 else     
                                     let () = Message.show (" Show *************** HSAT Successful ************"^(Var.toString vi)) in    
@@ -2016,6 +2122,7 @@ else
                                                 x_bound <- F (xis) Pre v Post, we must add Post[x_bound/v] in the Gamma*)
 
                                             let () = Message.show (" Show *************** Distinguished : Returning the choice ************"^(Var.toString vi)) in  
+                                            let _ = count_chosen := !count_chosen + 1 in 
                                             let RefTy.MArrow (_,_,(vret, tret),_) = retty  in 
                                             let RefTy.Base (var4Ret, _,_) = tret in  
                                             let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar tret in     
@@ -2029,6 +2136,7 @@ else
                                             
                                             (gamma_with_ci, p2gMap, ptypeMap, Chosen (dps, doExpForApp, new_path))  
                                         else
+                                            let _ = count_filter := !count_filter + 1  in 
                                             (*~phi_ci'*)
                                             let not_phi_ci' =  Predicate.Not phi_ci' in 
                                             Message.show (" Show *************** Not-Distinguished : Now Adding D(ci) conjunct ************"^(Var.toString vi));
@@ -2048,6 +2156,7 @@ else
                                             *)
 
                                     else (*allowed = false*)
+                                        let _ = count_filter := !count_filter + 1 in 
                                         let failing_predicate = post_imp_phi_ci' in 
                                         Message.show (" Show *************** Hoare-Not-Allowed : Now Adding D(ci) Disjuncts ************");
                                         (*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
@@ -2094,6 +2203,7 @@ else
                             let potentialPath = path@[doExpForComp] in       
                             let hSat = satHypothesis path hypothesis  in 
                             if (hSat = false) then 
+                                    let _ = count_filter := !count_filter + 1 in 
                                     choice xs gammacap dps failingDisjuncts p2gMap ptypeMap
                             else
                                 let () = Message.show (" Show **************  Syntactic Equivalent Stuckness Check********"^(Var.toString vi)) in 
@@ -2103,8 +2213,9 @@ else
                                 Message.show (List.fold_left (fun str pi -> str^"\n"^( Syn.pathToString pi)) ("\n ") !visitedPaths);
                                 
                                 if (Syn.pathInList potentialPath (!visitedPaths)) then 
-                                        (*skip*)    
-                                  choice xs gammacap dps failingDisjuncts p2gMap ptypeMap    
+                                        (*skip*) 
+                                   let _ = count_filter := !count_filter + 1 in         
+                                   choice xs gammacap dps failingDisjuncts p2gMap ptypeMap    
                                 else     
                                     let () = Message.show (" Show *************** HSAT Successful ************"^(Var.toString vi)) in    
                                     let () = Message.show (" Show *************** Calling Hoare-Pre ************"^(Var.toString vi)) in 
@@ -2113,6 +2224,7 @@ else
                                     if (allowed) then 
                                         let () =  Message.show (" Show *************** 
                                                     Hoare-Allowed : Now Checking distingushing Predicate ************"^(Var.toString vi)) in 
+                                        
                                         let (gamma_with_ci, previous, ptypeMap, phi_ci', isDistinguished) = distinguish gammacap ptypeMap dps spec path doExpForComp rti in 
                                         
                                         let dp_ci = 
@@ -2137,6 +2249,7 @@ else
                                             let () = 
                                                 Message.show (" Show *************** Distinguished : Returning the choice ************"^
                                                         (Var.toString vi)) in 
+                                            let _ = count_chosen := !count_chosen + 1 in 
                                             let RefTy.MArrow (_,_,(vrti, trti),_) = rti  in
                                             let gamma_with_ci = DPred.addGamma (gamma_with_ci) boundVar trti in     
                                                 
@@ -2156,7 +2269,7 @@ else
                                             let () = 
                                                 Message.show (" Show *************** Not-Distinguished : 
                                                                 Now Adding conjunct ************"^(Var.toString vi)) in  
-                                         
+                                            let _ = count_filter := !count_filter + 1 in 
                                            (*~phi_ci'*)
                                            let not_phi_ci' =  Predicate.Not phi_ci' in 
                                           
@@ -2173,6 +2286,8 @@ else
                                         let () = 
                                             Message.show (" Show *************** 
                                                     Hoare-Not-Allowed : Now Adding Disjuncts ************") in 
+                                         let _ = count_filter := !count_filter + 1 in 
+                                           
                                         let failing_predicate = post_imp_phi_ci' in 
                                         (*if Case c1...ck ----> vi  , add D (ck) = pre (vi) *)
                                         let dps= 
@@ -2223,7 +2338,9 @@ and deduceR (k : int)
             (ptypeMap : PTypeMap.t): (DPred.gammaCap * PGMap.t * PTypeMap.t * deduceResult) = 
     
     Message.show (" EXPLORED :: "^(pathToString path));
-        
+    let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+    let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
+                     
     if (!litercount > 100) then 
                 (* let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in  *)
          raise (LearningException "FORCED STOPPED") 
@@ -2386,6 +2503,9 @@ This *)
     let rec loop experience gammacap path spec dps path2GammaMap ptypeMap =
         
         Message.show (" EXPLORED :: "^(pathToString path));
+        let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+        let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
+                 
         let (gammacap, p2gMap, ptypeMap, chooseres) = chooseC k hypothesis gammacap path spec dps path2GammaMap ptypeMap in 
         match chooseres with 
             | Nothing _ -> 
@@ -2418,6 +2538,9 @@ This *)
             | Chosen (dps', ei, pi) ->  
                 
                 Message.show (" EXPLORED :: "^(pathToString pi));
+                let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+                let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
+                 
                 Message.show ("Show :: Chosen "^(Syn.monExp_toString ei));
             (*  Message.show ("New DPS "^(DMap.toString dps));
              *) Message.show(" Show :: Run deduceR");
@@ -2427,7 +2550,9 @@ This *)
                 match deduceres with 
                     | Success p ->
                             Message.show (" EXPLORED :: "^(pathToString p));
-             
+                            let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+                            let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
+                 
                             (Some (Syn.buildProgramTerm  p), experience)
                     | Conflict {env;dps;conflictpath;conflictpathtype;disjuncts} -> 
                             Message.show (" Show :: Conflict Path  Found  :: Calling learnP Now");
@@ -2507,7 +2632,6 @@ and  weakestPreSynththesis  ( backtrack : bool)
         
         (*Check if h'_wp => h_wp then skip this choice*)
         if (checkFromExperience h_wp h'_wp  gammacap) then         
-                    
             (*depending on the result from the backward synthesis either call forward, continue *)
             match result with 
                 (*TODO :: At the moment we treat Break and Flip in a similar manner, returning to the forward Call*)
@@ -2584,6 +2708,9 @@ and bottomUpChoose
                 (post:Predicate.t) : (PWPMap.t * WPP2CMap.t * DPred.gammaCap * Predicate.t * Syn.path * wpresult)  = 
     
     Message.show ("Show :: EXPLORED BW-CHOOSE :: WP :: PATH "^(Syn.pathToString path));
+    let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+    let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
+                
     let gammacap = DPred.T{gamma=gammaMap;sigma=sigmaMap;delta=deltaPred} in 
     
     (*recursive loop, used by both paths with holes and without holes*)            
@@ -2618,6 +2745,7 @@ and bottomUpChoose
                         | e -> [] 
             in              
             if (List.exists (fun visitedi -> Var.equal vi visitedi) visited4Suffix) then 
+                let _ = count_filter := !count_filter + 1 in 
                 let () = Message.show (" Show *************** WP : Already visited path"^(Syn.pathToString suffixPath)^" <- "^(Var.toString vi)) in 
                 wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred xs prefixPath holeVar holeType suffixPath pre post
             else 
@@ -2638,6 +2766,7 @@ and bottomUpChoose
                         (*skip this components*)
                         
                         let () = Message.show (" Show *************** WP : Non-Match Return Type Skipping "^(Var.toString vi)) in 
+                        let _ = count_filter := !count_filter + 1 in 
                         Message.show ("Show WP HoleType : "^(RefTy.toString holeType));
                         Message.show ("Show WP ViRetTy  : "^(RefTy.toString retty));
 
@@ -2702,6 +2831,7 @@ and bottomUpChoose
                             let actualArgs = List.map (fun (vi,ti) -> Syn.Evar vi) newbindings in 
                             let appliedMonExp = Syn.Edo (   holeVar,
                                                             Syn.Eapp (Syn.Evar vi, actualArgs)) in  (*apply vi e_arg*)
+                            let _ = count_chosen := !count_chosen + 1 in 
                             let synthesized_partial = holes@[appliedMonExp] in 
                             let updatedPath = prefixPath@synthesized_partial@suffixPath in 
                             
@@ -2764,6 +2894,7 @@ and bottomUpChoose
                         Message.show ("Show WP HoleType : "^(RefTy.toString holeType));
                         Message.show ("Show WP ViRetTy  : "^(RefTy.toString retbt));
 
+                        let _ = count_filter := !count_filter + 1 in 
 
                         wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred xs prefixPath holeVar holeType suffixPath pre post
                     else    
@@ -2826,6 +2957,7 @@ and bottomUpChoose
 
                         if (not (List.length args_ty_list == List.length newbindings)) then 
                             let () = Message.show (" &&&&& "^(string_of_int (List.length args_ty_list))^ "!= "^(string_of_int (List.length newbindings))) in 
+                            let _ = count_filter := !count_filter + 1 in 
                             wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred xs prefixPath holeVar holeType suffixPath pre post 
                         else         
                             let () = Message.show (" Show *************** WP : Generating WP for Effectful Ci "^(Var.toString vi)) in 
@@ -2848,6 +2980,7 @@ and bottomUpChoose
                             match wpCheck with 
                                 | Break -> 
                                         Message.show (" Show *************** WP : Break WP_Check Failed for Ci "^(Var.toString vi));
+                                        let _ = count_filter := !count_filter + 1 in 
                                         wp_choose path2wpMap 
                                                     path2visitedMap 
                                                         gammaMap 
@@ -2855,6 +2988,7 @@ and bottomUpChoose
                                                                 deltaPred xs prefixPath holeVar holeType suffixPath pre post
                                 | Continue -> (*Ci is a correct wp choice*)
                                         Message.show (" Show *************** WP : Continue  Ci "^(Var.toString vi));
+                                        let _ = count_chosen := !count_chosen + 1 in 
                                         let appliedMonExp = Syn.Edo ( holeVar,
                                                                         Syn.Eapp (Syn.Evar vi, actualArgs)) in 
                                         Message.show ("Show WP :: HOles "^(Syn.pathToString actualArgs));
@@ -2973,7 +3107,71 @@ and bottomUpChoose
             
             Message.show (List.fold_left (fun acc (vi, _) -> acc^", \n Show"^Var.toString vi) " " c_es);
    
-                                                                  
+
+           (* filter out the functions s specs are not-interesting ss *)
+        let qualifier_spec_pre = Quals.of_list (Predicate.getRelation pre)  in 
+        let qualifier_spec_post = Quals.of_list (Predicate.getRelation post)  in 
+
+        let qualifier_spec = Quals.union (qualifier_spec_pre) (qualifier_spec_post) in 
+        
+        let () = Quals.iter (fun e -> Printf.printf "%s" ("\n SPEC QUALS "^(RelId.toString e))) qualifier_spec in 
+        let c_es = 
+            List.filter (fun (vi , ti) -> 
+                     let () = Printf.printf "%s" ("\n Component "^(Var.toString vi)) in 
+
+                           
+                       match ti with 
+                         | RefTy.Arrow ((varg, argty), _) -> 
+                            let uncurried = RefTy.uncurry_Arrow ti in 
+                            let RefTy.Uncurried (args_ty_list, retty) = uncurried in 
+                            let RefTy.MArrow (_, pre_lib, (_, _), post_lib) = retty in 
+                            let  () = List.iter (fun e -> Printf.printf "%s" ("\n Lib Rels PRE "^(RelId.toString e))) (Predicate.getRelation pre_lib) in 
+                            let qualifier_lib_pre = Quals.of_list(Predicate.getRelation pre_lib) in 
+                            
+                            let  () = List.iter (fun e -> Printf.printf "%s" ("\n Lib Rels POST "^(RelId.toString e))) (Predicate.getRelation post_lib) in 
+                            
+                            let qualifier_lib_post = Quals.of_list (Predicate.getRelation post_lib) in 
+                            let qualifier_lib = Quals.union qualifier_lib_pre qualifier_lib_post in 
+                            let () = Quals.iter (fun e -> Printf.printf "%s" ("\n Lib QUALS "^(RelId.toString e))) qualifier_lib in 
+        
+                            let qualifier_intersection = Quals.inter qualifier_spec qualifier_lib in 
+                            let () = Quals.iter (fun e -> Printf.printf "%s" ("\n INTER "^(RelId.toString e))) qualifier_intersection in 
+
+                            (* can add more elements to {sel}*)
+                            let diff = Quals.diff qualifier_intersection (Quals.singleton "sel") in     
+
+                            let () = Quals.iter (fun e -> Printf.printf "%s" ("\n DIFF "^(RelId.toString e))) diff in 
+
+                            not (Quals.is_empty diff)
+                                
+
+                        | RefTy.MArrow (_,pre_lib,(_,_), post_lib) ->
+                            let qualifier_lib_pre = Quals.of_list (Predicate.getRelation pre_lib) in 
+                            let qualifier_lib_post = Quals.of_list (Predicate.getRelation post_lib) in 
+                            let qualifier_lib = Quals.union qualifier_lib_pre qualifier_lib_post in 
+                            let () = Quals.iter (fun e -> Printf.printf "%s" ("\n Lib QUALS "^(RelId.toString e))) qualifier_lib in 
+        
+                            let qualifier_intersection = Quals.inter qualifier_spec qualifier_lib in 
+                           
+                            let () = Quals.iter (fun e -> Printf.printf "%s" ("\n INTER "^(RelId.toString e))) qualifier_intersection in 
+                            
+                            (* can add more elements to {sel}*)
+                            let diff = Quals.diff qualifier_intersection (Quals.singleton "sel") in     
+
+                            let () = Quals.iter (fun e -> Printf.printf "%s" ("\n DIFF "^(RelId.toString e))) diff in 
+
+                            not (Quals.is_empty diff)
+                            
+
+                        | RefTy.Base  (_,_, predicate_lib) -> 
+                            true
+                    ) c_es    
+
+        in 
+            
+          Message.show ("After Filtering CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
+                            
+
 
             wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred c_es prefixPath holeVar holeType suffixPath (pre:Predicate.t) post
 

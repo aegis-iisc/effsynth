@@ -28,3 +28,5 @@ let find t tyd =
 let add = fun tmap -> fun name ty -> TypesMap.add tmap name ty 
 let remove = TypesMap.remove
 
+
+
