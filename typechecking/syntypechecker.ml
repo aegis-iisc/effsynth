@@ -497,10 +497,10 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
     
     else    
 
-        (*   
+           
           let () = Printf.printf "%s" ("Found Path Type "^(RefTy.toString path_type)) in 
           let () = Printf.printf "%s" ("Compared Against Spec "^(RefTy.toString spec)) in 
-	       *)  
+	         
 	       	let vc = VC.fromTypeCheck gammaMap [deltaPred] (path_type, spec) in  
 
 	        (*make a direct call to the SMT solver*)

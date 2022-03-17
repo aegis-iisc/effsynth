@@ -32,6 +32,10 @@ and typedMonExp = {expMon:monExp; ofType:RefTy.t }
 
 type path =  monExp list 
 
+let is_empty_path p = 
+    match p with 
+        |[] -> true 
+        | _ -> false 
 
 (*The t ~ H relation
 The exact logic can be made less or more precise*)

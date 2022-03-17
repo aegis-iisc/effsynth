@@ -8,6 +8,21 @@
 (*  (as described in file LICENSE enclosed).                              *)
 (**************************************************************************)
 
+(*@ashish type 'a buffer = {
+  dummy: 'a;
+  data: ('a array);
+  mutable first: int;
+  mutable len: int;
+  }
+
+relems : buffer :-> Set
+rlen : buffer :-> lint 
+
+type rbuffer = ref buffer  *)
+
+
+
+
 (*@ open Seq *)
 
 type 'a buffer

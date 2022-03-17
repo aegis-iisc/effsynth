@@ -125,6 +125,18 @@ struct
       exp (String.length s - 1) []
  
 
+  let order t1 t2 = if (equal (t1, t2)) 
+                        then 0 
+                        else 
+                          if (String.length (toString t1) >= 
+                              String.length (toString t2)) 
+                            then 1
+                          else 
+                            -1   
+
+
+   
+
   let getIdNumber rid = 
     let relCharList = explode rid in 
     2 
@@ -1267,6 +1279,18 @@ let getRetVar t =
               if (List.length bvs = 3) then 
                   let (rvar,_) = List.nth bvs 1 in 
                   rvar
+              else
+                raise (SpecLangEx "Illegal Predicate :: Bvs must be forall h v h'")      
+        | _ -> raise (SpecLangEx "RetVar Called on Illegal Predicate")
+
+
+let getRetVarBinding t = 
+      match t with 
+        | Forall (_, _) ->
+              let bvs = getBVs t in 
+              if (List.length bvs = 3) then 
+                  let (rvar,tvar) = List.nth bvs 1 in 
+                  (rvar,tvar)
               else
                 raise (SpecLangEx "Illegal Predicate :: Bvs must be forall h v h'")      
         | _ -> raise (SpecLangEx "RetVar Called on Illegal Predicate")

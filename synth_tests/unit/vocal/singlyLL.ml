@@ -8,6 +8,13 @@
 (*  (as described in file LICENSE enclosed).                              *)
 (**************************************************************************)
 
+
+(*@author ashish 
+type node = Nil | Cons of {content: 'a; next: 'a cell}
+
+type cell = ref node *)
+
+
 type 'a cell = Nil | Cons of { mutable content: 'a; mutable next: 'a cell; }
 
 let get_content = function

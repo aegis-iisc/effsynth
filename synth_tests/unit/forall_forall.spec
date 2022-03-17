@@ -16,32 +16,6 @@ fresh_int : State
 				mem (Tbl', v) = false};
 
 
-size : State 
-			{\(h : heap). true} 
-			v : { v : int | true} 
-			{\(h : heap), (v : int), (h' : heap). 
-				\(Tbl' : [int]),(Tbl : [int]).
-				ilssel (h, tbl) = Tbl /\  
-				ilssel (h', tbl) = Tbl' /\  
-				v == size (Tbl) /\
-				ilssel (h', tbl) = ilssel (h, tbl)};
-
-
-remove 	: (s : {v : int  | true}) ->  (t : {v : tbl | true}) -> 
-
-			State  {\(h : heap).
-							\(Tbl : [int]).
-							sel (h, tbl) = Tbl =>  
-							(mem (Tbl, s) = true)} 
-				v : { v : unit | true} 
-			{\(h : heap), (v : unit), (h' : heap). 
-				\(Tbl' : [int]), (Tbl : [int]).
-				ilssel (h', tbl) = Tbl'/\
-				ilssel (h, tbl) = Tbl /\  
-				(mem (Tbl', s) = false /\ 
-				size (Tbl') == size (Tbl) - 1)};
-
-
 average_len : State  {\(h : heap).
 					\(Tbl : [int]).
 					Tbl = ilssel (h, tbl) 
@@ -81,8 +55,7 @@ goal : (s : {v : int | true}) ->
 				(ilssel (h, tbl) = Tbl /\  
 				ilssel (h', tbl) = Tbl')   
 				=> 
-				((mem (Tbl', s) = true) /\
-				size (Tbl') == size (Tbl) + 1 )
+				(size (Tbl') == size (Tbl) + 1 )
 				
 			};
 

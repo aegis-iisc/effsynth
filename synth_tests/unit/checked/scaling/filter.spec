@@ -1,3 +1,38 @@
+q : ref queue;
+num : ref int;
+Q : queue;
+Q' : queue;
+
+
+peek : State {\(h : heap). \(Q: queue). (qsel (h, q) = Q => qsize (Q) > 0)}
+							  v : {v : int | true}
+							 {\(h : heap), (v : int), (h' : heap).
+							 \(Q : queue), (Q' : queue).
+								qsel (h', q) = Q'/\
+								qsel (h, q) = Q /\
+								qmem (Q', v) = true /\
+								sel (h', num) == sel (h, num) /\
+								Q' = Q
+							  };
+
+
+
+clear :	State {\(h : heap). 
+								\(Q: queue).
+								(qsel (h, q) = Q
+								 => qsize (Q) > 0)}
+							  v : {v : unit | true}
+							 {\(h : heap), (v : unit), (h' : heap).
+							 	\(Q : queue), (Q' : queue).
+								qsel (h', q) = Q' /\
+								qsel (h, q) = Q /\
+								sel (h', num) == sel (h, num) /\
+								empty (Q') = true /\
+								qsize (Q') == 0
+							  };
+
+
+
 tbl : ref [int];
 Tbl' : [int];
 Tbl :  [int];
@@ -29,35 +64,6 @@ size : State
 				ilssel (h', tbl) = ilssel (h, tbl)};
 
 
-average_len : State  {\(h : heap).
-					\(Tbl : [int]).
-					Tbl = ilssel (h, tbl) 
-					=> size (Tbl) > 0} 
-				v : { v : float | true} 
-			 {\(h : heap), (v : float), (h' : heap). 
-				ilssel (h', tbl) = 	ilssel (h, tbl) 
-				/\ 
-				sel (h', num) == sel (h, num)
-				};
-
-
-
-add : (s : {v : int | true}) ->  
-			State  {\(h : heap).
-				\(Tbl : [int]). 
-				ilssel (h, tbl) = Tbl =>  
-				(mem (Tbl, s) = false)} 
-				v : { v : unit | true} 
-			{\(h : heap), (v : unit), (h' : heap). 
-				\(Tbl' : [int]), (Tbl : [int]) , (s' : int).
-				ilssel (h', tbl) = Tbl'/\
-				ilssel (h, tbl) = Tbl /\
-				mem (Tbl', s) = true /\
-				size (Tbl') == size (Tbl) + 1 /\
-				sel (h', num) == sel (h, num) /\
-				((not [s = s'] /\ mem (Tbl, s') = false) => (mem (Tbl', s') = false))
-				};
-
 
 goal : (s : {v : int | true}) -> 
 		State {\(h : heap). 
@@ -65,14 +71,15 @@ goal : (s : {v : int | true}) ->
 				sel (h, num) == 0 /\
 				ilssel (h, tbl) = Tbl /\
 				not  (0 > size (Tbl)) /\
-				(mem (Tbl, s) = true)}
+				(mem (Tbl, s) = false)}
 				v : {v : float | true}
 		  	{\(h : heap), (v : float), (h' : heap). 
 				\(Tbl' : [int]), (Tbl : [int]).
 				(ilssel (h, tbl) = Tbl /\  
 				ilssel (h', tbl) = Tbl')   
 				=> 
-				size (Tbl') == size (Tbl) + 2 
+				((mem (Tbl', s) = true) /\
+				size (Tbl') == size (Tbl) + 1 )
 				
 			};
 

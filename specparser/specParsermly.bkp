@@ -290,12 +290,17 @@ vartyatom : LPAREN i=ID COLON bt=basety RPAREN
                      RefTy.Base (v,_,_) -> ((Var.fromString i),bt)
                        | _ -> raise (Failure "Impossible case of basety")
 		};
-	   | LPAREN vas=vartyseq RPAREN  {
+	  | LPAREN vas=vartyseq RPAREN  {
                 match vas with
                         [x] -> x 
                         | _ -> (genVar (), RefTy.Sigma vas)
-                  };
-
+    };
+    | LPAREN i=ID COLON fty=refty RPAREN 
+		{         match fty with 
+                     RefTy.Arrow ((_,_),_) -> 
+                          ((Var.fromString i),fty)
+                       | _ -> raise (Failure "Impossible case of ArrowType")
+		};
 vartyseq : vt=varty {[vt]}
          | vt=varty COMMA vts=vartyseq {vt :: vts};
 
@@ -304,7 +309,7 @@ varty : i = ID COLON rt=refty
 
 tyd : t=ID {TyD.fromString t}
     | LBRACE t=ID RBRACE {TyD.makeTList (TyD.fromString t)}	
-	| REF t=tyd {TyD.makeTRef t };
+	  | REF t=tyd {TyD.makeTRef t };
 
 
 basety : ty=tyd {RefinementType.Base ((Var.get_fresh_var "v"), 
