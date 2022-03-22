@@ -3,15 +3,12 @@ D' : [nlrecord];
 d : ref [nlrecord];
 
 
-
-
-
 select : (n  : { v : string | true})
 							-> (u : { v :string | true}) -> 
 									 
 									 State {\(h : heap).
 									 	\(D : [nlrecord]).
-									 	true									 	} 
+									 	true} 
 										v : { v : unit | true}
 									   {\(h: heap),(v : unit),(h': heap).
 										\(D : [nlrecord]), (D' : [nlrecord]).

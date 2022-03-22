@@ -518,7 +518,9 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
 	 
 let verifyWP gammacap pre wp : bool =
 
-    let () = Printf.printf "%s" " Show :: VerifyWP" in 
+    let () = Printf.printf "%s" (" Show :: VerifyWP for the WP Predicate \n "^(Predicate.toString wp)) in 
+    let () = Printf.printf "%s" (" \n Show :: Given Pre "^(Predicate.toString pre)) in 
+   
     let gammaMap = DPred.getGamma gammacap in 
     let sigmaMap = DPred.getSigma gammacap in 
     let deltaPred = DPred.getDelta gammacap in 

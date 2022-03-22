@@ -1286,13 +1286,31 @@ let getRetVar t =
 
 let getRetVarBinding t = 
       match t with 
-        | Forall (_, _) ->
+        | Forall (_, predBody) ->
               let bvs = getBVs t in 
               if (List.length bvs = 3) then 
                   let (rvar,tvar) = List.nth bvs 1 in 
                   (rvar,tvar)
               else
-                raise (SpecLangEx "Illegal Predicate :: Bvs must be forall h v h'")      
+                
+                let _ = Printf.printf "%s" ("\n Num args "^(string_of_int (List.length bvs))) in 
+                let _ = List.iter (fun (vi, ti) -> Printf.printf "%s" ("\n BVi "^(vi)) ) bvs in 
+                (*Thw WP case, which will always be line 
+                          \Forall h. Pre_f /\ (\forall, v, h'.  
+                                  Post_f =>  Goal) *)
+                match predBody with 
+                  | Conj (p1, p2) -> 
+                        let _ = Printf.printf "%s" ("\n The WP Case ") in 
+                      
+                        let bvs_p2 = getBVs p2 in 
+                        if (List.length bvs_p2 = 2) then 
+                          let _ = Printf.printf "%s" ("\n The WP Case "^(string_of_int (List.length bvs_p2))) in 
+                          let (rvar1,tvar1) = List.nth bvs_p2 0 in 
+                          (rvar1,tvar1)
+                        else 
+                          raise (SpecLangEx "Illegal Predicate :: Bvs &&& must be forall h v h'")      
+                        
+                  | _ -> raise (SpecLangEx "Illegal Predicate :: Bvs &&& must be forall h v h'")      
         | _ -> raise (SpecLangEx "RetVar Called on Illegal Predicate")
 
         

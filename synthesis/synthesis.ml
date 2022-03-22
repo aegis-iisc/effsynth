@@ -5,6 +5,7 @@ module Gamma = Environment.TypingEnv
 module Sigma = Environment.Constructors
 module Components = Environment.Components
 module Explored = Environment.ExploredTerms                 
+module ExploredPaths = Environment.ExploredPaths
 module VCE = Vcencode 
 module DPred = Knowledge.DiffPredicate
 module DMap = Knowledge.DistinguisherMap
@@ -51,7 +52,7 @@ module Bidirectional : sig
   val learnConst : bool 
   val noLearnConst : bool 
   val visitedPaths : path list ref 
-
+  val effect_filter : bool ref
   val count_filter : int ref
   val count_chosen : int ref
 
@@ -69,7 +70,7 @@ module Bidirectional : sig
  val isynthesizeMatch : VC.vctybinds -> Sigma.t -> Predicate.t -> (Var.t * RefTy.t) -> RefTy.t ->  Syn.typedMonExp option 
  val isynthesizeFun : VC.vctybinds -> Sigma.t -> Predicate.t -> RefTy.t  -> Syn.typedMonExp option
  val esynthesizeFun : Explored.t -> VC.vctybinds -> Sigma.t -> Predicate.t ->  RefTy.t -> (Syn.typedMonExp option)
- val synthesize :  VC.vctybinds -> Sigma.t -> Predicate.t-> RefTy.t -> bool -> bool -> int ->  Syn.typedMonExp option 
+ val synthesize :  VC.vctybinds -> Sigma.t -> Predicate.t-> RefTy.t -> bool -> bool -> int -> bool ->   Syn.typedMonExp option 
 
 
 val litercount : int ref   
@@ -107,6 +108,13 @@ val litercount : int ref
    val createWP :  VC.vctybinds ->  RefTy.t -> Predicate.t ->  
             ((Var.t * TyD.t)* (Var.t * TyD.t)) list -> (VC.vctybinds * Predicate.t)
      
+   val deduceBaseLine : DPred.gammaCap -> ExploredPaths.t	-> Syn.monExp -> path -> RefTy.t -> DMap.t ->  PGMap.t -> PTypeMap.t ->
+                                    (DPred.gammaCap * ExploredPaths.t * PGMap.t * PTypeMap.t *  deduceResult) 
+	 
+
+    val chooseBaseLine : DPred.gammaCap -> ExploredPaths.t -> path -> RefTy.t -> DMap.t ->  PGMap.t -> PTypeMap.t -> 
+                    (DPred.gammaCap * ExploredPaths.t * PGMap.t * PTypeMap.t *  choiceResult)
+    
 
 end = struct
 
@@ -115,14 +123,14 @@ let enumerated = ref []
 let subprobplem = ref []
 let visitedPaths = ref [[]]
 let tryCount = ref 0
-
+let effect_filter = ref true
 
 let   count_filter = ref 0
 let   count_chosen = ref 0
 
 
 
-let learnConst = true 
+let learnConst = false 
 let noLearnConst = false
 let bidirectional = ref false
 let globalBidirectional = ref false 
@@ -807,7 +815,6 @@ let distinguish gamma ptypeMap dps spec path ci rti=
         sp i ← infer_SP (φ, t p i );
         (φ s , φ t ) ← D (c i );
         X = {¬ (φ s => sp i+1 )} ∨ {(sp i+1 => φ t ) ∧ 
-        (*not putting this extra check for now as we do not have a k-bound version* *)
         ¬(sp i => φ t )}; *)
         
         (*substitute current heap values for D(ci).learntConj*)
@@ -818,13 +825,13 @@ let distinguish gamma ptypeMap dps spec path ci rti=
         let dci_conj_imp_spi_plus1 = Predicate.Forall (bvs, P.Not (P.If (d_ci_conj_applied_h', pot_path_post_applied ))) in   
 
         (* Message.show (" \n $$$$$$$$$$$$$$$$$$$$$ "^(Predicate.toString dci_conj_imp_spi_plus1));     *)
-        (* let d_ci_disj_applied_h' = VC.apply diffpred_ci_learntDisj [(h'_var, TyD.Ty_heap)] in *)
+        let d_ci_disj_applied_h' = VC.apply diffpred_ci_learntDisj [(h'_var, TyD.Ty_heap)] in 
         
-        (* let sti_plus1_imp_d_ci_disj = Predicate.Forall (bvs, P.Not (P.If (pot_path_post_applied ,d_ci_disj_applied_h'))) in    *)
+        let sti_plus1_imp_d_ci_disj = Predicate.Forall (bvs, P.Not (P.If (pot_path_post_applied ,d_ci_disj_applied_h'))) in    
 
         (* Message.show (" \n >>>>>>>>>>>>>>>>>>>> "^(Predicate.toString sti_plus1_imp_d_ci_disj)); *)
-        (* let x_check = Predicate.Disj (dci_conj_imp_spi_plus1, sti_plus1_imp_d_ci_disj) in  *)
-        let x_check = dci_conj_imp_spi_plus1  in 
+        let x_check = Predicate.Disj (dci_conj_imp_spi_plus1, sti_plus1_imp_d_ci_disj) in 
+        (* let x_check = dci_conj_imp_spi_plus1  in  *)
         let vc_x_check = VC.VC(gammaMap4vc2, deltaPred4vc2, x_check) in 
 
 
@@ -1098,6 +1105,21 @@ let backtrackC gamma ptypeMap dps path p2gMap spec =
                 e -> raise e
               (*e -> raise (LearningException ("No gamma for Path "^(pathToString p_kminus1)))*)            
 
+
+
+
+let backtrackBaseLine gamma dps path p2gMap spec = 
+	let gammaMap = DPred.getGamma gamma in 
+	let sigmaMap = DPred.getSigma gamma in 
+	let deltaPred = DPred.getDelta gamma in 
+		
+
+	let conflict_node = List.hd (List.rev path) in  
+	match previousPath path with 
+		| None -> raise (LearningException "No possible backtracking")
+		| Some p_kminus1 ->
+			 (gamma, p_kminus1, dps, p2gMap)		
+			  (*e -> raise (LearningException ("No gamma for Path "^(pathToString p_kminus1)))*)			
 
 
           
@@ -1390,12 +1412,12 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
               
     
               let gamma_n = gamma in 
-              let e_n = synthesize gamma_n sigma delta_n spec learnConst !bidirectional !maxPathLength in 
+              let e_n = synthesize gamma_n sigma delta_n spec learnConst !bidirectional !maxPathLength !effect_filter in 
               (match e_n with 
                 | Some exp_n -> 
     
                       Message.show ("Show :: Successfully Synthesisized Nil Branch Now Trying Cons");
-                      let e_c = synthesize gamma_c sigma delta_c spec learnConst !bidirectional !maxPathLength in 
+                      let e_c = synthesize gamma_c sigma delta_c spec learnConst !bidirectional !maxPathLength !effect_filter in 
                       (match (e_c) with 
                        | (Some exp_c)-> 
                               Message.show ("Show :: Successfully Synthesisized Cons Branch ");
@@ -1527,7 +1549,7 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
            
              (*\Gamma, [v=true]\phi |- spec ~~~> t_true*)
                       
-             let t_true = synthesize gamma sigma delta_true spec learnConst !bidirectional !maxPathLength in 
+             let t_true = synthesize gamma sigma delta_true spec learnConst !bidirectional !maxPathLength !effect_filter in 
              
 
             (match t_true with 
@@ -1539,7 +1561,7 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
                        Message.show ("Show :: False Predicate "^(Predicate.toString false_pred4bi));
              
 
-                      let t_false = synthesize gamma sigma delta_false spec learnConst !bidirectional !maxPathLength in 
+                      let t_false = synthesize gamma sigma delta_false spec learnConst !bidirectional !maxPathLength !effect_filter in 
                       (match (t_false) with 
                        | (Some exp_false)-> 
                               Message.show ("Show :: Successfully Synthesisized False Branch ");
@@ -1567,7 +1589,7 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
                    let effBoolSpec = RefTy.MArrow (Effect.State, pre, (v, boolSpec), post) in  
             Message.show (" Type Constructed "^(RefTy.toString effBoolSpec)); 
             (*It returns a term of the form Eapp f ai >>= eskip*)
-            let boolArgs = synthesize gamma sigma delta effBoolSpec learnConst false !maxPathLength in
+            let boolArgs = synthesize gamma sigma delta effBoolSpec learnConst false !maxPathLength !effect_filter in
                    match boolArgs with 
                 | None -> 
                     Message.show ("Show :: Failed EffBool"); 
@@ -1622,7 +1644,7 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
                             let () = Printf.printf "%s" ("\n $$$$$$$>>>>"^(RefTy.toString specFalse)) in  *)
 
                            
-                            let t_true = synthesize gamma_true sigma delta' specTrue learnConst !bidirectional !maxPathLength in 
+                            let t_true = synthesize gamma_true sigma delta' specTrue learnConst !bidirectional !maxPathLength !effect_filter in 
                             
                             match t_true with 
                                 | Some exp_true -> 
@@ -1630,7 +1652,7 @@ and isynthesizeMatch gamma sigma delta argToMatch spec : Syn.typedMonExp option 
                                       Message.show ("Show :: Successfully Synthesisized the True Branch Now Trying False Branch");
                                      
                                       (*\Gamma, [v=false]\phi |- spec ~~~> t_false*)
-                                      let t_false = synthesize gamma_false sigma delta' specFalse learnConst !bidirectional !maxPathLength in 
+                                      let t_false = synthesize gamma_false sigma delta' specFalse learnConst !bidirectional !maxPathLength !effect_filter in 
                                       (match (t_false) with 
                                        | (Some exp_false)-> 
                                               Message.show ("Show :: Successfully Synthesisized False Branch ");
@@ -1682,7 +1704,7 @@ and isynthesizeFun gamma sigma delta spec : Syn.typedMonExp option=
                 Some e
             | None ->
                 Message.show ("Show >>>>>>>>>>>>>>>>>>>>>> If then else Failed :: Try CDCL without subdivision\n <<<<<<<<<<<<<<<<<<<"); 
-                synthesize gamma_extended sigma delta retT learnConst !bidirectional !maxPathLength 
+                synthesize gamma_extended sigma delta retT learnConst !bidirectional !maxPathLength !effect_filter
               
      
                
@@ -1696,18 +1718,20 @@ and esynthesizeFun explored gamma sigma delta spec : Syn.typedMonExp option =
                      (*if we cannot find a function of the given type we can make a call to iRule for function synthesis*)   
                      isynthesizeFun gamma sigma delta spec               
 
-
+    
 (*The main entry for the synthesize*)
 (*In some cases the input spec can be more than the RefinementType*)
 (*synthesize : TypingEnv.t -> Constructors.t -> RefinementType.t -> Syn.typedMonExp option *)
-and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp option)=  
+and  synthesize  gamma sigma delta spec learning  bi max efilter : (Syn.typedMonExp option)=  
+    
     let () = if (not (!globalBidirectional)) then 
         (bidirectional := bi;
-        globalBidirectional := true)
+         globalBidirectional := true)
     else 
         bidirectional := !bidirectional
    in      
    maxPathLength := max;
+   effect_filter := efilter;
    match spec with 
       | RefTy.Base (v, t, pred) -> 
             Message.show "Show ***********Calling Scalar synthesize***************";
@@ -1756,115 +1780,117 @@ and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp opti
 
                             
                 if (learning) then 
+                    let _ = Printf.printf "%s" (" EXPLROED LEARNING ON") in 
                     if (bi) then
-                        
-                    (*initial path H1 : pair*)
-                    
-                    let () = Message.show ("Show EXPLORED :: "^Syn.pathToString path) in 
-                    let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
-                    let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
-                   
-                    let () = Message.show "Show ***********Calling weakestPreSynththesis***************" in 
-                    if (!itercount >= 5) then 
-                            None 
-                    else 
-                        let () = itercount := !itercount + 1 in 
-                        (*backpath is the hypothesis and wp is the weakestPre*)
-                        let (path2wpMap, path2visitedMap, wp, backpath, gammacap', wpresult) = 
-                                weakestPreSynththesis (backtrack) (experience) path2wpMap 
-                                                            path2visitedMap
-                                                            gammacap path eff pre post  in 
+                        let () = Message.show ("Show EXPLORED :: "^Syn.pathToString path) in 
+                        let () = Message.show ("Show EXPLORED #Filtered "^(string_of_int !count_filter)) in 
+                        let () = Message.show ("Show EXPLORED #Chosen "^(string_of_int !count_chosen)) in 
                        
-                        match wpresult with 
-                            | Complete -> (*Simple case when backward algorithm found a solution*)
-                                        Message.show "Show ***********WP : COMPLETE ***************";
-                                        Some {Syn.expMon=Syn.buildProgramTerm backpath;Syn.ofType = spec}
-                            | _ ->     
-                                   
-                                   (* raise (SynthesisException "Backward Failed"); *)
-                                   Message.show "Show ***********WP : FLIP/BREAK : Calling CDCL ***************";
-                                   (*if there are holes in the backpath, find the last hole and try makes the forward call treating the type of the hole as the 
-                                    retrun type , Thus the spec for the forward call is constructed as follows :
-                                    construct (wp , <xi : ti>i=1...j, Toplevel_spec) = State {Toplevel_spec.Pre} v : tj {wp}*)  
-                                   
-                                   Message.show ("Show WP : BackwardPath "^(Syn.pathToString backpath));
-                                   let (lastHole, prefix, suffix) = Syn.getLastHole backpath in 
-                                   (* backpath is the Hypothesis H 
-
-                                   if the backpath has hole then ret type is last hole type
-                                   else 
-                                    ret type = Top*)
-                                   let topType = 
-                                      match lastHole with 
-                                        | None -> RefTy.fromTyD (TyD.Ty_unknown) 
-                                        | Some h -> 
-                                           let (_, terminal_holeType)  = 
-                                                (match h with 
-                                                 | Syn.Ehole t -> (None, t) 
-                                                 | Syn.Edo (bound, hole) -> (match hole with
-                                                                         | Syn.Ehole t -> (Some bound, t)
-                                                                         | _ -> raise (SynthesisException "Illegeal Hole Expression") )
-                                                 | _ -> raise (SynthesisException "Hole can be of the form [??:t] | do x <- [??:t]")
-                                                ) 
-                                               in  terminal_holeType
-                                   in                   
-
-                                   
-                                    (*Current Algorithm does not use the backpath*)
-                                    let new_forward_spec = RefTy.MArrow (eff, pre, (v,topType), wp) in 
-                                    
-                                    let k = List.length (backpath) in 
-                                    let hypothesis = backpath in 
-                                    
-                                    (*while (k < m) Forward| <k , hypothesis> match res | None Forward | <k+1, hypothesis> *)
-                                    (*returns (Syn.monExp option * Knowledge.Experience *)
-                                    let rec while_m_forward (k_arg : int) (hypothesis_arg) gammacap_arg dps_arg forward_spec_arg experience_arg : ( Syn.monExp option * Experiences.t) = 
-                                        let () = Message.show ("Show :: Forward <k, h> = < "^(string_of_int k_arg)^", "^(Syn.pathToString hypothesis_arg)) in 
+                        let () = Message.show "EXPLORED Show ***********Calling weakestPreSynththesis***************" in 
+                        raise (SynthesisException "FORCED");
+                        
+                        if (!itercount >= 5) then 
+                                None 
+                        else 
+                            let () = itercount := !itercount + 1 in 
+                            (*backpath is the hypothesis and wp is the weakestPre*)
+                            let (path2wpMap, path2visitedMap, wp, backpath, gammacap', wpresult) = 
+                                    weakestPreSynththesis (backtrack) (experience) path2wpMap 
+                                                                path2visitedMap
+                                                                gammacap path eff pre post  in 
+                           
+                            match wpresult with 
+                                | Complete -> (*Simple case when backward algorithm found a solution*)
+                                            Message.show "Show ***********WP : COMPLETE ***************";
+                                            Some {Syn.expMon=Syn.buildProgramTerm backpath;Syn.ofType = spec}
+                                | _ ->     
+                                       
+                                       (* raise (SynthesisException "Backward Failed"); *)
+                                       Message.show "Show ***********WP : FLIP/BREAK : Calling CDCL ***************";
+                                       (*if there are holes in the backpath, find the last hole and try makes the forward call treating the type of the hole as the 
+                                        retrun type , Thus the spec for the forward call is constructed as follows :
+                                        construct (wp , <xi : ti>i=1...j, Toplevel_spec) = State {Toplevel_spec.Pre} v : tj {wp}*)  
+                                       
+                                       Message.show ("Show WP : BackwardPath "^(Syn.pathToString backpath));
+                                       let (lastHole, prefix, suffix) = Syn.getLastHole backpath in 
+                                       (* backpath is the Hypothesis H 
+    
+                                       if the backpath has hole then ret type is last hole type
+                                       else 
+                                        ret type = Top*)
+                                       let topType = 
+                                          match lastHole with 
+                                            | None -> RefTy.fromTyD (TyD.Ty_unknown) 
+                                            | Some h -> 
+                                               let (_, terminal_holeType)  = 
+                                                    (match h with 
+                                                     | Syn.Ehole t -> (None, t) 
+                                                     | Syn.Edo (bound, hole) -> (match hole with
+                                                                             | Syn.Ehole t -> (Some bound, t)
+                                                                             | _ -> raise (SynthesisException "Illegeal Hole Expression") )
+                                                     | _ -> raise (SynthesisException "Hole can be of the form [??:t] | do x <- [??:t]")
+                                                    ) 
+                                                   in  terminal_holeType
+                                       in                   
+    
+                                       
+                                        (*Current Algorithm does not use the backpath*)
+                                        let new_forward_spec = RefTy.MArrow (eff, pre, (v,topType), wp) in 
                                         
-                                        let (forwardRes, experience) = cdcleffSynthesizeBind k_arg hypothesis gammacap_arg dps_arg forward_spec_arg experience_arg in 
-                                         (match forwardRes with 
+                                        let k = List.length (backpath) in 
+                                        let hypothesis = backpath in 
+                                        
+                                        (*while (k < m) Forward| <k , hypothesis> match res | None Forward | <k+1, hypothesis> *)
+                                        (*returns (Syn.monExp option * Knowledge.Experience *)
+                                        let rec while_m_forward (k_arg : int) (hypothesis_arg) gammacap_arg dps_arg forward_spec_arg experience_arg : ( Syn.monExp option * Experiences.t) = 
+                                            let () = Message.show ("Show :: Forward <k, h> = < "^(string_of_int k_arg)^", "^(Syn.pathToString hypothesis_arg)) in 
+                                            
+                                            let (forwardRes, experience) = cdcleffSynthesizeBind k_arg hypothesis gammacap_arg dps_arg forward_spec_arg experience_arg in 
+                                             (match forwardRes with 
+                                                | Some fres -> 
+                                                    (Some (fres), experience) 
+                                                | None -> 
+    
+                                                    (*see if k < m, then increment k and recursively call forward else make a call to backward*)
+                                                    if (k_arg < max) then 
+                                                        let k_arg = k_arg + 1 in
+                                                        while_m_forward k_arg hypothesis gammacap_arg dps_arg forward_spec_arg experience
+    
+                                                    else    
+                                                      (*remove the path till the last decision level 
+                                                        backpath = H1 -> H2 ....C1 -> C2....Ck 
+                                                        backtrack to c2 .....Ck 
+    
+                                                        *)
+                                                        (None, experience) 
+                                            )        
+                                        in 
+                                        (*changed using gammacap rather than gammacap'*)   
+                                        (* calling with k = max, gving a single iteartion of while_m with max sized paths* *)
+                                        let k = max in              
+                                        let (forwardRes_k_to_m, experience) = while_m_forward k hypothesis gammacap dps new_forward_spec experience in 
+                                        (match forwardRes_k_to_m with 
                                             | Some fres -> 
-                                                (Some (fres), experience) 
+                                                let backres = Syn.buildProgramTerm backpath in 
+                                                (*TODO HIGH : This unifies the shape generated by wp and the forward,
+                                                *)
+                                                (*   let final_term = Syn.unifyFwBw fres backres in 
+                                               *) 
+                                                (*TODO :: unification algorithm*) 
+                                               Some {Syn.expMon = (Syn.Edo (fres, backres)); Syn.ofType = spec}
                                             | None -> 
-
-                                                (*see if k < m, then increment k and recursively call forward else make a call to backward*)
-                                                if (k_arg < max) then 
-                                                    let k_arg = k_arg + 1 in
-                                                    while_m_forward k_arg hypothesis gammacap_arg dps_arg forward_spec_arg experience
-
-                                                else    
-                                                  (*remove the path till the last decision level 
-                                                    backpath = H1 -> H2 ....C1 -> C2....Ck 
-                                                    backtrack to c2 .....Ck 
-
-                                                    *)
-                                                    (None, experience) 
-                                        )        
-                                    in 
-                                    (*changed using gammacap rather than gammacap'*)   
-                                    (* calling with k = max, gving a single iteartion of while_m with max sized paths* *)
-                                    let k = max in              
-                                    let (forwardRes_k_to_m, experience) = while_m_forward k hypothesis gammacap dps new_forward_spec experience in 
-                                    (match forwardRes_k_to_m with 
-                                        | Some fres -> 
-                                            let backres = Syn.buildProgramTerm backpath in 
-                                            (*TODO HIGH : This unifies the shape generated by wp and the forward,
-                                            *)
-                                            (*   let final_term = Syn.unifyFwBw fres backres in 
-                                           *) 
-                                            (*TODO :: unification algorithm*) 
-                                           Some {Syn.expMon = (Syn.Edo (fres, backres)); Syn.ofType = spec}
-                                        | None -> 
-                                             (*call the backward synthesis again*)
-                                             Message.show  ("Show ******* Calling the Backward Synthesis Again************");
-                                             let backtrack = true in    
-                                             bidirectionalSearch backtrack experience path2wpMap path2visitedMap 
-                                                                            gammacap 
-                                                                                hypothesis eff pre wp 
-                                  
-                                    )    
-                    else
-                        let () = Message.show "Show ***********Bidirection FALSE : Calling CDCL***************" in 
+                                                 (*call the backward synthesis again*)
+                                                 Message.show  ("Show ******* Calling the Backward Synthesis Again************");
+                                                 let backtrack = true in    
+                                                 bidirectionalSearch backtrack experience path2wpMap path2visitedMap 
+                                                                                gammacap 
+                                                                                    hypothesis eff pre wp 
+                                      
+                                        )    
+                     else
+                        let () = Message.show "EXPLORED :: Show ***********Bidirection FALSE : Calling CDCL***************" in 
+                        raise (SynthesisException "FORCED");
+                        
                         let k = max in 
                         let hypothesis = initialP in 
                         let experience = Experiences.naive in 
@@ -1875,11 +1901,13 @@ and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp opti
                             | None -> None
                         )    
                 else  (*No learning*)
+                    let _ = Printf.printf "%s" (" EXPLORED BaseLine ") in 
+                    raise (SynthesisException "FORCED");
                     let k = max in 
                     let hypothesis = initialP in 
                     let experiences = Experiences.naive in 
-                    let (res, _) = cdcleffSynthesizeBind k hypothesis gammacap dps spec experiences in 
-                    let res = NoLearning.effSynthesizeBind gammacap dps_empty spec  in   *)
+                    (* let (res, _) = cdcleffSynthesizeBind k hypothesis gammacap dps spec experiences in  *)
+                    let res =  effSynthesizeBaseLine gammacap dps spec  in   
                     
                     (match res with 
                             | Some me ->  Some {Syn.expMon = me; 
@@ -1894,6 +1922,9 @@ and  synthesize  gamma sigma delta spec learning  bi max : (Syn.typedMonExp opti
 
 
              (*backtrack = false initially*)
+            let () = Printf.printf "%s" ("\n EXPLORED learningOn  "^(string_of_bool learning)) in 
+            let () = Printf.printf "%s" ("\n EXPLORED bidirectionality  "^(string_of_bool bi)) in
+  
              bidirectionalSearch false initial_Experinece initial_path2WPMap initial_path2VisitedMap gammacap initialP requiredEff pre post 
     
                      
@@ -1972,10 +2003,14 @@ else
 
 
         Message.show ("Show :: CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
-        
 
-        let c_es = effectGuidedFiltering c_es pre post in 
         (* filter out the functions s specs are not-interesting ss *)
+        
+        let c_es = if (!effect_filter) then 
+                        effectGuidedFiltering c_es pre post 
+                   else 
+                     c_es
+        in              
         
         Message.show ("Show :: After Filtering CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
        
@@ -2700,7 +2735,6 @@ and  weakestPreSynththesis  ( backtrack : bool)
                 | Continue ->
                         (*a path cretaed by updating the last hole in the path, continue the backward search*)
                         let backtrack = false in     
-                                   
                         let updatedPath = backpath in 
                         let isComp = Syn.isComplete updatedPath in 
                         if (Syn.isComplete updatedPath) then 
@@ -3102,11 +3136,12 @@ and bottomUpChoose
                    (*rather than this, use the post-condition return variable type as the return type *)
                    
                    
-                   (* Message.show ("Show Post  "^(Predicate.toString post ));
-                   Message.show (" Show ::  Weakest Pres for Back "^(Predicate.toString pre)); *)
+                   Message.show ("Show Post  "^(Predicate.toString post ));
+                   Message.show (" Show ::  Weakest Pres for Back "^(Predicate.toString pre));
                    let (_, ht) = Predicate.getRetVarBinding post in 
                   
-                   (* let topType  = RefTy.fromTyD (TyD.Ty_unknown) in   *)
+
+                       (* let topType  = RefTy.fromTyD (TyD.Ty_unknown) in   *)
                    let topType = RefTy.fromTyD ht in 
                    
                    let holeVar = Syn.Evar (Var.get_fresh_var "ret") in 
@@ -3122,7 +3157,11 @@ and bottomUpChoose
                     let c_es = rotate c_es (List.length path) in 
                     Message.show ("Show :: Choosing Potential Functions"^
                             (List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
-                    let c_es  = effectGuidedFiltering c_es pre post in 
+                    let c_es  = 
+                        if (!effect_filter) then 
+                         effectGuidedFiltering c_es pre post
+                        else
+                         c_es  in 
                     Message.show ("After Filtering CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
                     wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred c_es prefixPath holeVar topType suffixPath (pre:Predicate.t) post
             else (*try filling some more holes*)
@@ -3168,9 +3207,350 @@ and bottomUpChoose
             let c_es = rotate c_es (List.length path) in 
             Message.show ("Show :: Potential Functions");
             Message.show (List.fold_left (fun acc (vi, _) -> acc^", \n Show"^Var.toString vi) " " c_es);
-            let c_es = effectGuidedFiltering c_es pre post in     
+            let c_es = 
+            
+            if (!effect_filter) then 
+                effectGuidedFiltering c_es pre post
+            else 
+                c_es    in     
             Message.show ("After Filtering CHOOSING FROM"^(List.fold_left (fun acc (vi, _) -> acc^", "^Var.toString vi) " " c_es));
             wp_choose path2wpMap path2visitedMap gammaMap sigmaMap deltaPred c_es prefixPath holeVar holeType suffixPath (pre:Predicate.t) post
+
+
+
+
+
+
+(* The NO-CDCL baseline version of the synthesis algoroithm *)
+
+(*cdcleffSynthesizeBind : DPred.gammaCap -> DMap.t -> RefTy.t -> Syn.monExp*)
+and effSynthesizeBaseLine (gammaCap : DPred.gammaCap)  
+						(dps : DMap.t) 
+						(spec : RefTy.t) : Syn.monExp option = 
+	Message.show "Show :: Running the Baseline version without Learning";
+	
+(* 	Message.show ("Gamma at CDCL"^(Gamma.toString (DPred.getGamma gammaCap)));				
+ *)	let p = [] in 
+	let pathGammaMap = PGMap.empty in 
+    let ptypeMap = PTypeMap.empty  in 
+    let exploredpaths = ExploredPaths.empty in 
+	(*the main while loop in the paper*)
+	let rec loop gammacap exploredpaths path spec dps path2GammaMap ptypeMap =
+		Message.show (" EXPLORED :: "^(pathToString path));
+		         	
+		let (gammacap, exploredpaths, p2gMap, ptypeMap, chooseres) = chooseBaseLine gammacap exploredpaths path spec dps path2GammaMap ptypeMap  in 
+		
+		match chooseres with 
+			| Nothing _ -> 
+				
+				if (List.length path > 0) then  
+					let gammaMap = DPred.getGamma gammacap in 
+					Message.show (" Show :: Conflict Path  Found  while backtracking");
+	             	
+					let sigmaMap = DPred.getSigma gammacap in 
+					let deltaPred = DPred.getDelta gammacap in 
+	    			let conflictpath = path in 
+					let exploredpaths = ExploredPaths.add exploredpaths conflictpath in 
+	             			
+					 let (gammaMap, deltaPred, ptypeMap, conflictpathtype) = 
+                                SynTC.typeForPath ptypeMap gammaMap sigmaMap deltaPred spec conflictpath in 
+                
+                    let gammacap = DPred.T {gamma = gammaMap; sigma=sigmaMap; delta= deltaPred} in 
+                    
+
+					Message.show ("**************Show :: Backtracking From ********"^(pathToString conflictpath));
+	             	let (gammacap, backpath, dps, p2gMap) = backtrackBaseLine gammacap dps conflictpath p2gMap spec in
+	         		Message.show ("**************Show :: Backtracked To ********"^(pathToString backpath));
+	             	
+	         		loop gammacap exploredpaths backpath spec dps p2gMap ptypeMap
+ 				else			
+					raise (LearningException "No program and No possible backtracking")
+			| Chosen (dps', ci, pi) ->  
+				Message.show (" EXPLORED :: "^(pathToString pi));
+	    
+				Message.show (" ShowPath :: "^pathToString pi);
+	    		Message.show ("Show :: Chosen "^(Syn.monExp_toString ci));
+				Message.show(" Run deduceR");
+				let (gammacap, exploredpaths, p2gMap, ptypeMap, deduceres) = deduceBaseLine gammacap exploredpaths ci pi spec dps' p2gMap ptypeMap in 
+			    match deduceres with 
+			    	| Success p -> 
+						Message.show (" EXPLORED :: "^(pathToString p));
+	    	    		Some (Syn.buildProgramTerm  p)
+			    	| Conflict {env;dps;conflictpath;conflictpathtype;disjuncts} -> 
+			    			Message.show (" Show :: Conflict Path  Found  ");
+	             			let exploredpaths = ExploredPaths.add exploredpaths conflictpath in 
+	             			Message.show ("**************Show :: Backtracking From ********"^(pathToString conflictpath));
+	             			
+
+	             			let (gammacap, backpath, dps, p2gMap) = backtrackBaseLine env dps conflictpath p2gMap spec in
+	             			Message.show ("**************Show :: Backtracked to ********"^(pathToString backpath));
+	             			loop gammacap exploredpaths backpath spec dps p2gMap ptypeMap
+ 							 
+	              			
+			    		(*let dp = learnP gamma tk ck pk dp in 
+			    		let (dp, tj, cj, pj, gamma) = backtrackC gamma tk ck pk dp in 
+			    		loop gamma tj pj spec dp
+		 		 *)
+		
+	in 
+
+	loop gammaCap exploredpaths p spec dps pathGammaMap ptypeMap
+
+
+
+
+
+and chooseBaseLine gammacap (exploredpaths : ExploredPaths.t) path spec 
+	(dps : DMap.t) 
+	(p2gMap : PGMap.t ) (ptypeMap : PTypeMap.t) :  (DPred.gammaCap * ExploredPaths.t * PGMap.t * PTypeMap.t *  choiceResult)= 
+    
+    if (List.length path > !maxPathLength) then 
+        (gammacap, exploredpaths, p2gMap, ptypeMap, Nothing (dps, [])) 
+
+    else 
+        let RefTy.MArrow (eff, pre, (v, t), post) = spec in 
+        let gamma = DPred.getGamma gammacap in 
+        let c_wellRetType = Gamma.enumerateAndFind gamma spec in 
+        
+        let c_es = List.filter (fun (vi, ti) -> 
+        					let RefTy.MArrow (effi, _,(_,_), _) = ti in 
+	     					Effect.isSubEffect effi eff) c_wellRetType in 
+        
+        
+
+        (*choosing a component
+        The failing disjunct keeps the list of failing Predicates while checking the Hoare Post => Pre implication*)
+        let rec choice potentialChoices gammacap exploredpaths dps (p2gMap : PGMap.t) (ptypeMap : PTypeMap.t) : 
+                                    (DPred.gammaCap * ExploredPaths.t * PGMap.t * PTypeMap.t *  choiceResult)= 
+        	Message.show (" Show :: BaseLine Choice ");
+        	
+        	
+        	match potentialChoices with 
+        		| [] -> 
+        		    (gammacap, exploredpaths,  p2gMap, ptypeMap,  Nothing (dps, [])) 
+        		| (vi, rti) :: xs -> 
+        			
+        			
+	     			match rti with 
+	     			| RefTy.Arrow ((varg, argty), _) -> 
+	     				(*FIXME :: The arrow case of baseline *)
+	     				Message.show (" Show *************** Arrow Component ************"^(Var.toString vi));
+                        let uncurried = RefTy.uncurry_Arrow rti in 
+                    	let RefTy.Uncurried (args_ty_list, retty) = uncurried in 
+
+	     			    let gammaMap = DPred.getGamma gammacap in 
+        		        let sigmaMap = DPred.getSigma gammacap in 
+        		        let deltaPred = DPred.getDelta gammacap in 
+        		        (*All arguments are  always a scalar/Base Refinement*)
+        		        Message.show (" Show *************** Synthesizing Args ei : ti for ************"^(Var.toString vi));
+
+        		       (* lists of terms which can be used as argument *)    
+        		        let e_potential_args_lists =  
+        		        List.map (fun (argi, argtyi) -> esynthesizeScalar gammaMap sigmaMap deltaPred [argtyi;retty]) args_ty_list  in 
+
+        		        let all_successful = List.filter (fun e_argi -> match e_argi with 
+        		                                            | x ::xs -> true
+        		                                            | [] -> false) e_potential_args_lists in 
+
+
+        		        (*length of synthesized args match with the formal parameter*)
+        		        let e_allsuccessful = (if ((List.length all_successful) = (List.length args_ty_list)) 
+        		                                then Some all_successful
+        		                                else None) in 
+
+
+	     		   		(match e_allsuccessful with (*BEGIN1*)
+                            | None -> (*Atleast one required argument cannot be synthesized thus cannot make the call*)
+                                Message.show (" Show *************** Synthesizing Args ei : Failed for some  arg");
+                                choice xs gammacap exploredpaths dps p2gMap ptypeMap
+	     					| Some es -> (* es is a list of lists ([i;j...k]; [p;q;...n]...) *)
+                                Message.show (" Show *************** Successfully Synthesized Args ei Forall i "^(string_of_int (List.length es)));
+                                    (*head exists for each of these *)
+                                    
+                        		let () = List.iter (fun ai_list -> 
+                                                         List.iter (
+                                                                    fun aij -> Message.show (" \n Show Argij "^(Syn.typedMonExp_toString aij))
+                                                                    ) ai_list) es in 
+
+
+	     						   let rec n_cartesian_product = function
+                                        | [] -> [[]]
+                                        | x :: xs ->
+                                            let rest = n_cartesian_product xs in
+                                            List.concat (List.map (fun i -> List.map (fun rs -> i :: rs) rest) x)  in 
+
+
+                                    let chooseArgs (argsListEach : ((Syn.typedMonExp) list ) list)   : (Syn.typedMonExp list) list   = 
+                                            n_cartesian_product argsListEach        
+                                    
+                                    in 
+
+                                    let possible_args_lists = chooseArgs es in 
+
+
+                                    let () = List.iter (fun li -> 
+                                                        let () = Printf.printf "%s" ("\n Next Possible Args Options ") in 
+                                                        List.iter (fun ei -> Printf.printf "%s" 
+                                                                    ("\n EI "^(Syn.monExp_toString ei.expMon) )) li) possible_args_lists in 
+                                    
+
+                                   
+                                    let rec createLibraryApplied possible_args = 
+                                         match possible_args with 
+                                         | [] -> []
+                                         | x :: xs -> 
+                                            let _ = List.iter (fun ei -> Printf.printf "%s" 
+                                                                       ("\n Show :: Trying Args  "^(Syn.monExp_toString ei.expMon) )) x in                                
+                                           
+                                           let monExps_es = List.map (fun ei -> ei.expMon) x in 
+                                           let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
+                                           let boundVar = Var.fresh_binding_var "bound" in 
+                                           let bound = Syn.Evar (boundVar) in 
+                                           let doExpForApp = Syn.Edo (bound, appliedMonExp) in 
+                                           let potentialPath = path@[doExpForApp] in 
+                                           let () = Message.show (" Show *************** Calling Hoare-Pre ************"^(Var.toString vi)) in 
+                                           let () = Message.show (" Show *************** On Path  ************"^(Syn.pathToString potentialPath)) in 
+                                           
+                                           (* FW_Call rule, implication check *)
+                                           let (gammacap, ptypeMap, post_imp_phi_ci', allowed) = hoarePre gammacap ptypeMap spec path appliedMonExp rti in
+                                           if (allowed) then 
+                                                   let () = Message.show (" Show *************** FW_Call-Allowed************"^(Var.toString vi)) in 
+                                                   x
+                                           else 
+                                               createLibraryApplied xs     
+                                           
+                                    in 
+                                    
+                                    let ei_hds = createLibraryApplied possible_args_lists in 
+
+
+                                    if (List.length ei_hds == 0) then 
+                                        choice xs gammacap exploredpaths dps p2gMap ptypeMap
+                                   	else	
+	     								let monExps_es = List.map (fun ei -> ei.expMon) ei_hds in 
+                                        let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
+                                        let boundVar = Var.fresh_binding_var "bound" in 
+                                        let bound = Syn.Evar (boundVar) in 
+                                        let doExpForApp = Syn.Edo (bound, appliedMonExp) in 
+                                        let potentialPath = path@[doExpForApp] in 
+                                      
+	     								if (ExploredPaths.mem exploredpaths potentialPath) then 
+                    						choice xs gammacap exploredpaths dps p2gMap ptypeMap
+                        		
+                                    	else    
+                                    		let (gammacap, ptypeMap, post_imp_phi_ci', allowed) = hoarePre gammacap ptypeMap spec path appliedMonExp rti in 
+                                    		if (allowed) then 
+                                    			(
+                                    			Message.show (" Show *************** Hoare-Allowed : ********"^(Var.toString vi));
+                                    			(gammacap, exploredpaths, p2gMap, ptypeMap,  Chosen (dps, appliedMonExp, potentialPath))  
+                                                )	
+                                             else
+                                             	(
+                                             	Message.show (" Show *************** Hoare-Not-Allowed : Chose another************"); 
+                                    			choice xs gammacap exploredpaths dps p2gMap ptypeMap
+                                               )
+	     				)            
+
+	     			| RefTy.MArrow (_,_,(_,_),_) ->
+                    	let monExpForComp = Syn.Evar vi in  (*apply vi e_arg*)
+
+                        let boundVar = Var.fresh_binding_var "bound" in 
+                        let bound = Syn.Evar (boundVar) in 
+                        let argsMonExps = [] in 
+                        let appliedMonExp = Syn.Eapp (monExpForComp, argsMonExps) in  (*apply vi ()*)
+                        let doExpForComp = Syn.Edo (bound, appliedMonExp) in 
+                                            
+                    	(*check the hoare pre-condition rule*)
+                    	let potential_path = path@[doExpForComp] in 
+                    	if (ExploredPaths.mem exploredpaths potential_path) then 
+                    			choice xs gammacap exploredpaths dps p2gMap ptypeMap
+                        		
+                    	else    
+                    		let (gammacap, ptypeMap, post_imp_phi_ci', allowed) = hoarePre gammacap ptypeMap spec path monExpForComp rti in 
+                    		if (allowed) then 
+                    			(
+                    			Message.show (" Show *************** Hoare-Allowed : ********"^(Var.toString vi));
+                    			(gammacap, exploredpaths, p2gMap, ptypeMap,  Chosen (dps, doExpForComp, potential_path))  
+                                )	
+                             else
+                             	(
+                             	Message.show (" Show *************** Hoare-Not-Allowed : Chose another************"); 
+                    			choice xs gammacap exploredpaths dps p2gMap ptypeMap
+                               )
+                    
+         in 
+	     
+        choice c_es gammacap exploredpaths dps p2gMap ptypeMap
+        
+
+
+
+and deduceBaseLine (gamma:DPred.gammaCap) 
+					  (exploredpaths:ExploredPaths.t) 
+						(compi:Syn.monExp) 
+						(path:path) 
+						(spec: RefTy.t) 
+						(dps : DMap.t) 
+						(p2gMap : PGMap.t)
+                        (ptypeMap : PTypeMap.t) : (DPred.gammaCap * ExploredPaths.t * PGMap.t * PTypeMap.t *  deduceResult) = 
+	Message.show (" EXPLORED :: "^(pathToString path));
+	
+	
+	if (!itercount > 100) then 
+                (* let () = Message.show (List.fold_left (fun str vi -> (str^"::"^(Var.toString vi))) "ENUM " !enumerated) in  *)
+         raise (LearningException "FORCED STOPPED") 
+    else
+    	let _ = itercount := !itercount + 1 in  
+        let gammaMap = DPred.getGamma gamma in 
+		let sigmaMap = DPred.getSigma gamma in 
+		let deltaPred = DPred.getDelta gamma in 
+	
+
+	(* 	let (gammaMap, deltaPred, path_type) = SynTC.typeForPath gammaMap sigmaMap deltaPred spec path in 
+	 *)	let (verified,ptypeMap, gamma, path_type) = SynTC.typeCheckPath ptypeMap gammaMap sigmaMap deltaPred path spec  in 
+		
+		if (verified) then 
+			 (
+			 Message.show ("Show :: Found a correct Path "^(pathToString path));
+			 (gamma, exploredpaths, p2gMap, ptypeMap,  Success path)
+			 ) 
+		else 
+			(
+				Message.show ("Show :: Incomplete Path "^(pathToString path)^" Now chosing Next component "^(Syn.monExp_toString compi));
+			
+				let (gamma, exploredpaths, p2gMap, ptypeMap, nextComponent) = chooseBaseLine gamma exploredpaths path spec dps p2gMap ptypeMap in 
+				match nextComponent with 
+					| Nothing (dps', failingDisjuncts) ->  
+									Message.show ("Show :: Conflicting path found "^(pathToString path));
+										(gamma, 
+										exploredpaths,
+										p2gMap, 
+                                        ptypeMap,
+										Conflict 
+										{env=gamma;
+										 dps=dps';
+										 conflictpath=path;
+										 conflictpathtype=path_type;
+										 disjuncts= failingDisjuncts}
+										)
+					(*see if we also need to return an updated gamma*)					
+					| Chosen	(dps', ci', pi') -> deduceBaseLine gamma exploredpaths ci' pi' spec dps' p2gMap ptypeMap		
+			)
+				 
+
+
+
+
+
+let toplevel gamma sigma delta spec learning bi max efilter : (Syn.typedMonExp option) = 
+     (*set the global parameters *)
+     learningOn := learning;
+     bidirectionalOn := bi;
+     efilterOn := efilter; 
+     maxValue := max; 
+     synthesize  gamma sigma delta spec  
+    
+
 
 end
 
