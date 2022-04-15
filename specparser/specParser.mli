@@ -18,6 +18,7 @@ type token =
   | REF
   | RCURLY
   | RBRACE
+  | QUAL
   | PURE
   | PRIMITIVE
   | PLUS
@@ -48,6 +49,7 @@ type token =
   | CROSSPRD
   | CONJ
   | COMMA
+  | COLONARROW
   | COLON
   | ASSUME
   | ARROW

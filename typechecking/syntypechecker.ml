@@ -68,7 +68,9 @@ let generateConsConstraints (macthedArg : Var.t) (arg_x: Var.t) (arg_xs : Var.t)
   Just the checking for the fun application
  *)
 let typecheck (gamma : Gamma.t) (sigma:Sigma.t) (delta : Predicate.t)
-    (t : Syn.monExp) (spec : RefTy.t) : (RefTy.t option) = 
+              (typenames : SpecLang.Var.t list) 
+              (qualifiers : SpecLang.RelSpec.Qualifier.t list)
+              (t : Syn.monExp) (spec : RefTy.t) : (RefTy.t option) = 
 	  
     let () = Printf.printf "%s" ("\n Typechecking "^(Syn.monExp_toString t)) in 
      match t with 
@@ -103,7 +105,7 @@ let typecheck (gamma : Gamma.t) (sigma:Sigma.t) (delta : Predicate.t)
                 (*make a direct call to the SMT solver*)
                 let vcStandard = VC.standardize vc in 
                 let () = Printf.printf "%s" ("\n $$$$$$$$$$$$$$$ "^VC.string_for_vc_stt vcStandard) in  
-                let result = VCE.discharge vcStandard  in 
+                let result = VCE.discharge vcStandard typenames qualifiers  in 
                 let typechecks = 
                   match result with 
                   | VCE.Success -> true
@@ -472,7 +474,10 @@ let rec accumulatePathType remaining_path acc_gamma acc_delta acc_type =
            (gammaMap, deltPred, ptypeMap, path_type)
 
 
-let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec : RefTy.t) = 
+let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred 
+           (typenames : SpecLang.Var.t list) 
+           (qualifiers : SpecLang.RelSpec.Qualifier.t list)
+           (path : Syn.path) (spec : RefTy.t) = 
   	
     let (gammaMap, deltaPred, ptypeMap, path_type) = 
 			   typeForPath ptypeMap gammaMap sigmaMap deltaPred spec path in 
@@ -506,7 +511,7 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
 	        (*make a direct call to the SMT solver*)
 	        let vcStandard = VC.standardize vc in 
 	        let () = Printf.printf "%s" (VC.string_for_vc_stt vcStandard) in  
-	        let result = VCE.discharge vcStandard  in 
+	        let result = VCE.discharge vcStandard typenames qualifiers  in 
 	        match result with 
 	        | VCE.Success -> 
                           (true, ptypeMap, gammacap, path_type)
@@ -516,7 +521,11 @@ let typeCheckPath ptypeMap gammaMap sigmaMap deltaPred (path : Syn.path) (spec :
 	                   (false,ptypeMap, gammacap, path_type) 
 	        | VCE.Undef -> raise (SynthesisException "Typechecking Did not terminate")  
 	 
-let verifyWP gammacap pre wp : bool =
+let verifyWP gammacap 
+      (typenames : SpecLang.Var.t list) 
+      (qualifiers : SpecLang.RelSpec.Qualifier.t list)
+       (pre : Predicate.t)
+       (wp : Predicate.t) : bool =
 
     let () = Printf.printf "%s" (" Show :: VerifyWP for the WP Predicate \n "^(Predicate.toString wp)) in 
     let () = Printf.printf "%s" (" \n Show :: Given Pre "^(Predicate.toString pre)) in 
@@ -544,7 +553,7 @@ let verifyWP gammacap pre wp : bool =
 
       let vcStandard = VC.standardize vc in 
       let () = Printf.printf "%s" (VC.string_for_vc_stt vcStandard) in  
-            let result = VCE.discharge vcStandard  in 
+            let result = VCE.discharge vcStandard typenames qualifiers  in 
             (*May need to return*)
             match result with 
             | VCE.Success -> 

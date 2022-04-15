@@ -37,14 +37,16 @@ end
 
 
 
-let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
+let discharge (VC.T (tydbinds, anteP, conseqP) as vc) 
+        (typenames) 
+        (qualifiers) =
 
   let ctx = ref @@ Z3_encode.mkDefaultContext ()  in 
   let solver = ref @@ Solver.mk_solver !ctx None in 
   
   let () = Solver.reset !solver in   
-     
-   let () = Printf.printf "%s" ("GAMMA in VCE "^(VC.string_tybinds tydbinds)) in 
+    
+  let () = Printf.printf "%s" ("GAMMA in VCE "^(VC.string_tybinds tydbinds)) in 
 
   let constMap = ConstMap.empty in  
   let relMap = RelMap.empty in 
@@ -964,16 +966,58 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
                          (tyMap, constMap, relMap) 
                 )         
           |_ -> 
-              let () = Printf.printf "%s" (" \nprocessTyDBind consEncoding Case ") in 
+              let () = Printf.printf "%s" (" \n processTyDBind consEncoding Case ") in 
           
               let (tyMap, constMap, relMap, _) = encodeConst (tyMap, constMap, relMap) (v,tyd) in 
-            let () = Printf.printf "%s" (" \nprocessTyDBind consEncoding done ") in 
+            let () = Printf.printf "%s" (" \n processTyDBind consEncoding done ") in 
           
             (tyMap, constMap, relMap)
           ) 
            
     in 
 
+    let processTypenames (tyMap, constMap, relMap) tyd = 
+        let () = Printf.printf "%s" (" \n processTypenames VCE "^(tyd)) in 
+        let  (tyMap, constMap, relMap, sort_quad) = encodeTyD (tyMap, constMap, relMap) (TyD.fromString tyd) in 
+        (tyMap, constMap, relMap)
+           
+           
+    in
+
+    let processQualifiers (tyMap, constMap, relMap) qual = 
+        let () = Printf.printf "%s" (" \n processQualifiers VCE "^(SpecLang.RelSpec.Qualifier.toString qual)) in 
+        let SpecLang.RelSpec.Qualifier.Qual {name;shape} = qual in 
+        let z3_sorts_for_shape = 
+                  List.map (fun tyd_i -> 
+                                    (try 
+                                      TyMap.find tyMap tyd_i
+                                    with 
+                                      | TyMap.TyDNotFound _ -> 
+                                         let sortfortyd_i = 
+                                          (match tyd_i with 
+                                           TyD.Ty_alpha _ ->  addTyD tyMap tyd_i 
+                                          | _ -> addTyD tyMap tyd_i  
+                                          ) 
+                                        in
+                                         snd (sortfortyd_i)
+                                    )
+                                        
+                            ) shape
+        in              
+        if (List.length z3_sorts_for_shape > 2) then 
+          let mrel = mkMStrucRel (Var.toString name, z3_sorts_for_shape) in 
+          let relMap = RelMap.add relMap (Var.toString name) mrel in 
+          (tyMap, constMap, relMap)
+        else 
+          if (List.length z3_sorts_for_shape = 2) then 
+            let mrel = mkStrucRel (Var.toString name, z3_sorts_for_shape) in 
+            let relMap = RelMap.add relMap (Var.toString name) mrel in 
+            (tyMap, constMap, relMap)
+          else 
+            raise (VCEncodingFailed "Qualifier Processing with incorrect number of sorts")  
+
+      
+    in 
     
     let processPrimEq (tyMap, constMap, relMap) (primR, def) =
          let () = Printf.printf "%s" (" \nprocessPrimEq PrimEq  ") in 
@@ -1059,75 +1103,22 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
 
       in   
 
-(*   let  processBindEq (tyMap, constMap, relMap) (theR,def) : (TyMap.t* ConstMap.t* RelMap.t) =
-          
-          let () = Printf.printf "%s" (" Relation "^(RelId.toString theR) ) in 
-          let Bind.Def {abs;_} = def in 
-          let Bind.Abs (_,Bind.Expr {ground;fr}) = abs in 
-          let (groundR, _,_) = ground in 
-          let Bind.Fr (_,fre) = fr in 
-          let open RelLang in 
-          let rec doItFre fre = 
-            match fre with 
-             X (re1,re2) -> List.concat [doItFre re1; doItFre re2]
-            |R (RInst {rel;_},_) -> [rel]
-            | _ -> [theR](* raise (VCEncodingFailed "Transformer expression is not cross prd!") *)
-          in   
-          let paramRs = Vector.fromList (doItFre fre) in  
-          
-          let doItR = fun rid -> 
-          mkQStrucRelApp( 
-            getStrucRelForRelId relMap rid) in 
-          let gSet = doItR groundR in 
-          let pSets = Vector.map (paramRs, doItR) in 
-          let frSet = mkQCrossPrd pSets in 
-          let bindSet = mkBind (gSet,frSet) in 
-          let  theSet = doItR theR 
-        in
-         let () =  assertBindEq (theSet,bindSet) in 
-            (tyMap, constMap, relMap)
-     
-      in  
-  *)    
-     (*  let _ = List.iter processTyDBind tydbinds in 
-      *) (* pre is rbinds of elaborated VC.t. Maps newRelNames to
-         instantiated definitions.*)
-    
+      
 
-      (*TODO No Bind or higher order relations for now *)
+      (*Adding the sorts from the environment tydbinds and typenames *)
       let () = Printf.printf "%s" (" \n ******processTyDBind starting *****") in 
              
       let (tyMap, constMap, relMap) = List.fold_left (processTyDBind) (tyMap, constMap, relMap) tydbinds in  
-      let () = Printf.printf "%s" (" \n ******** processTyDBind finished ********") in 
-     
-    
-    (*
-      let open PRE in 
-     (*  let _ = List.iter 
-        (fun (r,{def;_}) -> match def with
-            PRE.Bind bdef -> processBindEq (r,bdef)
-          | PRE.Prim pdef -> processPrimEq (r,pdef)) (PRE.toVector pre)
+      
+      let () = Printf.printf "%s" (" \n ******Adding Typenames to tyMap*****") in 
+      let (tyMap, constMap, relMap) = List.fold_left (processTypenames) (tyMap, constMap, relMap) typenames in 
 
-      *) 
-      let (init_tyMap, init_constMap, init_relMap) = (tyMap, constMap, relMap) in    
+      let () = Printf.printf "%s" (" \n ******Adding Qualifiers to relMap  *****") in 
+      let (tyMap, constMap, relMap) = List.fold_left (processQualifiers) (tyMap, constMap, relMap) qualifiers in 
 
-     let () = Printf.printf "%s" (" \n ******PRE processing starting *****") in 
-     
-      let (tyMap, constMap, relMap) = 
-        List.fold_left (fun (tyMap, constMap, relMap) (r,{def;_}) -> 
-              match def with
-              PRE.Bind bdef -> processBindEq (tyMap, constMap, relMap) (r,bdef)
-            | PRE.Prim pdef -> processPrimEq (tyMap, constMap, relMap) (r,pdef)
-          ) (init_tyMap, init_constMap, init_relMap) (PRE.toVector pre)
 
-      in
-*)
-  let () = Printf.printf "%s" (" \n ******PRE processing finished *****") in 
-    
-      (* pre is rbinds of elaborated VC.t. Maps newRelNames to
-         instantiated definitions.*)
-        
-   (* ---- Type refinement encoding begins ---- *)
+
+    (* ---- Type refinement encoding begins ---- *)
     (*encoding for base pred*)
     let rec encodeBasePred (tyMap, constMap, relMap) (bp)  = 
         
@@ -1243,10 +1234,6 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
               let const = getConstForVar constMap v in 
               let out = mkStrucRelApp (
                 (getStrucRelForRelId relMap rid), (getConstForVar constMap v)) in 
-              
-              
-
-              let () = Printf.printf "%s" (" \n ******encodeRelExpr made rel exp  *****") in
               out 
             | MultiR (RInst {rel=rid;_}, args) -> 
              
@@ -1717,14 +1704,12 @@ let discharge (VC.T (tydbinds, anteP, conseqP) as vc) =
 
 
       (*main entry*) 
-       let (tyMap, constMap, relMap) = addSelUpdate (tyMap, constMap, relMap) in    
+      let (tyMap, constMap, relMap) = addSelUpdate (tyMap, constMap, relMap) in    
       let _ = assertVCPred (tyMap, constMap, relMap) anteP in 
       (*
        * We check the SAT of ¬conseqP
        *)
-
-(*       let _ = mk_length_assertions() in  
-       *)let _ = dischargeAssertion (mkNot (encodeVCPred (tyMap, constMap, relMap) conseqP)) in 
+      let _ = dischargeAssertion (mkNot (encodeVCPred (tyMap, constMap, relMap) conseqP)) in 
       let solverDischarged = getSolver () in 
       let expressions_list = Solver.get_assertions solverDischarged  in  
 

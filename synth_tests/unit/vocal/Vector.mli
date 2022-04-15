@@ -44,18 +44,6 @@ type 'a t
 (** {2 Operations proper to vectors, or with a different type and/or
     semantics than those of module [Array]} *)
 
-(*#
-create : {capacity : int | v >= 0 /\ v <= Max} -> (dummy : 'a) -> 
-                                                State {true}
-                                                v :  ('a t) ref  
-                                                { dom (h, v) = false /\
-                                                  dom (h', v) = dom (h, v) U {(v)} /\
-                                                  sel (h', v) = V' => 
-                                                  elems (V') = empty /\
-                                                  len (V') = 0
-                                                }
-
-#*)
 val create: ?capacity:int -> 'a -> 'a t
 (** [create dummy] returns a fresh vector of length [0].
    All the elements of this new vector are initially
@@ -70,20 +58,6 @@ val create: ?capacity:int -> 'a -> 'a t
 
 
 
-(*#
-make : ?(dummy : 'a) -> {n: int | v >= 0 /\ v <= Max} -> 
-                                                {x : 'a | true} ->       
-                                                State {true}
-                                                v :  ('a t) ref  
-                                                { dom (h, v) = false /\
-                                                  dom (h', v) = dom (h, v) U {(v)} /\
-                                                  sel (h', v) = V' => 
-                                                  (elems (V') = {(x)} /\
-                                                  len (V') = n /\
-                                                  order (V') = {(x, x)})
-                                                }
-
-#*)
 val make: ?dummy:'a -> int -> 'a -> 'a t
 (** [make dummy n x] returns a fresh vector of length [n] with all elements
     initialized with [x]. If [dummy] is omitted, [x] is also used as a
@@ -94,19 +68,6 @@ val make: ?dummy:'a -> int -> 'a -> 'a t
       ensures  forall i: integer. 0 <= i < n -> a.view[i] = x *)
 
 
-(*#
-We yet cannot define the spec for this function as we do not have abstract 
-refinements or  parametric relations in our spec language.
-
-init : (~dummy (n : int) ->  (f : {x : int } -> {v : 'a | phi v x}) -> 
-        State {true}
-       v : ('a t) ref     
-       { dom (h, v) = false /\
-         dom (h', v) = dom (h, v) U {(v)} /\
-        ??
-      }
-     
-#*)
 val init: dummy:'a -> int -> (int -> 'a) -> 'a t
 (** [init n f] returns a fresh vector of length [n],
    with element number [i] initialized to the result of [f i].
@@ -120,21 +81,6 @@ val init: dummy:'a -> int -> (int -> 'a) -> 'a t
       ensures  forall i: int. 0 <= i < n -> a.view[i] = f i *)
 
 
-
-(*#
-resize : (vec : 'a t ref) -> {n: int | v >= 0 /\ v <= Max} -> 
-                                                {x : 'a | true} ->       
-                                                State {true}
-                                                v :  unit 
-                                                { 
-                                                   sel (h, vec) = V /\    
-                                                   sel (h', vec) = V' => 
-                                                  (elems (V') C= elems (V) /\
-                                                  len (V') = n /\
-                                                  order (V') C=  order (V)
-                                                }
-
-#*)
 
 val resize: 'a t -> int -> unit
 (** [resize a n] sets the length of vector [a] to [n].
@@ -153,19 +99,6 @@ val resize: 'a t -> int -> unit
 
 (** {2 Array interface} *)
 
-(*#
-clear : (vec : 'a t ref) ->  State {true}
-                              v :  unit 
-                               { 
-                                    sel (h, vec) = V /\    
-                                    sel (h', vec) = V' => 
-                                    (elems (V') = empty /\
-                                     len (V') = 0 /\
-                                    order (V') =  empty
-                              }
-
-#*)
-
 
 val clear: 'a t -> unit
 (** Discard all elements from a vector.
@@ -175,17 +108,6 @@ val clear: 'a t -> unit
       ensures Seq.length a.view = 0 *)
 
 
-
-(*#
-is_empty : (vec : 'a t ref) ->  State {true}
-                                    v :  bool 
-                               { 
-                                    sel (h, vec) = V /\
-                                    [v = true] <=> len (V) = 0 /\ elems (V) = empty
-                                    /\ h' = h
-                              }
-
-#*)
 
 val is_empty: 'a t -> bool
 (** Return [true] if the given vector is empty, [false] otherwise. *)
@@ -202,29 +124,6 @@ val length: 'a t -> int
 (*@ n = length a
       ensures n = Seq.length a.view *)
 
-
-
-(*#
-do we chose to have fine-grained properties over each index in the Vector,
-The data structure actually has two level of mutation, one in the size of the underlying 
-array of data, and other the array itself is mutable
-
-we over-approximate the actual data by an imprecise set of elems
-
-get : (vec : 'a t ref) -> n : int ->  
-                              State {true}
-                                    v :  'a 
-                               { 
-                                    sel (h, vec) = V /\
-                                    v \in elems (V)
-                                    /\ h' = h
-                              }
-
-A precise specification will require the theory of Arrays from the SMT world which 
-is orthogonal to our problem
-
-
-#*)
 val get: 'a t -> int -> 'a
 (** [get a n] returns the element number [n] of vector [a].
     The first element has number [0]. The last element has number
@@ -237,23 +136,6 @@ val get: 'a t -> int -> 'a
       ensures  x = a.view[i] *)
 
 
-(*#
-Actually look into SMT theory of Arrays
-Lack of a very precise spec, makes the synthesis process weak as well.
-
-set : (vec : 'a t ref) -> n : int -> x : 'a   
-                              State {true}
-                                    v :  unit
-                               { 
-                                    sel (h', vec) = V' /\
-                                    x \in elems (V')
-                              }
-
-A precise specification will require the theory of Arrays from the SMT world which 
-is orthogonal to our problem
-
-
-#*)
 val set: 'a t -> int -> 'a -> unit
 (** [set a n x] modifies aector [a] in place, replacing
     element number [n] with [x].

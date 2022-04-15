@@ -7,6 +7,17 @@
 (*  This software is free software, distributed under the MIT license     *)
 (*  (as described in file LICENSE enclosed).                              *)
 (**************************************************************************)
+(* @ashish
+type key;
+type table;
+type ht= table ref
+
+predicate hdom : heap :-> ref table :-> bool
+predicate  keyset : table :-> key Set 
+predicate  member : table :-> key :-> bool 
+predicate  hash : key :-> int
+predicate  hsize : table :-> int  *)
+
 
 module type HashedType = sig
   type t

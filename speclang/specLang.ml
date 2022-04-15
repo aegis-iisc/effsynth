@@ -1309,7 +1309,7 @@ let getRetVarBinding t =
                           (rvar1,tvar1)
                         else 
                           raise (SpecLangEx "Illegal Predicate :: Bvs &&& must be forall h v h'")      
-                        
+
                   | _ -> raise (SpecLangEx "Illegal Predicate :: Bvs &&& must be forall h v h'")      
         | _ -> raise (SpecLangEx "RetVar Called on Illegal Predicate")
 
@@ -1902,12 +1902,26 @@ module RelSpec = struct
 
     end
 
+  module Qualifier = 
+    struct
+     type t = Qual of {name : Var.t; 
+                       shape : TyD.t list
+                      }
+     let toString = fun 
+          (Qual {name;shape}) -> 
+              ("Qual "^(Var.toString name)^" : "^
+                (List.fold_left (fun sorts_string tyd_i -> 
+                                  (sorts_string^" :-> "^(TyD.toString tyd_i))
+                                  ) "" shape)) 
+                 
+    end
   type t = T of {
                 typedefs : Algebraic.t list;
                 preds : Formula.t list;        
+                quals : Qualifier.t list;
                 reldecs : StructuralRelation.t list;
-                 primdecs : PrimitiveRelation.t list;
-                 typespecs : TypeSpec.t list}
+                primdecs : PrimitiveRelation.t list;
+                typespecs : TypeSpec.t list}
    (*let layout = fun (T {reldecs;primdecs;typespecs;_}) ->
       				      let srs = Vector.toString (StructuralRelation.toString) (reldecs) in 
       				      let prs = Vector.toString (PrimitiveRelation.toString) (primdecs) in 
@@ -1919,7 +1933,7 @@ module RelSpec = struct
    let toString t = L.toString (layout t)   
    *)
    let toString t = 
-        let T {typedefs;reldecs;primdecs;typespecs;preds} = t in 
+        let T {typedefs;reldecs;primdecs;typespecs;preds;quals} = t in 
         let als = List.fold_left 
             (fun tdacc td -> (tdacc^"\n "^(Algebraic.toString td))) " Typedefs " typedefs in 
         let ps =  List.fold_left 
@@ -1930,11 +1944,16 @@ module RelSpec = struct
         
         let tss = List.fold_left (fun tsacc ts -> (tsacc^" \n "^(TypeSpec.toString ts))) " TSs " typespecs in 
         
+        let qs =  List.fold_left 
+            (fun qsacc q -> (qsacc^" \n "^(Qualifier.toString q))) " Qualifiers " quals
+             in 
+        
        ("RelSpec { "^srs^"; "^prs^"; "^tss^"; "^ps^" }")
         
    let mk_empty_relspec () = T {
         typedefs = [];
         preds = [];
+        quals = [];
         reldecs= [];
         primdecs = [];
         typespecs =[]}                

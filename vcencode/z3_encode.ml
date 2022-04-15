@@ -68,7 +68,7 @@ let sort_layout = fun s ->
           match s with 
             Int s -> Layout.str (Z3Sort.to_string s)    
           | Bool s ->  Layout.str (Z3Sort.to_string s)    
-          | T (str, s) -> Layout.str (str^" :: "^(Z3Sort.to_string s))
+          | T (str, s) -> Layout.str (str^" :-> "^(Z3Sort.to_string s))
           | U (str) -> Layout.str str
 
 (*The ast in the older version of the z3 is replaced with expressions *)

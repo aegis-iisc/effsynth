@@ -10,6 +10,17 @@
 
 (** Zippers for lists *)
 
+(* @ashish
+type 'a t = {
+  left: 'a list;
+  right: 'a list;
+  len: int;
+  }
+
+  qualifiers zlen, zelems , zrlen, zllen 
+ *)
+
+
 type 'a t
 (*@ model seq: 'a seq
     model idx: integer

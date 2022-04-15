@@ -145,6 +145,38 @@ goal : 	 (n  : { v : nl | true})->
 
 
 (*
+
+x<- confirmedS 
+y <- subscribe 
+z< -read
+_ <- confirmU 
+_ <- unsubscribe 
+remove 
+
+ret z
+
+*)		 		 
+
+(*
+if (subscribed n u) then 
+	z< -read
+	_ <- confirmU 
+	_ <- unsubscribe 
+	remove 
+	ret z
+else
+	
+x<- confirmedS 
+y <- subscribe 
+z< -read
+_ <- confirmU 
+_ <- unsubscribe 
+remove 
+
+ret z
+
+
+
 x<- confirmedS 
 y <- subscribe 
 z< -read

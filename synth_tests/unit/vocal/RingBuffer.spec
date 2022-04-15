@@ -1,38 +1,46 @@
-create: (capacity : { v : int | (v > 0 \/ [v=0]) /\ not (Max > v)}) -> 
+type buffer; 
+qualifier rdom : heap :-> ref buffer :-> bool;
+qualifier rmem : buffer :-> a :-> bool;
+qualifier rsel : heap :-> ref buffer :-> buffer;
+qualifier rlen : buffer :-> int;
+qualifier rdisjoint : buffer :-> buffer :-> bool;
+
+Max : int;
+
+create: (capacity : { v : int | ([v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
         (dummy : a) -> 
        	State {\(h : heap). true} 
 			v : ref buffer 
 		{ \(h : heap), (v : ref buffer), (h' : heap). 
 				\(V : buffer), (V' : buffer).
-			      vdom (h, v) = false /\
-                  vdom (h', v) = vdom (h, v) U {(v)} /\
+		  rdom (h, v) = false /\
+                  rdom (h', v) = true /\
                   rsel (h', v) = V' /\
-                  relems (V') = empty /\
+                  rmem (V', dummy) = true /\
                   rlen (V') = 0
         };
 
 
 
 length :  (vec : ref buffer) ->  
-                State {\(h : heap). vdom (h, vec) = true} 
+                State {\(h : heap). rdom (h, vec) = true} 
 			    v : { v : int | true}   
                 {\(h : heap), (v : int), (h' : heap). 
-				    \(V : buffer).
+			\(V : buffer).
 	                  v = rlen (V) /\
-                      [h' = h]
+                         [h' = h]
                     };
        
 
 
 
 clear : (vec : ref buffer) ->  
-            State {\(h : heap). vdom (h, vec) = true} 
+            State {\(h : heap). rdom (h, vec) = true} 
 			 v : { v : unit | true}    
              {\(h : heap), (v : unit), (h' : heap). 
 				    \(V : buffer), (V' : buffer).
 	                rsel (h, vec) = V /\    
                     rsel (h', vec) = V' /\ 
-                    relems (V') = empty /\
                     rlen (V') = 0 
             };
 
@@ -40,14 +48,14 @@ clear : (vec : ref buffer) ->
 pop : (a1 : ref buffer)  -> 
        State {\(h : heap).
                 \(V1: buffer). 
-                        vdom (h, a1) = true
+                        rdom (h, a1) = true
                  } 
 			     v : { v : a | true} 
                 {\(h : heap), (v : a), (h' : heap). 
 				 \(V1: buffer), (V1' : buffer). 
                     rsel (h, a1) = V1 /\ 
                     rsel (h', a1) = V1' /\
-                    {(x)} C= relems (V1) /\
+                    rmem (V1', v) = false /\
                     rlen (V1') = rlen (V1) - 1
                 };
 
@@ -57,30 +65,89 @@ get : (vec : ref buffer) ->
         (n : int) ->  
            State {\(h : heap).
                         \(V: buffer). 
-                        vdom (h, vec) = true /\ 
-                        (vsel (h, vec) = V => 
-                        vlen (V) > n)
+                        rdom (h, vec) = true /\ 
+                        (rsel (h, vec) = V => 
+                        rlen (V) > n)
                 } 
 			    v : { v : a | true}   
                 {\(h : heap), (v : a), (h' : heap). 
 				    \(V : buffer).
-	                sel (h, vec) = V /\
-                    {(v)} C= elems (V)
-                    /\ [h' = h]
+	                rsel (h, vec) = V /\
+                        rdom (V, v) = true /\ 
+                        [h' = h]
                 };
 
 
 copy : (a1 : ref buffer) -> 
             State {\(h : heap).
                 \(V1: buffer). 
-                        vdom (h, a1) = true
+                        rdom (h, a1) = true
                  } 
 			     v : { v : ref buffer | true} 
                 {\(h : heap), (v : ref buffer), (h' : heap). 
 				 \(V1: buffer), (VN : buffer). 
-                    vsel (h, a1) = V1 /\ 
-                    vsel (h, v) = VN /\
-                    vsel (h', a1) = vsel (h, a1) /\
-                    velems (VN) = velems (V1) /\
-                    vlen (VN) = vlen (V1) 
+                    rsel (h, a1) = V1 /\ 
+                    rsel (h, v) = VN /\
+                    rsel (h', a1) = rsel (h, a1) /\
+                    [VN = V1] /\
+                    rlen (VN) = rlen (V1) /\
+                    rdisjoint (V1, VN) = true 
+                    
                 };
+
+
+(*
+\lambda 
+capacity dummy 
+x <- create capacity dummy
+return x
+*)
+goal0 :  (capacity : { v : int | ( [v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
+        (dummy : a) -> 
+       	State {\(h : heap). true} 
+			v : ref buffer 
+		{ \(h : heap), (v : ref buffer), (h' : heap). 
+				\(V : buffer), (V' : buffer).
+			      rdom (h, v) = false /\
+                  rdom (h', v) = true /\
+                  (rsel (h', v) = V' => rlen (V') = 0)
+        };
+
+(*
+\lambda a1
+y <- copy a1  
+return y
+*)
+goal1 : (a1 :  ref buffer) ->   
+        State {\(h : heap). rdom (h, a1) = true} 
+			v : ref buffer 
+		{ \(h : heap), (v : ref buffer), (h' : heap). 
+		\(V1 : buffer), (VN : buffer).
+		  rdom (h', v) = true /\
+                  (rsel (h, a1) = V1 /\ 
+                  rsel (h, v) = VN ) => 
+                  
+                  (rsel (h', a1) = rsel (h, a1) /\
+                  [VN = V1] /\
+                  rlen (VN) = rlen (V1) /\
+                  rdisjoint (V1, VN) = true) 
+                 
+        };
+
+
+
+goal2 : (a1 :  ref buffer) ->   
+        State {\(h : heap). rdom (h, a1) = true} 
+			v : ref buffer 
+		{ \(h : heap), (v : ref buffer), (h' : heap). 
+		\(V1 : buffer), (VN : buffer).
+		  rdom (h', v) = true /\
+                  (rsel (h, a1) = V1 /\ 
+                  rsel (h, v) = VN ) => 
+                  
+                  (rsel (h', a1) = rsel (h, a1) /\
+                  [VN = V1] /\
+                  rlen (VN) = rlen (V1) /\
+                  rdisjoint (V1, VN) = true) 
+                 
+        };

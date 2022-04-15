@@ -99,4 +99,28 @@ z <- avg_len ()
 ret z.
 
 
+\ (tbl, s).
+	b<- mem tbl s
+	if (b) then  
+     	b1 <- fresh_str tbl;  
+     	_ <- add_tbl tbl b1 ;
+     	b3 <- fresh_str tbl;
+     	_ <- add_tbl b3;
+     	b5 <- avg_len tbl;
+     	b6 <- size_tbl 
+     	ret Pair (b5, b6)
+    else 
+		b7 <- fresh_str tbl;  
+ 		_ <- add_tbl tbl b1 ;
+ 		b9 <- avg_len tbl;
+		b10 <- size_tbl 
+		ret Pair (b9, b10)
+	
+ ( ---> do locbound332 <- apply add  (, s );
+ x <- fresh_int
+_ <- apply add (x)
+z <- avg_len ()
+ret z.
+
+
  *)

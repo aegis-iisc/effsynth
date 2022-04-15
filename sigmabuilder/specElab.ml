@@ -45,21 +45,25 @@ let parseLSpecFile file =
 
 (*Populate the Gamma, Formulas, and Sigma*)
 let elaborateEnvs ast = 
- let RelSpec.T {typedefs;typespecs;preds;_} = ast in 
+ let RelSpec.T {typedefs;typespecs;preds;quals;_} = ast in 
  let gamma = TEnv.empty in
  let sigma = ConsEnv.empty in 
-
  let gamma  = List.fold_left (fun tmap ts -> let TypeSpec.T{ name;refty;_} = ts in                                      
                                let stringName = Var.toString name in 
-                               if stringName = "goal" then 
-                                  tmap 
-                              else 
-                               TEnv.add tmap stringName refty) gamma typespecs in
+                               if (String.length name >= 4) then 
+                                  let sub_name = String.sub name 0 4 in 
+                                  (if sub_name = "goal" then
+                                    tmap 
+                                  else
+                                    TEnv.add tmap stringName refty
+                                  )
+                               else 
+                                    TEnv.add tmap stringName refty ) gamma typespecs in
 
- let sigma = List.fold_left (fun sigma tdef -> 
-                                let Algebraic.TD {typename;constructors} = tdef in 
-                                
-                                let rec addToSigma  (consmap:ConsEnv.t) (cons: Algebraic.constructor list) : ConsEnv.t  =
+ let (typenames, sigma) = List.fold_left 
+                              (fun (typenames, sigma) tdef -> 
+                                  let Algebraic.TD {typename;constructors} = tdef in 
+                                  let rec addToSigma  (consmap:ConsEnv.t) (cons: Algebraic.constructor list) : ConsEnv.t  =
                                     match cons with 
                                       | [] ->  consmap
                                       | x :: xs -> 
@@ -73,13 +77,22 @@ let elaborateEnvs ast =
                                           addToSigma consmap xs 
 
                                   in    
-                                 addToSigma sigma constructors
-                                 ) sigma typedefs in  
+                                 match constructors with 
+                                 | [] -> ((typename :: typenames), sigma)
+                                 |  _::_ -> (typenames, (addToSigma sigma constructors))
+                                ) ([], sigma) typedefs in  
 
- let goalTypespec = List.find (fun ts -> let TypeSpec.T{name;refty;_} = ts in 
-                        if name = "goal" then true else false) typespecs in 
- let TypeSpec.T{name;refty;_} = goalTypespec in 
- let goal = refty in 
+
+ let goalTypespecList = List.filter (fun ts -> let TypeSpec.T{name;refty;_} = ts in 
+                        if (String.length name >= 4) then 
+                          let sub_name = String.sub name 0 4 in 
+                          if sub_name = "goal" then true else false
+                        else 
+                          false) typespecs in 
+ let goals = List.map 
+                (fun goalTypespec -> 
+                let TypeSpec.T{name;refty;_} = goalTypespec in 
+                refty) goalTypespecList in 
  (*TODO populate sigma*)
- (gamma, sigma, goal)
+ (gamma, sigma, typenames, quals, goals)
 

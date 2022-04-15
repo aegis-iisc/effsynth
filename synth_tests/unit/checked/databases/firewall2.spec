@@ -30,7 +30,8 @@ add_connection : (d : { v : int | true})
 										\(h : heap).
 											\(D : [int]).
 											didsel (h, dtab) = D =>	
-											device (D, x) = true
+											(device (D, d) = true /\
+											device (D, x) = true)
 											}
 											v : {v : unit | true}
 											{\(h: heap),(v : unit),(h': heap).

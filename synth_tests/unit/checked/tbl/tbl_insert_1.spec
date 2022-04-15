@@ -4,6 +4,7 @@ Tbl :  [int];
 num : ref int;
 
 
+
 fresh_int : State 
 			{\(h : heap). not (sel (h, num) > 1)} 
 			v : { v : int | true} 

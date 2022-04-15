@@ -1,34 +1,56 @@
-vec : ref vec;
-V : vec;
-V' : vec;
-num : ref int; 
+type vec; 
+qualifier vdom : heap :-> ref vec :-> bool;
+qualifier vmem : vec :-> a :-> bool;
+qualifier vsel : heap :-> ref vec :-> vec;
+qualifier vlen : vec :-> int;
+qualifier vdisjoint : vec :-> vec :-> bool;
+
 Max : int;
+num : ref int;
 
 
-create : (capacity : { v : int | (v > 0 \/ [v=0]) /\ not (Max > v)}) -> 
+
+
+create : (capacity : { v : int | ( [v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
         (dummy : a) -> 
-       	State {\(h : heap). true} 
+       	State {\(h : heap). not (sel (h, num) > 1)} 
 			v : ref vec 
 		{ \(h : heap), (v : ref vec), (h' : heap). 
 				\(V : vec), (V' : vec).
 			      vdom (h, v) = false /\
-                  vdom (h', v) = vdom (h, v) U {(v)} /\
+                  sel (h', num) == sel (h, num) + 1 /\
+                  vdom (h', v) = true /\
                   vsel (h', v) = V' /\
-                  velems (V') = empty /\
                   vlen (V') = 0
         };
 
-make : (dummy : a) -> 
-       (n : { v : int | (v > 0 \/ [v=0]) /\ not (Max > v)}) -> 
-        (x : a) ->       
-            State {\(h : heap). true} 
+
+
+make_empty : State {\(h : heap). not (sel (h, num) > 1)} 
 			    v : ref vec 
 		        {\(h : heap), (v : ref vec), (h' : heap). 
-				    \(V : vec), (V' : vec).
-	                vdom (h, v) = false /\
-                    vdom (h', v) = vdom (h, v) U {(v)} /\
+		        \(V : vec), (V' : vec).
+	            vsel (h', v) = V' /\ 
+                    vdom (h', v) = true /\
+                    vlen (V') = 0 /\
+                    sel (h', num) == sel (h, num) + 1 
+                  
+                };
+
+
+
+make : (dummy : a) -> 
+        (n : { v : int | ([v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
+        (x : a) ->       
+            State {\(h : heap). not (sel (h, num) > 1)} 
+			    v : ref vec 
+		        {\(h : heap), (v : ref vec), (h' : heap). 
+		        \(V : vec), (V' : vec).
+	            sel (h', num) == sel (h, num) + 1 /\
                     vsel (h', v) = V' /\ 
-                    velems (V') = {(x)} /\
+                    vdom (h, v) = false /\
+                    vdom (h', v) = true /\
+                    vmem (V', x) = true /\
                     vlen (V') = n 
                 };
 
@@ -36,25 +58,29 @@ make : (dummy : a) ->
 init : (dummy : a ) -> 
        (n : int) ->  
        (f : (x : int) -> { v :  a| true}) -> 
-        State {\(h : heap). true} 
+        State {\(h : heap). not (sel (h, num) > 1)} 
 			    v : ref vec 
 		        {\(h : heap), (v : ref vec), (h' : heap). 
 				    \(V : vec), (V' : vec).
-	                vdom (h, v) = false /\
-                     vlen (V') = n 
+	                sel (h', num) == sel (h, num) + 1 /\
+                        vdom (h, v) = false /\
+                        vlen (V') = n 
                 };
 
 
 resize : (vec : ref vec) -> 
-         (n : { v : int | (v > 0 \/ [v=0]) /\ not (Max > v)}) -> 
+         (n : { v : int | ([v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
          (x : a) ->       
-         State {\(h : heap). vdom (h, vec) = true} 
+         State {\(h : heap).\(V : vec). 
+                        vdom (h, vec) = true /\
+                        (vsel (h, vec) = V => not (n > vlen (V)))
+                        } 
 			 v : { v : unit | true}    
              {\(h : heap), (v : unit), (h' : heap). 
-				    \(V : vec), (V' : vec).
+			\(V : vec), (V' : vec).
 	                vsel (h, vec) = V /\    
                     vsel (h', vec) = V' /\ 
-                    velems (V') C= velems (V) /\
+                    vlen (V) > vlen (V') /\
                     vlen (V') = n 
                     };
 
@@ -63,10 +89,8 @@ clear : (vec : ref vec) ->
             State {\(h : heap). vdom (h, vec) = true} 
 			 v : { v : unit | true}    
              {\(h : heap), (v : unit), (h' : heap). 
-				    \(V : vec), (V' : vec).
-	                vsel (h, vec) = V /\    
-                    vsel (h', vec) = V' /\ 
-                    velems (V') = empty /\
+		\(V : vec), (V' : vec).
+	            vsel (h', vec) = V' /\ 
                     vlen (V') = 0 
             };
 
@@ -79,7 +103,6 @@ is_empty : (vec : ref vec) ->
 				    \(V : vec), (V' : vec).
 	                  vsel (h, vec) = V /\
                       ([v = true] <=> len (V) = 0) /\ 
-                      velems (V) = empty /\ 
                       [h' = h]
                     };
 
@@ -88,8 +111,8 @@ length :  (vec : ref vec) ->
                 State {\(h : heap). vdom (h, vec) = true} 
 			    v : { v : int | true}   
                 {\(h : heap), (v : int), (h' : heap). 
-				    \(V : vec).
-	                  v = vlen (V) /\
+		        \(V : vec).
+	                v = vlen (V) /\
                       [h' = h]
                     };
        
@@ -101,15 +124,14 @@ get : (vec : ref vec) ->
            State {\(h : heap).
                         \(V: vec). 
                         vdom (h, vec) = true /\ 
-                        (vsel (h, vec) = V => 
-                        vlen (V) > n)
+                        (vsel (h, vec) = V => vlen (V) > n)
                 } 
 			    v : { v : a | true}   
                 {\(h : heap), (v : a), (h' : heap). 
 				    \(V : vec).
-	                sel (h, vec) = V /\
-                    {(v)} C= elems (V)
-                    /\ [h' = h]
+	                vsel (h, vec) = V /\
+                        vmem (V, v) = true /\        
+                         [h' = h]
                 };
 
 
@@ -126,9 +148,10 @@ set : (vec : ref vec) ->
 			    v : { v : unit | true}   
                 {\(h : heap), (v : unit), (h' : heap). 
 				    \(V : vec), (V' : vec).
-	                sel (h, vec) = V /\
-                    sel (h', vec) = V' /\
-                    {(x)} C= elems (V')
+	            vsel (h, vec) = V /\
+                    vsel (h', vec) = V' /\
+                    vmem (V', x) = true 
+                    
                 };
 
 
@@ -140,17 +163,16 @@ sub : (vec : ref vec) ->
                         vdom (h, vec) = true /\ 
                         (vsel (h, vec) = V => 
                         vlen (V) > n /\ 
-                        vlen (V) > offset + n )
+                        vlen (V) > offset + n)
                 } 
 			     v : ref vec  
                 {\(h : heap), (v : ref vec), (h' : heap). 
-				    \(NV : vec).
-	                sel (h, vec) = V /\
-                    sel (h', v) = NV /\
+		 \(V : vec), (NV : vec).
+	            vsel (h, vec) = V /\
+                    vsel (h', v) = NV /\
                     vdom (h', v) = true /\
-                    sel (h, vec) = sel (h', vec) /\
-                    elems (NV) C= elems (V) /\
-                    len (V) > len (NV) 
+                    vsel (h, vec) = vsel (h', vec) /\
+                    (vlen (V) > vlen (NV) \/ vlen (V) = vlen (NV))
                 };
 
 
@@ -168,12 +190,11 @@ fill : (vec : ref vec) ->
                 } 
 			     v : { v : unit | true} 
                 {\(h : heap), (v : unit), (h' : heap). 
-				    \(V : vec), (V' : vec).
-	                sel (h, vec) = V /\
-                    sel (h', vec) = V' /\
-                    elems (V') C= elems (V) /\  
-                    {(x)} C= elems (V') /\
-                    len (V') = len (V) 
+	           \(V : vec), (V' : vec).
+	            vsel (h, vec) = V /\
+                    vsel (h', vec) = V' /\
+                    vmem (V', x) = true /\
+                    vlen (V') = vlen (V) 
                 };
 
 blit : (a1 : ref vec) -> 
@@ -195,7 +216,7 @@ blit : (a1 : ref vec) ->
                     vsel (h, a2) = V2 /\ 
                     vsel (h', a2) = V2' /\
                     vsel (h', a1) = vsel (h, a1) /\
-                    len (V2') = len (V2) 
+                    vlen (V2') = vlen (V2) 
                 };
 
 
@@ -208,7 +229,7 @@ append : (a1 : ref vec) ->
                         vdom (h, a1) = true /\ 
                         vdom (h, a2) =  true/\
                         ((vsel (h, a1) = V1 /\ vsel (h, a2) = V2) => 
-                         Max > (vlen (V1) + vlen (V2)))
+                         (Max > (vlen (V1) + vlen (V2))))
                  } 
 			     v : { v : ref vec | true} 
                 {\(h : heap), (v : ref vec), (h' : heap). 
@@ -216,10 +237,10 @@ append : (a1 : ref vec) ->
                     vsel (h, a1) = V1 /\ 
                     vsel (h, a2) = V2 /\
                     vsel (h', v) = VN /\
-                    dom (h', v) = true /\
+                    vdom (h', v) = true /\
                     vsel (h', a1) = vsel (h, a1) /\
                     vsel (h', a2) = vsel (h, a2) /\
-                    len (VN) = len (V1) + len (V2)
+                    vlen (VN) == (vlen (V1) + vlen (V2))
                 };
 
 
@@ -233,7 +254,7 @@ merge_right : (a1 : ref vec) ->
                         vdom (h, a2) =  true/\
                         ((vsel (h, a1) = V1 /\ vsel (h, a2) = V2) => 
                          Max > (vlen (V1) + vlen (V2)) /\
-                         disjoint (V1, V2) = true)
+                         vdisjoint (V1, V2) = true)
                  } 
 			     v : { v : unit | true} 
                 {\(h : heap), (v : unit), (h' : heap). 
@@ -242,11 +263,9 @@ merge_right : (a1 : ref vec) ->
                     vsel (h, a2) = V2 /\
                     vsel (h', a1) = V1' /\
                     vsel (h', a2) = V2' /\
-                    elems (V2') = empty /\
                     vlen (V2') = 0 /\
-                    elems (V1') = elems (V1) U elems (V2) /\
-                    len (V1') = len (V1) + len (V2) /\
-                    disjoint (V1', V2') = true
+                    vlen (V1') = vlen (V1) + vlen (V2) /\
+                    vdisjoint (V1', V2') = true
                 };
 
 
@@ -262,7 +281,7 @@ map :  (dummy : b) ->
 				 \(V1: vec), (VN : vec). 
                     vsel (h, a1) = V1 /\ 
                     vsel (h, v) = VN /\
-                    len (VN) = len (V1) /\
+                    vlen (VN) = vlen (V1) /\
                     vsel (h', a1) = vsel (h, a1)
                 };
 
@@ -270,8 +289,8 @@ map :  (dummy : b) ->
 
 
 mapi :  (dummy : b) -> 
-       (a1 : ref vec) ->  
-       (f : (i : int) -> (x : a) -> { v :  b| true}) ->
+        (a1 : ref vec) ->  
+        (f : (i : int) -> (x : a) -> { v :  b| true}) ->
           State {\(h : heap).
                 \(V1: vec). 
                         vdom (h, a1) = true} 
@@ -280,8 +299,9 @@ mapi :  (dummy : b) ->
 				 \(V1: vec), (VN : vec). 
                     vsel (h, a1) = V1 /\ 
                     vsel (h, v) = VN /\
-                    len (VN) = len (V1) /\
-                    vsel (h', a1) = vsel (h, a1)
+                    vlen (VN) = vlen (V1) /\
+                    vsel (h', a1) = vsel (h, a1) /\
+                    vdisjoint (V1, VN) = true
                 };
 
 
@@ -290,16 +310,22 @@ mapi :  (dummy : b) ->
 copy : (a1 : ref vec) -> 
             State {\(h : heap).
                 \(V1: vec). 
-                        vdom (h, a1) = true
+                        vdom (h, a1) = true /\
+                        not (sel (h, num) > 1)
                  } 
 			     v : { v : ref vec | true} 
                 {\(h : heap), (v : ref vec), (h' : heap). 
 				 \(V1: vec), (VN : vec). 
+                    vdom (h', a1 ) = true /\
+                    vdom (h' , v) = true /\
                     vsel (h, a1) = V1 /\ 
                     vsel (h, v) = VN /\
                     vsel (h', a1) = vsel (h, a1) /\
-                    velems (VN) = velems (V1) /\
-                    vlen (VN) = vlen (V1) 
+                    [VN = V1] /\
+                    vlen (VN) = vlen (V1) /\
+                    vdisjoint (V1, VN) = true /\
+                    sel (h', num) == sel (h, num) + 1 
+                    
                 };
 
 
@@ -329,7 +355,7 @@ push : (a1 : ref vec)  ->
 				 \(V1: vec), (V1' : vec). 
                     vsel (h, a1) = V1 /\ 
                     vsel (h', a1) = V1' /\
-                    velems (V1') = {(x)} U velems (V1) /\
+                    vmem (V1', x) = true /\
                     vlen (V1') = vlen (V1) + 1
                 };
 
@@ -338,28 +364,111 @@ push : (a1 : ref vec)  ->
 pop : (a1 : ref vec)  -> 
        State {\(h : heap).
                 \(V1: vec). 
-                        vdom (h, a1) = true
+                        vdom (h, a1) = true /\
+                        (vsel (h, a1) = V1 => vlen (V1) > 0)
                  } 
 			     v : { v : a | true} 
                 {\(h : heap), (v : a), (h' : heap). 
 				 \(V1: vec), (V1' : vec). 
                     vsel (h, a1) = V1 /\ 
                     vsel (h', a1) = V1' /\
-                    {(x)} C= velems (V1) /\
+                    vmem (V1', x) = false /\
                     vlen (V1') = vlen (V1) - 1
                 };
 
 
-top: (a1 : ref vec)  -> 
+top : (a1 : ref vec)  -> 
        State {\(h : heap).
                 \(V1: vec). 
-                        vdom (h, a1) = true
+                        vdom (h, a1) = true /\
+                        (vsel (h, a1) = V1 => vlen (V1) > 0) 
                  } 
 			     v : { v : a | true} 
                 {\(h : heap), (v : a), (h' : heap). 
 				 \(V1: vec), (V1' : vec). 
                     vsel (h, a1) = V1 /\ 
                     vsel (h', a1) = V1' /\
-                    {(x)} C= velems (V1) /\
+                    vmem (V1', x) = false /\
                     vlen (V1') = vlen (V1) - 1
                 };
+
+(*create a new vector
+\cap dum .create cap dummy = 
+        \lambda
+[cap] 
+[dummy]
+               ;
+           <-
+          [x] $
+          [app]
+          [create] [dum] [cap]                
+          $
+          retrun 
+          x 
+
+*)
+goal :  (capacity : { v : int | ( [v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
+        (dummy : a) -> 
+       	State {\(h : heap). (sel (h, num) == 0)} 
+			v : ref vec 
+		{ \(h : heap), (v : ref vec), (h' : heap). 
+		\(V : vec), (V' : vec).
+		  vdom (h, v) = false /\
+                  vdom (h', v) = true /\
+                  (vsel (h', v) = V' => vlen (V') = 0)
+        };
+
+(*create a new vector
+\cap dum .create cap dummy = 
+        \lambda
+[cap] 
+[dummy]
+               ;
+           <-
+          [x] $
+          [app]
+          [make] [dum] [cap]                
+          $
+          retrun 
+          x 
+
+*)
+goal1 : (capacity : { v : int | ( [v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
+        (dummy : a) -> 
+       	(x : a) -> 
+                State {\(h : heap).  (sel (h, num) == 0)} 
+			v : ref vec 
+		{ \(h : heap), (v : ref vec), (h' : heap). 
+			\(V : vec), (V' : vec).
+			vdom (h, v) = false /\
+                        vdom (h', v) = true /\
+                  (vsel (h', v) = V' => 
+                        not (0 > vlen (V'))  /\ vmem (V', x) = true)
+        };
+
+(*
+\cap dummy a1
+        x <- create dumm cap 
+        copy a1 x
+        merge_right a1 x
+        retrun x
+
+*)
+
+goal2 : (capacity : { v : int | ( [v > 0] \/ [v=0]) /\ not [Max > v]}) -> 
+        (dummy : a) -> 
+       	(a1 : ref vec) -> 
+        State {\(h : heap).
+                  vdom (h, a1) = true /\ sel (h, num) == 1 
+                 } 
+			     v : { v : ref vec | true} 
+                {\(h : heap), (v : ref vec), (h' : heap). 
+		        \(V1: vec), (VN : vec), (V1' : vec). 
+                    vsel (h, a1) = V1 /\ 
+                    vsel (h', a1) = V1' /\
+                    vsel (h', v) = VN /\
+                    vlen (VN) = 0 /\
+                    vlen (V1') == vlen (V1) + vlen (VN) /\
+                    vdisjoint (V1', VN) = true
+                };
+

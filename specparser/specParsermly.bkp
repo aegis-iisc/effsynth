@@ -5,6 +5,7 @@ open Printf
 module TypeSpec = SpecLang.RelSpec.TypeSpec
 module RefTy = SpecLang.RefinementType
 module Formula = SpecLang.RelSpec.Formula
+module Qualifier = SpecLang.RelSpec.Qualifier
 let defaultCons = SpecLang.Tycon.default
 let symbase = "sp_"
 let count = ref 0
@@ -72,6 +73,9 @@ let print msg = let () = Printf.printf "%s" msg in ()
 %token PURE
 %token ANGLEFT
 %token ANGRIGHT
+%token COLONARROW
+%token QUAL
+
 
 %start <SpecLang.RelSpec.t> start
 %%
@@ -87,10 +91,11 @@ decsandtys:
    | td = typedef SEMICOLON d= decsandtys
                   {
                     match d with 
-                          RelSpec.T ({typedefs;preds;reldecs; primdecs; typespecs}) ->    
+                          RelSpec.T ({typedefs;preds;quals;reldecs; primdecs; typespecs}) ->    
                               RelSpec.T {
                               typedefs = td :: typedefs;
                               preds = preds;
+                              quals = quals;
                               reldecs = reldecs; 
                               primdecs = primdecs;
                               typespecs = typespecs}
@@ -100,20 +105,22 @@ decsandtys:
    | r=reldec SEMICOLON d=decsandtys 
                   {
                     match d with 
-                    RelSpec.T ({typedefs;preds;reldecs; primdecs; typespecs}) -> 
+                    RelSpec.T ({typedefs;preds;quals;reldecs; primdecs; typespecs}) -> 
                     RelSpec.T {typedefs=typedefs;
                               preds = preds;
-		    		                  reldecs = r ::reldecs; 
+		    		                  quals = quals;
+                              reldecs = r ::reldecs; 
                               primdecs = primdecs;
                             typespecs = typespecs}
                           }
   | p= primdec SEMICOLON d=decsandtys 
                 {match d with 
-                  RelSpec.T ({typedefs;preds;reldecs; primdecs; typespecs}) -> 
+                  RelSpec.T ({typedefs;preds;quals;reldecs; primdecs; typespecs}) -> 
                     RelSpec.T {
                               typedefs=typedefs;
                               preds = preds;
-		    		                  primdecs = p :: primdecs; 
+		    		                   quals = quals;
+                              primdecs = p :: primdecs; 
                               reldecs=reldecs; 
                               typespecs = typespecs}
                 }
@@ -121,22 +128,39 @@ decsandtys:
 
                 {
                   match d with
-                 RelSpec.T {typedefs;preds;reldecs; primdecs;typespecs} -> 
-                    RelSpec.T {typedefs=typedefs;preds= preds;reldecs = reldecs; primdecs=primdecs;
+                   RelSpec.T {typedefs;preds;quals;reldecs; primdecs;typespecs} -> 
+                    RelSpec.T {typedefs=typedefs;preds= preds;quals;reldecs = reldecs; primdecs=primdecs;
                       typespecs = t :: typespecs}
                 }
   | p = predspec SEMICOLON d = decsandtys
   		{
 		 match d with 
-		  RelSpec.T {typedefs;preds;reldecs; primdecs; typespecs} -> 
-                    RelSpec.T {typedefs=typedefs;preds= p :: preds;reldecs = reldecs; primdecs=primdecs;
+		  RelSpec.T {typedefs;preds;quals;reldecs; primdecs; typespecs} -> 
+                    RelSpec.T {typedefs=typedefs;
+                              preds= p :: preds;
+                              quals = quals;
+                              reldecs = reldecs; 
+                              primdecs=primdecs;
+                              typespecs = typespecs}
+
+		}	
+  | q = qualdef SEMICOLON d = decsandtys
+  		{
+		 match d with 
+		    RelSpec.T {typedefs;preds;quals;reldecs; primdecs; typespecs} -> 
+                    RelSpec.T {typedefs=typedefs;
+                              preds= preds;
+                              quals = q :: quals;
+                              reldecs = reldecs; primdecs=primdecs;
                       typespecs = typespecs}
 
 		}	
-  |             {RelSpec.T {
+  
+  |       {RelSpec.T {
                     typedefs=[];
   			            preds = Vector.new0 ();
-  			            reldecs = [];
+  			            quals = [];
+                    reldecs = [];
                     primdecs = Vector.new0 ();
                     typespecs = []}};
 
@@ -148,7 +172,14 @@ typedef : TYPE tn = ID EQUALOP cons=tpatmatchseq
                     }
                 }; 
 
+        | TYPE tn = ID{
+            Algebraic.TD {
+                    typename = Var.fromString tn;   
+                    constructors = []    
+                    }
+        };
 
+qualdef : QUAL i=ID COLON p=shape {Qualifier.Qual {name=Var.fromString i; shape = p}};
 
 predspec : FORMULA i=ID EQUALOP p=pred {Formula.Form{name=Var.fromString i;pred = p}};
 
@@ -179,6 +210,13 @@ reldec : RELATION i=ID patmseq=patmatchseq
                 params = p;
                 mapp = [(defaultCons,None,
                   Star ie)]}};
+
+
+shape :  s=tyd COLONARROW ss = sortseq {s :: ss};
+       
+sortseq : s = tyd {[s]}
+        | s = tyd COLONARROW ss= sortseq {s :: ss};
+
 
 params : i=ID   {[RelId.fromString i]}
        | i=ID p=params {(RelId.fromString i)::p};

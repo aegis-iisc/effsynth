@@ -11,6 +11,17 @@
 (** This module implements a priority queue based on a minimal binary heap.
 The heap is modelized by a dynamic array, taken from the module Vector **)
 
+
+(*
+type pq = { dummy : a;
+            heap : a Vector.t};
+
+predicate mem : (a,  pq) :-> bool 
+predicate minimum : pq :-> a
+predicate is_minimum : (a, pq) :-> bool 
+
+ *)
+
 module Make (X: sig
   type t
 
