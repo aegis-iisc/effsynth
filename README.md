@@ -10,4 +10,3 @@
 
 # To run:
 ./effsynth.native [-bi] [-cdcl] [-effect] <path-to-spec-file>
-
