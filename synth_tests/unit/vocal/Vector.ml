@@ -89,8 +89,10 @@ let merge_right : type a. (a t) -> (a t) ->  unit =
                let size = n1 + n2 in
                unsafe_resize a1 size; blit a2 (0 ) a1 n1 n2; clear a2
 
-let copy : type a. (a t) ->  (a t) =
-  fun a1 -> { dummy = a1.dummy; size = a1.size; data = Array.copy a1.data }
+let copy : type a. (a t) ->  (a t) -> unit =
+  fun a1 a2 ->
+    a2.size <- a1.size; 
+    a2.data <- Array.copy a1.data
 
 let push : type a. (a t) -> a ->  unit =
   fun a x -> let n = a.size in unsafe_resize a (n + 1 ); (a.data).(n) <- x

@@ -242,7 +242,7 @@ val mapi : dummy:'b -> 'a t -> (int -> 'a -> 'b) -> 'b t
       ensures  forall i: int. 0 <= i < Seq.length a1.view ->
                a2.view[i] = f i a1.view[i] *)
 
-val copy: 'a t -> 'a t
+val copy: 'a t -> 'a t -> unit
 (** [copy a] returns a copy of [a], that is, a fresh vector containing
     the same elements as [a]. *)
 (*@ a2 = copy a1

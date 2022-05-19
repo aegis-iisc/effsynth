@@ -270,9 +270,9 @@ let enumPureE explored gamma sigma delta (spec : RefTy.t) : (Syn.typedMonExp) li
             match fs with
              | [] -> potentialExps 
              | (vi, rti) :: xs -> 
-                 (* Message.show ("\n Show ::  Enumerating a Pure Term "^(Var.toString vi));
-                 Message.show ("\n Show ::  Enumerating a Pure Term "^(Char.escaped (vi.[0])));
-                  *)
+                 Message.show ("\n Show ::  Enumerating a Pure Term "^(Var.toString vi)^"\n");
+                 Message.show ("\n Show ::  Type of the Pure Term "^(RefTy.toString rti)^"\n");
+                  
                  (** Skip the ghost Vars like [A-Z]**)
                  let  startCharvar = vi.[0] in 
                  let upper = Char.uppercase_ascii startCharvar in 
@@ -1229,8 +1229,9 @@ let rec esynthesizePureApp gamma sigma delta specs_path : Syn.typedMonExp option
                                         | [] -> None
                                         | es_x :: es_xs -> 
                                             let monExps_es = List.map (fun ei -> ei.expMon) es_x in 
-                                            let appliedMonExp = Syn.Eapp (Syn.Evar vi, monExps_es) in  (*apply vi e_arg*)
-                                             let funAppType =  SynTC.typecheck gamma sigma delta !typenames !qualifiers appliedMonExp spec in 
+                                            let appliedMonExp = Syn.Eapp (Syn.Evar vi, [List.hd(monExps_es)]) in  (*apply vi e_arg*)
+                                            Message.show ("DEBUG :: "^(Syn.monExp_toString appliedMonExp));
+                                            let funAppType =  SynTC.typecheck gamma sigma delta !typenames !qualifiers appliedMonExp spec in 
                                                 match funAppType with 
                                                 | Some type4AppliedMonExp -> 
                                                      Message.show (" Show *************** TypeChecking Succsessful "^(RefTy.toString type4AppliedMonExp));

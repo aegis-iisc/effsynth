@@ -46,6 +46,8 @@ val make : 'a -> 'a elem
 (* @ axiom alpha_is_a_constant_in_practice:
     forall n. 0 <= n <= max_int -> alpha n <= 5 *)
 
+(*@@ operations doing path compression are not reasoned over at all
+      can we define a property which required these  *)
 val find : 'a elem -> 'a elem
 (*@ r = find [uf: 'a uf] e
       (* requires $ O(alpha(n)) where n = card (dom uf) *)

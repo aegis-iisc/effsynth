@@ -173,6 +173,8 @@ goal : 	 (n  : { v : nl | true})->
 							(dsel (h', d) = D' /\ 
 							dsel (h, d) = D ) => 
 								(v = articles (D') /\
-								nlmem (D', n, u) = false)};
+								nlmem (D', n, u) = false /\
+								subsize (D', u) == subsize (D, u) -- 1  /\
+								nlreach (D, n) == nlreach (D, n) -- 1)};
 		 
 
