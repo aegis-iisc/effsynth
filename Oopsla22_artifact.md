@@ -1,14 +1,14 @@
-# OOPSLA 2022 Artifact
+# OOPSLA 2022 Artifact (README.md)
 ## Overview
 This Readme file contains two sections. The __Getting Started__ section gives the main steps for 
 installing the dependencies using OCaml package manager (opam) followed by introducing small scripts for building and running Cobal on a sample test case.
 
-The second section __Step-by-step Instructions__ explains, the structure of the directory, how to run Cobalt on all the benchmarks in the paper?, undertsanding the results and how to run Cobal on an individual synthesis task in different ablation modes?
+The second section __Step-by-step Instructions__ explains the structure of the directory, how to run Cobalt on all the benchmarks in the paper?, understanding the results and how to run Cobal on an individual synthesis task in different ablation modes?
 
 ## Getting Started
-This is an artifact for the *Cobalt* tool associated with the
+This document is an overview of the Artifact for the *Cobalt* tool associated with the
 submission *Specification-Guided Component-Based Synthesis from Effectful Libraries.*
-The artifact is distributed as a source control repository link.
+The Artifact is distributed as a source control repository link.
 
 Following are the main steps to build and run  Cobalt: 
 
@@ -58,7 +58,7 @@ $ opam install "ocamlbuild>=0.12"
 $ eval $(opam env)
 ```
 
-To Run the evaluation
+To Run the Evaluations.
 
 *  [Python3](https://www.python.org/download/releases/3.0/)
 ```
@@ -67,27 +67,27 @@ $ apt-get install python3
 
 ### Building Cobalt
 
-After all the dependencis are installed, Cobalt can be directly built using ocamlbuild using the script build.sh in the project root directory.
+After all the dependencies are installed, Cobalt can be directly built using *ocamlbuild* using the script `build.sh` in the project root directory.
 
 ```
 
-./build.sh
+$ ./build.sh
 
 ```
 
-This will create a native executable effsynth.native in the root directory
+The above build script will create a native executable `effsynth.native` in the project's root directory
 
-### Quick test : Test Running Cobalt
+### Quick test: Test Running Cobalt
 
 
 ```
 
-python3 quick_test.py
+$ python3 quick_test.py
 
 ```
  
 This should produce the following output giving running times for the four ablation cases 
-*viz.* cobal fw-alone, bw-alone, no-cdcl, corresponding to 4 bars in Fig 9. (numbers may vary a little):
+*viz.* cobalt; fw-alone; bw-alone; no-cdcl; corresponding to 4 bars in Fig 9. (numbers may vary a little):
 ```
 Running Varinat cobalt ./synth_tests/unit/checked/other_units/u_test3.spec
 0.22user 0.09system 0:00.31elapsed 99%CPU (0avgtext+0avgdata 24536maxresident)k
@@ -103,14 +103,14 @@ Running Varinat cobalt ./synth_tests/unit/checked/other_units/u_test3.spec
 ## Step-by-step Instructions
 
 The following instructions explain:
-1. The structure of the repository giving relevant files.
+1. The structure of the repository highlighting relevant files.
 2. How to Run Cobalt to generate synthesis time Figure 9 a, b and c.
 3. How to Run Cobalt on individual synthesis problem.
 
-### Structure of the artifact.
-The source code for this artifact is available at [effsynth]()
+### structure of the Artifact.
+The source code for this Artifact is available at [effsynth](https://github.com/aegis-iisc/effsynth)
 
-The files and directories used in this artifact are:
+The files and directories used in this Artifact are:
 
 -  `quick_test.py` : a script to test the successfull installation of Cobalt
 -  `run_benchmarks.py` : a script to run Cobalt for all the benchmarks in the paper producing results.
@@ -124,20 +124,20 @@ The files and directories used in this artifact are:
 $ cd project_root
 $ python3 run_benchmarks.py
 ```
-Once the script terminates it will produce a file `timings` which containts entries for each benchmark in Fig 9a, b, c in the following format. (Showing the result for Png-simple benchmark P1).
+Once the script terminates, it will produce a file `timings` which contains entries for each benchmark in Fig 9a, b, and c in the following format. (Showing the result for Png-simple benchmark P1).
 The time 1000 shows the case where the tool timed out.
  
 ```
 ********************************
-   ./synth_tests/unit/checked/parsers/png_simple.spec_cobalt : 0.02336999999999989
-   ./synth_tests/unit/checked/parsers/png_simple.spec_fw-alone : 1.5463100000000054
-   ./synth_tests/unit/checked/parsers/png_simple.spec_bw-alone : 0.017842999999970743
-   ./synth_tests/unit/checked/parsers/png_simple.spec_no-cdcl : 1000
+./synth_tests/unit/checked/parsers/png_simple.spec_cobalt : 0.02336999999999989
+./synth_tests/unit/checked/parsers/png_simple.spec_fw-alone : 1.5463100000000054
+./synth_tests/unit/checked/parsers/png_simple.spec_bw-alone : 0.017842999999970743
+./synth_tests/unit/checked/parsers/png_simple.spec_no-cdcl : 1000
  ********************************
 
  
 ```
-#### Note (Exact reproducibility) : Note that we have refined the implementation since the time of paper submission thus, not all the number will match with those in the paper. However, the general relation between the timings of the approaches still hold.
+#### Note (Exact reproducibility): Note that we have refined the implementation since the time of paper submission; thus, not all the numbers will match with those in the paper. However, the general relation between the timings of the approaches still holds for benchmarks, as visible in the above example.
 
 
 ### Running an individual synthesis query
