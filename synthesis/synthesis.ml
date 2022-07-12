@@ -29,9 +29,17 @@ exception LearningException of string
 
 open Syn
 
+
+module Printf = struct 
+  let printf d s = Printf.printf d ""
+  let originalPrint = Printf.printf 
+end  
+
 module Message = struct 
 
-  let show (s:string) = Printf.printf "%s" ("\n"^s) 
+  let show (s:string) = Printf.printf "%s" ("")
+  
+  (* Printf.printf "%s" ("\n"^s)  *)
 
 
 end

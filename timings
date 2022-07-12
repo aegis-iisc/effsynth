@@ -157,3 +157,46 @@
  ./synth_tests/unit/checked/vocal/Vector2.spec_bw-alone : 1.321469
  ./synth_tests/unit/checked/vocal/Vector2.spec_no-cdcl : 1000
  ********************************
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.22819599999999998
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.908586
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.20844400000000007
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.5339889999999998
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.192435
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.897288
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.22040599999999988
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.3760760000000003
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.22838
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.92747
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.226788
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.498713
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.229459
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.952327
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.19275299999999995
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.4138000000000002
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.243302
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.8978339999999999
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.2126380000000001
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.4083199999999998
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.25240599999999996
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 1.0010320000000001
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.26378499999999994
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.5390290000000002
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.21470499999999998
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.872525
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.20551200000000014
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.4413399999999998
+ ********************************
+ ********************************
+ ./synth_tests/unit/checked/other_units/u_test3.spec_cobalt : 0.16261499999999998
+ ./synth_tests/unit/checked/other_units/u_test3.spec_fw-alone : 0.667282
+ ./synth_tests/unit/checked/other_units/u_test3.spec_bw-alone : 0.18129800000000007
+ ./synth_tests/unit/checked/other_units/u_test3.spec_no-cdcl : 1.086069
+ ********************************
+ ./synth_tests/unit/checked/databases/small_query2.spec_cobalt : 1.685829

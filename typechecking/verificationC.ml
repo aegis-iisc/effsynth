@@ -12,6 +12,11 @@ exception Error of string
 exception Unimplemented of string     
 exception CantDischargeVC
 exception SolverTimeout  
+
+module Printf = struct 
+  let printf d s = Printf.printf d ""
+  let originalPrint = Printf.printf 
+end  
 (*aliases for some functions in SpecLang*)
 let string_for_ty = RefTy.toString 
 let string_pred = P.toString 

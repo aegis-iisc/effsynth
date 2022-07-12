@@ -6,6 +6,11 @@ module Formula = RelSpec.Formula
 module TEnv = Environment.TypingEnv 
 module ConsEnv = Environment.Constructors
 
+
+module Printf = struct 
+  let printf d s = Printf.printf d ""
+  let originalPrint = Printf.printf 
+end  
 exception LexingError of string 
 let load_file f =
   let ic = open_in f in

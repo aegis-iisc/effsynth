@@ -15,7 +15,7 @@ module Expr = Z3.Expr
 module Constructor = Z3.Datatype.Constructor
 module Z3Sort = Z3.Sort
 
-let logOpen = Log.open_ "Logging@z3" 
+(* let logOpen = Log.open_ "Logging@z3"  *)
 let logz3 s = Log.append s
 open Boolean
 open Arithmetic
@@ -31,6 +31,10 @@ end
    *)
 
 
+module Printf = struct 
+  let printf d s = Printf.printf d ""
+  let originalPrint = Printf.printf 
+end  
 
 exception Z3ex of string 
 (*Local types used for encoding*)

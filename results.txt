@@ -1,0 +1,1233 @@
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+semicolon
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+semicolon
+var: d
+whitespace colon
+whitespace refwhitespace lbrace
+var: nlrecord
+rbrace
+semicolon
+var: select
+whitespace colon
+whitespace lparen
+var: d
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace refwhitespace lbrace
+var: nlrecored
+rbrace
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: string
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+var: string
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace whitespace var: nlmem
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace rcurly
+whitespace whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nlrecord
+whitespace pipe
+whitespace truercurly
+whitespace lcurly
+lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: nlrecord
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+whitespace conjwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: D'
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: nlmem
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: nletter
+whitespace lparen
+var: v
+rparen
+whitespace equalopwhitespace var: n
+whitespace conjwhitespace whitespace var: user
+whitespace lparen
+var: v
+rparen
+whitespace equalopwhitespace var: u
+whitespace rcurly
+semicolon
+var: confirmS
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+colon
+var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace lparen
+var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace lparen
+var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falserparen
+rparen
+rcurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+var: v
+whitespace colon
+whitespace var: unit
+whitespace pipe
+whitespace truercurly
+whitespace lcurly
+whitespace lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: unit
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+conjwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsewhitespace conjwhitespace whitespace var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truercurly
+semicolon
+var: subscribe
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace whitespace lparen
+var: nlmem
+whitespace lparen
+var: D
+whitespace comma
+whitespace var: n
+whitespace comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falserparen
+rcurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: unit
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: unit
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+conjwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsewhitespace whitespace rcurly
+semicolon
+whitespace var: read
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace lparen
+var: nlmem
+whitespace lparen
+var: D
+whitespace comma
+whitespace var: n
+whitespace comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace whitespace var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace rparen
+whitespace rcurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace lbrace
+var: string
+rbrace
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace lbrace
+var: string
+rbrace
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+conjwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace whitespace var: v
+whitespace equalopwhitespace var: articles
+whitespace lparen
+var: D'
+rparen
+rcurly
+semicolon
+whitespace whitespace var: remove
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace lparen
+var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace lparen
+var: nlmem
+whitespace lparen
+var: D
+whitespace comma
+whitespace var: n
+whitespace comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falserparen
+whitespace whitespace rparen
+whitespace whitespace rcurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: unit
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: unit
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+whitespace conjwhitespace whitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsewhitespace whitespace rcurly
+semicolon
+whitespace var: unsubscribe
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace whitespace lparen
+var: nlmem
+whitespace lparen
+var: D
+whitespace comma
+whitespace var: n
+whitespace comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truerparen
+rcurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: unit
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: unit
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+conjwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsewhitespace whitespace rcurly
+semicolon
+whitespace var: confirmU
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+colon
+var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace lparen
+var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace implieswhitespace lparen
+var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falserparen
+rparen
+rcurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+var: v
+whitespace colon
+whitespace var: unit
+whitespace pipe
+whitespace truercurly
+whitespace lcurly
+whitespace lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: unit
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+conjwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace whitespace var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truercurly
+semicolon
+whitespace var: goal
+whitespace colon
+whitespace lparen
+var: n
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: nl
+whitespace pipe
+whitespace truercurly
+rparen
+arrow
+whitespace whitespace lparen
+var: u
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: user
+whitespace pipe
+whitespace truercurly
+rparen
+whitespace arrow
+whitespace whitespace var: State
+whitespace lcurly
+lambdalparen
+var: h
+whitespace colon
+whitespace var: heap
+rparen
+dotwhitespace whitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+whitespace conjwhitespace var: nlmem
+whitespace lparen
+var: D
+whitespace comma
+whitespace var: n
+whitespace comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falsercurly
+whitespace var: v
+whitespace colon
+whitespace lcurly
+whitespace var: v
+whitespace colon
+whitespace var: unit
+whitespace pipe
+whitespace truercurly
+whitespace whitespace lcurly
+lambdalparen
+var: h
+colon
+whitespace var: heap
+rparen
+comma
+lparen
+var: v
+whitespace colon
+whitespace var: unit
+rparen
+comma
+lparen
+var: h'
+colon
+whitespace var: heap
+rparen
+dotwhitespace lambdalparen
+var: D
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+comma
+whitespace lparen
+var: D'
+whitespace colon
+whitespace lbrace
+var: nlrecord
+rbrace
+rparen
+dotwhitespace lparen
+var: dsel
+whitespace lparen
+var: h'
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D'
+whitespace conjwhitespace whitespace var: dsel
+whitespace lparen
+var: h
+comma
+whitespace var: d
+rparen
+whitespace equalopwhitespace var: D
+rparen
+whitespace implieswhitespace whitespace lparen
+var: nlmem
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: subscribed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace truewhitespace conjwhitespace var: confirmed
+whitespace lparen
+var: D'
+comma
+whitespace var: n
+comma
+whitespace var: u
+rparen
+whitespace equalopwhitespace falserparen
+whitespace rcurly
+semicolon
+                                                                                                                                                    
+ Num args 1
+ BVi var_h35
+ The WP Case 
+ The WP Case 2                                                                                                                                                                                                                                  Success : { 
+MArrrow ( State 
+ 
+                                                PRE { 
+ Forall 
+ 	 
+ Key =h Value = Ty_heap{ Forall 
+ 	 
+ Key =D Value = Ty_list Ty_alphanlrecord{ 
+ 	 Conj <c (dsel)( , h, d ) = (D)
+ 	 , 
+ 	 Conj <c (nlmem)( , D, n, u ) = (true)
+ 	 , 
+ 	 Conj <c (subscribed)( , D, n, u ) = (false)
+ 	 , (confirmed)( , D, n, u ) = (false) >c  >c  >c  } } 
+ } 
+ 
+                                                RET :  Base {v:Ty_unit | true} 
+ { 
+                                                POST Forall 
+ 	 
+ Key =h Value = Ty_heap
+ Key =v Value = Ty_unit
+ Key =h' Value = Ty_heap{ Forall 
+ 	 
+ Key =D Value = Ty_list Ty_alphanlrecord
+ Key =D' Value = Ty_list Ty_alphanlrecord{ 
+ 	 Impl < 
+ 	 Conj <c (dsel)( , h', d ) = (D')
+ 	 , (dsel)( , h, d ) = (D) >c 
+ 	 
+ 	 Conj <c (nlmem)( , D', n, u ) = (true)
+ 	 , 
+ 	 Conj <c (subscribed)( , D', n, u ) = (true)
+ 	 , (confirmed)( , D', n, u ) = (false) >c  >c  > } } 
+ } 
+ ) 
+ apply confirmS  (, n ), u ) 
+ 	 >>= \lambda var_ret66 . 
+ 	 apply subscribe  (, n ), u ) 
+ 	 >>= \lambda var_ret6 . 
+ 	 Eskip 
+ }

@@ -5,18 +5,17 @@ import os, os.path
 import csv
 import resource
 
-ocamlbuild        = 'ocamlbuild'                                             # Path to Java8
-cobalt          = './effsynth.native'
-TIMEOUT      = 120
+cobalt       = './effsynth.native'
+TIMEOUT      = 120                            # Timeout in secs
 TEST_DIR     = './synth_tests/unit/checked/'   # Root directory for the tests   
 VARIANTS     = ['cobalt', 'fw-alone', 'bw-alone','no-cdcl']    # Configurations
-RESULTS      = 'all_results'                                      # Output file with synthesis results
+RESULTS      = 'results.txt'                                      # Output file with synthesis results
 TIMERESULTS  = 'timings'
 
 class Benchmark:
   def __init__(self, name, description):
     self.name = name                # Test file name
-    self.description = description  # Description (in the table)
+    self.description = description  # Label of the benchmark in Fig 9
 
   def str(self):
     return self.name + ': ' + self.description
@@ -27,68 +26,10 @@ class BenchmarkGroup:
     self.benchmarks = benchmarks  # List of benchmarks in this group
 
 ALL_BENCHMARKS = [
-#   BenchmarkGroup("synthetic",  [
-#     Benchmark('other_units/u_test3', 'Unit test 3'),
-#     ]),    
-  
-#   BenchmarkGroup("Databases",  [
-    
-#     Benchmark('databases/small_query1', 'D1: NL_unsubscribe'),
-#     Benchmark('databases/small_query2', 'D2: NL_subscribe'),
-#     Benchmark('databases/newsletter_remove', 'D3: NL_remove'),
-#     Benchmark('databases/newsletter_read', 'D4: NL_read'),
-#     Benchmark('databases/newsletter_read_remove', 'D5: NL_read_remove'),
-#     Benchmark('databases/firewall1', 'D6: F_delete'),
-#     Benchmark('databases/firewall2', 'D7: F_insert_connect'),
-#     Benchmark('databases/firewall4', 'D8: F_delete_make_central'),
-#     Benchmark('databases/firewall_if_for_firewall1', 'D9: F_cond_delete'),
-#     Benchmark('databases/firewall_if_for_firewall2', 'D10: F_cond_insert_connect'),
-#     Benchmark('databases/firewall_if_for_firewall4', 'D11: F_cond_delete_make_central'),
-#     ]),    
-#   BenchmarkGroup("Parsers", [
-#     Benchmark('parsers/png_simple', 'P1 png_chunk'),
-#     Benchmark('parsers/png_simple2', 'P2 png_chunk'),
-#     Benchmark('parsers/png_simple_if', 'P3 png_chunk'),
-#     Benchmark('parsers/cdcl_typedecl', 'P4 C_typedec'),
-#     Benchmark('parsers/cdcl_fundec_simple', 'P5 C_extern_fundec'),
-#     Benchmark('parsers/cdcl_vardec_simple', 'P6 C_extern_vardec'),
-    
-#     ]),
-    
-   BenchmarkGroup("Imperative", [
-#     Benchmark('imperative_ds_simple/queue/queue_query4', 'I1'),
-#     Benchmark('imperative_ds_simple/queue/queue_query4_plus', 'I2'),
-#     Benchmark('imperative_ds_simple/queue/queue_remove', 'I3'),
-#     Benchmark('imperative_ds_simple/queue/queue_if_query1', 'I4'),
-#     Benchmark('imperative_ds_simple/queue/queue_if_query2', 'I5'),
-#     #table 
-#     Benchmark('imperative_ds_simple/tbl/tbl_insert_input', 'I6'),
-#     Benchmark('imperative_ds_simple/tbl/tbl_insert_input_plus', 'I7'),
-#     Benchmark('imperative_ds_simple/tbl/tbl_insert_input_plus_plus', 'I8'),
-    #vocal 
-    Benchmark('vocal/Vector1', 'V1'),
-    Benchmark('vocal/Vector2', 'V2'),
-    Benchmark('vocal/Vector3', 'V3'),
-    Benchmark('vocal/RingBuffer1', 'RB1'),
-    Benchmark('vocal/RingBuffer2', 'RB2'),
-    Benchmark('vocal/sll_goal1', 'SLL1'),
-    Benchmark('vocal/sll_goal2', 'SLL2'),
-    Benchmark('vocal/sll_goal3', 'SLL3'),
-    Benchmark('vocal/Queue1', 'Q1'),
-    Benchmark('vocal/Queue2', 'Q2'),
-    Benchmark('vocal/Queue3', 'Q3'),
-    Benchmark('vocal/ZipplerList1', 'ZL1'),
-    Benchmark('vocal/ZipplerList2', 'ZL2'),
-    Benchmark('vocal/ZipplerList3', 'ZL3'),
-
-    Benchmark('vocal/PriorityQueue1', 'PQ1'),
-    Benchmark('vocal/PriorityQueue2', 'PQ2'),
-
-    Benchmark('vocal/HashTable1', 'HT1'),
-    Benchmark('vocal/HashTable2', 'HT2'),
-    Benchmark('vocal/HashTable3', 'HT3')
-    ]),
-  ]
+  BenchmarkGroup("synthetic",  [
+     Benchmark('other_units/u_test3', 'Unit test 3'),
+     ]),    
+]
 
 class SynthesisResult:
   def __init__(self, name, time_cobalt, time_fw_alone, time_bw_alone, time_no_cdcl, code_size_ast):
@@ -109,7 +50,7 @@ def run_benchmark(file, variant):
   '''Run single benchmark'''
   cpu_time = 0
   with open(RESULTS, "a") as outfile:
-    print ('Running Varinat'+variant, file)
+    print ('Running Varinat '+variant, file)
     if variant == 'cobalt':
         usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
         try:
@@ -191,54 +132,9 @@ def test_variants():
   return csvresults         
        
     
-      
-def clean_variants():
-  '''Remove previously generated benchmark variants'''
-  
-  for group in groups:
-    for b in group.benchmarks:
-      test = TEST_DIR + b.name
-      for var in VARIANTS:
-        varFileName = test + '-' + var + '.syn'
-        if os.path.isfile(varFileName):        
-          os.remove(varFileName)
-
-# write the result in a spreadsheed
-
-
-# def read_csv():
-#   '''Read stats file into the results dictionary'''
-#   with open(CSV_IN, 'rb') as csvfile:
-#     d = csv.excel
-#     d.skipinitialspace = True
-#     statsReader = csv.DictReader(csvfile, dialect = d)
-#     for row in statsReader:
-#       name = row['Name']
-#       time = float(row['Time'])/1000
-#       spec_size = row['Spec Size']
-#       code_size = row['Code Size']
-      
-#       is_var = False
-#       for var in VARIANTS:
-#         if name.endswith(var):
-#           # This is a test for a variant
-#           is_var = True
-#           suffix_len = len(var) + 1
-#           store_result(name[:-suffix_len], time, spec_size, code_size, var)
-#       if not is_var:
-#         store_result(name, time, spec_size, code_size)
         
-        
-          
-def cmdline():
-  import argparse
-  a = argparse.ArgumentParser()
-  a.add_argument('--unopt', action='store_true')
-  a.add_argument('--tiny', action='store_true')
-  return a.parse_args()          
           
 if __name__ == '__main__':
-  cl_opts = cmdline()
   
   if os.path.isfile(RESULTS):        
     os.remove(RESULTS)
@@ -250,11 +146,4 @@ if __name__ == '__main__':
   for row in csvres:
     print (csvres[row].str() ) 
     
-  
-  # print 'STATS'
-  # for res in results:
-    # print results[res].str()  
-      
-#   write_stats()
-  clean_variants()
   

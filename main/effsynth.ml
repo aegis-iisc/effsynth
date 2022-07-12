@@ -13,6 +13,11 @@ let usage_msg = "effsynth [-cdcl] [-bi] [-effect] <spec-file1> -g <goal-number>"
 let anon_fun specfile = 
     spec_file := specfile
 
+module Printf = struct 
+  let printf d s = Printf.printf d ""
+  let originalPrint = Printf.printf 
+end  
+
 
   let speclist =
   [("-effect", Arg.Set effect_filter, "Set the effect-guided filtering to true");
@@ -61,8 +66,8 @@ let () =
   let synthterm = Synth.Bidirectional.toplevel gamma sigma  delta typenames quals goal !learningON !bidirectional maxPathlength !effect_filter in   
     (*run the initial environment builder*)    
     match synthterm with 
-        | None -> Printf.printf "%s" "Synthesis returned witout result"
-        | Some t -> Printf.printf "%s" ("Success : "^(Lambda.typedMonExp_toString t))
+        | None -> Printf.originalPrint "%s" "Synthesis returned witout result"
+        | Some t -> Printf.originalPrint "%s" ("Success : "^(Lambda.typedMonExp_toString t))
    
 (*    
 
