@@ -58,13 +58,6 @@ let fold' (v, start, b, f, g) =
       else raise (VectorExc "Vector.fold'")
    
 
-(* let rec unzip list =
-  match list with
-    [] -> ([],[])
-    | (a,b)::ns -> (a::ua(unzip(ns)),b::ub(unzip(ns)));;
-
- *)
-
 let unzip ls = List.split ls
 
 
