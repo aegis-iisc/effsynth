@@ -2930,7 +2930,7 @@ and bottomUpChoose
                                             let actualArgi = esynthesizeScalar gammaMap sigmaMap deltaPred [ti ;holeType] in
                                             let base_ti = RefTy.toTyD ti in 
                                             let boundVari = Var.fresh_binding_var argi in 
-                                            
+                                            let _ = Printf.printf "%s" (" Bound Var Type "^(RefTy.toString ti)) in 
                                             match actualArgi with 
                                                 | [] ->  
                                                           ( bindingsAcc@[boundVari, ti],
@@ -3061,6 +3061,8 @@ and bottomUpChoose
                                 *)
                                             let base_ti = RefTy.toTyD ti in 
                                             let boundVari = Var.fresh_binding_var argi in 
+                                            let _ = Printf.printf "%s" (" Case2 Bound Var Type "^(RefTy.toString ti)) in 
+
                                             match actualArgi with 
                                                 | [] ->  
                                                           (bindingsAcc@[boundVari, ti],

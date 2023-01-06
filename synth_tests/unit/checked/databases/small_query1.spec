@@ -1,10 +1,16 @@
+qualifier dsel : heap :-> ref [nlrecord] :-> [nlrecord];
+qualifier nlmem : [nlrecord] :-> nl :-> user :-> bool;
+qualifier subscribed : [nlrecord] :-> nl :-> user :-> bool;
+qualifier confirmed : [nlrecord] :-> nl :-> user :-> bool;
+qualifier articles : [nlrecord] :-> [string];
+
 D : [nlrecord];
 D' : [nlrecord];
 d : ref [nlrecord];
 
 
-select : (n  : { v : string | true})
-							-> (u : { v :string | true}) -> 
+select : (n  : { v : nl | true})
+							-> (u : { v : user | true}) -> 
 									 
 									 State {\(h : heap).
 									 	\(D : [nlrecord]).

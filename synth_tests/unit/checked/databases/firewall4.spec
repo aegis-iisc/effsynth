@@ -1,3 +1,12 @@
+
+
+qualifier device : [int] :-> int :-> bool;
+qualifier didsel : heap :-> ref [int] :-> [int];
+qualifier dcssel : heap :-> ref [srpair] :-> [srpair];
+qualifier dsize : [int] :-> int;
+qualifier central : [srpair] :-> int :-> bool;
+qualifier cansend : [srpair] :-> int :-> int :-> bool;
+
 dtab : ref [int];
 cstab : ref [srpair];
 D : [int];
